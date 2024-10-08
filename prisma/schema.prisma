@@ -1,0 +1,129 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserGrade {
+  NORMAL
+  EXPERT
+}
+
+enum ChallengeField {
+  NEXTJS
+  API
+  CAREER
+  MODERNJS
+  WEB
+}
+
+enum DocType {
+  OFFICIAL
+  BLOG
+}
+
+enum ApplicationStatus {
+  WAITING
+  ACCEPTED
+  REJECTED
+  DELETED
+}
+
+model User {
+  id             Int           @id @default(autoincrement())
+  role           UserRole      @default(USER)
+  grade          UserGrade?
+  nickName       String        @unique @db.VarChar(10)
+  email          String        @unique @db.VarChar(20)
+  password       String        @db.VarChar(50)
+  createdAt      DateTime      @default(now())
+  applications   Application[]
+  participations Participate[]
+  works          Work[]
+  feedbacks      Feedback[]
+  likes          Like[]
+}
+
+model Challenge {
+  id              Int           @id @default(autoincrement())
+  title           String        @db.VarChar(200)
+  field           ChallengeField
+  docType         DocType
+  description     String        @db.Text
+  docUrl          String        @db.VarChar(200)
+  deadline        DateTime
+  progress        Boolean       @default(false)
+  participates    Int?
+  maxParticipates Int?
+  applications    Application[]
+  participations  Participate[]
+  works           Work[]
+}
+
+model Application {
+  id                   Int               @id @default(autoincrement())
+  user                 User              @relation(fields: [userId], references: [id])
+  userId               Int
+  challenge            Challenge         @relation(fields: [challengeId], references: [id])
+  challengeId          Int
+  status               ApplicationStatus @default(WAITING)
+  aplliedAt            DateTime          @default(now())
+  invalidationComment  String?           @db.VarChar(200)
+  invalidatedAt        DateTime?
+}
+
+model Participate {
+  id          Int       @id @default(autoincrement())
+  user        User      @relation(fields: [userId], references: [id])
+  userId      Int
+  challenge   Challenge @relation(fields: [challengeId], references: [id])
+  challengeId Int
+}
+
+model Work {
+  id              Int       @id @default(autoincrement())
+  user            User      @relation(fields: [userId], references: [id])
+  userId          Int
+  challenge       Challenge @relation(fields: [challengeId], references: [id])
+  challengeId     Int
+  description     String?   @db.Text
+  lastModifiedAt  DateTime  @updatedAt
+  isSubmitted     Boolean   @default(false)
+  submittedAt     DateTime?
+  feedbacks       Feedback[]
+  like            Like?
+  likeCount       Int       @default(0)
+}
+
+model Feedback {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  work      Work     @relation(fields: [workId], references: [id])
+  workId    Int
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+}
+
+model Like {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  work      Work     @relation(fields: [workId], references: [id])
+  workId    Int      @unique
+  createdAt DateTime @default(now())
+}
