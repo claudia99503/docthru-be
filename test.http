@@ -8,5 +8,30 @@ Content-Type: application/json
 
 
 ### 챌린저 내용 변경
-PATCH http://localhost:3001/api/challenges/1
+PATCH http://localhost:3001/api/challenges/4
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTcyODU0ODE5MiwiZXhwIjoxNzI4NTQ5MDkyfQ.zq0t6O-xsiI1l1g5MoscPZdKcrcz-gNCqt1fq0E66U0
+
+{
+  "title" : "title 변경",
+  "description" : "description 변경"
+}
+
+### 회원가입
+POST http://localhost:3001/api/users/register
+Content-Type: application/json
+
+{
+  "email" : "test@test.c",
+  "password" : "12341234",
+  "nickName" : "test"
+}
+
+### 로그인
+POST http://localhost:3001/api/users/login
+Content-Type: application/json
+
+{
+  "email" : "test@test.c",
+  "password" : "12341234"
+}

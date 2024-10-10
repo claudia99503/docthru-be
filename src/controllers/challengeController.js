@@ -1,7 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
+import { getCurrentUser } from '../services/userServices.js';
 
-export async function getChallenges(req, res) {
+export async function getChallenges(req, res, next) {
   try {
     const page = parseInt(req.query.page) || 1;
     const take = parseInt(req.query.take) || 10;
@@ -23,11 +24,11 @@ export async function getChallenges(req, res) {
 
     return res.status(200).json(challenges);
   } catch (error) {
-    return res.status(500).json(error);
+    next(error);
   }
 }
 
-export async function getChallengeById(req, res) {
+export async function getChallengeById(req, res, next) {
   try {
     const { challengeId } = req.params;
     const challenge = await prisma.challenge.findUnique({
@@ -67,15 +68,16 @@ export async function getChallengeById(req, res) {
 
     return res.status(200).json(dataFilter);
   } catch (error) {
-    return res.status(500).json(error);
+    next(error);
   }
 }
 
-export async function patchChallengeById(req, res) {
-  const { role } = req.user;
+export async function patchChallengeById(req, res, next) {
+  const userId = req.user.userId;
+  const { role } = await getCurrentUser(userId);
 
   if (role !== 'ADMIN') {
-    return res.status(403).json({ message: '권한이 없습니다.' });
+    throw new ForbiddenException('권한이 없습니다.');
   }
   try {
     const { challengeId } = req.params;
@@ -93,15 +95,9 @@ export async function patchChallengeById(req, res) {
 
     const challenge = await prisma.challenge.findUnique({
       where: { id: parseInt(challengeId, 10) },
-      select: {
-        id: true,
-        userId: true,
-      },
     });
     if (!challenge) {
-      return res
-        .status(404)
-        .json({ message: '챌린지를 찾을 수 없습니다.' });
+      throw new NotFoundException('첫 번째 챌린지가 없습니다.');
     }
 
     const updatedChallenge = await prisma.challenge.update({
@@ -121,6 +117,6 @@ export async function patchChallengeById(req, res) {
 
     return res.status(200).json(updatedChallenge);
   } catch (error) {
-    return res.status(500).json(error);
+    next(error);
   }
 }

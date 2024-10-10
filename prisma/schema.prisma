@@ -50,8 +50,8 @@ model User {
   nickName       String        @unique @db.VarChar(10)
   email          String        @unique @db.VarChar(255)
   password       String        @db.VarChar(255)
-  createdAt      DateTime      @default(now())
   refreshToken   String?       @db.Text
+  createdAt      DateTime      @default(now())
   applications   Application[]
   participations Participate[]
   works          Work[]
