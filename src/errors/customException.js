@@ -3,7 +3,7 @@ import {
   HttpStatus,
   ExceptionCode,
   ExceptionIdentifier,
-} from './index';
+} from './commonException.js';
 
 // 리소스가 존재하지 않을 때
 export class NotFoundException extends CommonException {
