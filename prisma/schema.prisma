@@ -48,8 +48,9 @@ model User {
   role           UserRole      @default(USER)
   grade          UserGrade?
   nickName       String        @unique @db.VarChar(10)
-  email          String        @unique @db.VarChar(20)
-  password       String        @db.VarChar(50)
+  email          String        @unique @db.VarChar(255)
+  password       String        @db.VarChar(255)
+  refreshToken   String?       @db.Text
   createdAt      DateTime      @default(now())
   applications   Application[]
   participations Participate[]
