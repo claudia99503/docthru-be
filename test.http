@@ -10,12 +10,18 @@ Content-Type: application/json
 ### 챌린저 내용 변경
 PATCH http://localhost:3001/api/challenges/4
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTcyODU0ODE5MiwiZXhwIjoxNzI4NTQ5MDkyfQ.zq0t6O-xsiI1l1g5MoscPZdKcrcz-gNCqt1fq0E66U0
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTcyODU1MjA2OCwiZXhwIjoxNzI4NTUyOTY4fQ.IyFyrkcmSyGKD0PSH_vGq35x-bI0ZChQuGy4gnGIzfs
 
 {
-  "title" : "title 변경",
-  "description" : "description 변경"
+  "title" : "ㅎㅇㄴㅁㅎㅇㄴㅁㅎㄴㅁ 변경",
+  "description" : "ㅎㅇㄴㅁㅎㅇㄴㅁㅎㅇㄴㅁㅎ 변경"
 }
+
+### 챌린저 삭제
+DELETE  http://localhost:3001/api/challenges/2
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTcyODYyMjEyMSwiZXhwIjoxNzI4NjIzMDIxfQ.Iqut6MutWygA2pCa-xI2FsfkgyBUi7i6F1dibh44fIc
+
 
 ### 회원가입
 POST http://localhost:3001/api/users/register
@@ -24,7 +30,9 @@ Content-Type: application/json
 {
   "email" : "test@test.c",
   "password" : "12341234",
-  "nickName" : "test"
+  "nickName" : "test",
+  "role" : "ADMIN",
+  "grade" : "EXPERT"
 }
 
 ### 로그인

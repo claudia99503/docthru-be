@@ -1,6 +1,10 @@
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 import { getCurrentUser } from '../services/userServices.js';
+import {
+  ForbiddenException,
+  NotFoundException,
+} from '../errors/customException.js';
 
 export async function getChallenges(req, res, next) {
   try {
@@ -63,6 +67,7 @@ export async function getChallengeById(req, res, next) {
         userId: app.userId,
         nickName: app.user.nickName,
         grade: app.user.grade,
+        aplliedAt: app.aplliedAt,
       })),
     };
 
@@ -77,7 +82,7 @@ export async function patchChallengeById(req, res, next) {
   const { role } = await getCurrentUser(userId);
 
   if (role !== 'ADMIN') {
-    throw new ForbiddenException('권한이 없습니다.');
+    return next(new ForbiddenException());
   }
   try {
     const { challengeId } = req.params;
@@ -97,7 +102,7 @@ export async function patchChallengeById(req, res, next) {
       where: { id: parseInt(challengeId, 10) },
     });
     if (!challenge) {
-      throw new NotFoundException('첫 번째 챌린지가 없습니다.');
+      throw new NotFoundException('챌린지가 없습니다.');
     }
 
     const updatedChallenge = await prisma.challenge.update({
@@ -120,3 +125,37 @@ export async function patchChallengeById(req, res, next) {
     next(error);
   }
 }
+
+export async function deleteChallengeById(req, res, next) {
+  const userId = req.user.userId;
+  const { role } = await getCurrentUser(userId);
+
+  if (role !== 'ADMIN') {
+    return next(new ForbiddenException());
+  }
+
+  try {
+    const { challengeId } = req.params;
+    const challenge = await prisma.challenge.findUnique({
+      where: { id: parseInt(challengeId, 10) },
+    });
+    if (!challenge) {
+      throw new NotFoundException('챌린지가 없습니다.');
+    }
+    console.log(challenge);
+
+    const deletedApplications = await prisma.application.updateMany({
+      where: { challengeId: parseInt(challengeId, 10) },
+      data: {
+        status: 'DELETED',
+      },
+    });
+
+    return res.sendStatus(204);
+  } catch (error) {
+    next(error);
+  }
+}
+
+// export async function getChallengesUrl(req, res, next) {
+//   try {
