@@ -67,7 +67,7 @@ export async function getChallengeById(req, res, next) {
         userId: app.userId,
         nickName: app.user.nickName,
         grade: app.user.grade,
-        aplliedAt: app.aplliedAt,
+        appliedAt: app.appliedAt,
       })),
     };
 
