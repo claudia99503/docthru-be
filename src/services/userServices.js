@@ -112,17 +112,58 @@ export const getCompletedChallenges = async (userId) => {
   return completedChallenges;
 };
 
-export const getAppliedChallenges = async (userId) => {
+export const getAppliedChallenges = async (
+  userId,
+  status,
+  sortBy = 'appliedAt',
+  sortOrder = 'desc',
+  searchTerm = ''
+) => {
+  const whereClause = { userId };
+  if (status) {
+    whereClause.status = status;
+  }
+
+  if (searchTerm) {
+    whereClause.challenge = {
+      OR: [
+        { title: { contains: searchTerm, mode: 'insensitive' } },
+        { description: { contains: searchTerm, mode: 'insensitive' } },
+      ],
+    };
+  }
+
+  const orderBy = [];
+  if (sortBy === 'appliedAt') {
+    orderBy.push({ appliedAt: sortOrder });
+  } else if (sortBy === 'deadline') {
+    orderBy.push({ challenge: { deadline: sortOrder } });
+  }
+  if (sortBy !== 'appliedAt') {
+    orderBy.push({ appliedAt: 'desc' });
+  }
+
   const appliedChallenges = await prisma.application.findMany({
-    where: { userId },
-    include: { challenge: true },
+    where: whereClause,
+    orderBy,
+    include: {
+      challenge: true,
+    },
   });
 
   if (appliedChallenges.length === 0) {
-    throw new NotFoundException('신청한 챌린지가 없습니다.');
+    throw new NotFoundException('조건에 맞는 신청한 챌린지가 없습니다.');
   }
 
-  return appliedChallenges;
+  return appliedChallenges.map((app) => ({
+    ...app,
+    status: applicationStatusConverter(app.status),
+    appliedAt: app.appliedAt.toISOString(),
+    challenge: {
+      ...app.challenge,
+      deadline: app.challenge.deadline.toISOString(),
+    },
+  }));
 };
 
 export const getCurrentUser = async (userId) => {
