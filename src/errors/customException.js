@@ -48,7 +48,7 @@ export class NotAllowedMethodException extends CommonException {
       status: HttpStatus.METHOD_NOT_ALLOWED,
       code: ExceptionCode.METHOD_NOT_ALLOWED,
       message,
-      identifier: ExceptionIdentifier.INPUT_ERROR,
+      identifier: ExceptionIdentifier.METHOD_NOT_ALLOWED,
     });
   }
 }
