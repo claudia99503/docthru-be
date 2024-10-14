@@ -93,21 +93,24 @@ export const refreshToken = async (req, res, next) => {
 export const getOngoingChallenges = async (req, res, next) => {
   try {
     const { userId } = req.user;
-    const ongoingChallenges = await userServices.getOngoingChallenges(userId);
-    res.json(ongoingChallenges);
+    const { page, limit } = req.query;
+    const result = await userServices.getOngoingChallenges(userId, page, limit);
+    res.json(result);
   } catch (error) {
     next(error);
   }
 };
-
 // 완료된 챌린지 조회
 export const getCompletedChallenges = async (req, res, next) => {
   try {
     const { userId } = req.user;
-    const completedChallenges = await userServices.getCompletedChallenges(
-      userId
+    const { page, limit } = req.query;
+    const result = await userServices.getCompletedChallenges(
+      userId,
+      page,
+      limit
     );
-    res.json(completedChallenges);
+    res.json(result);
   } catch (error) {
     next(error);
   }
@@ -117,7 +120,7 @@ export const getCompletedChallenges = async (req, res, next) => {
 export const getAppliedChallenges = async (req, res, next) => {
   try {
     const { userId } = req.user;
-    const { status, sortBy, sortOrder, search } = req.query;
+    const { status, sortBy, sortOrder, search, page, limit } = req.query;
 
     const validStatuses = ['WAITING', 'ACCEPTED', 'REJECTED'];
     const validSortBy = ['appliedAt', 'deadline'];
@@ -133,7 +136,7 @@ export const getAppliedChallenges = async (req, res, next) => {
       throw new BadRequestException('유효하지 않은 정렬 순서입니다.');
     }
 
-    const appliedChallenges = await authService.getAppliedChallenges(
+    const appliedChallenges = await userServices.getAppliedChallenges(
       userId,
       status,
       sortBy || 'appliedAt',
@@ -147,15 +150,17 @@ export const getAppliedChallenges = async (req, res, next) => {
       REJECTED: '신청거절',
     };
 
-    res.json({
-      challenges: appliedChallenges,
-      statusMap: statusMap,
-      meta: {
-        totalCount: appliedChallenges.length,
-        filter: { status, search },
-        sort: { by: sortBy || 'appliedAt', order: sortOrder || 'desc' },
-      },
-    });
+    const result = await userServices.getAppliedChallenges(
+      userId,
+      status,
+      sortBy,
+      sortOrder,
+      search,
+      page,
+      limit
+    );
+
+    res.json(result);
   } catch (error) {
     next(error);
   }

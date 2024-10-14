@@ -80,36 +80,75 @@ export const verifyRefreshToken = async (refreshToken) => {
   return user;
 };
 
-export const getOngoingChallenges = async (userId) => {
-  const ongoingChallenges = await prisma.participate.findMany({
-    where: {
-      userId,
-      challenge: { progress: true },
-    },
-    include: { challenge: true },
-  });
-
-  if (ongoingChallenges.length === 0) {
-    throw new NotFoundException('진행 중인 챌린지가 없습니다.');
-  }
-
-  return ongoingChallenges;
+const getPaginationData = (page, limit) => {
+  const parsedPage = parseInt(page) || 1;
+  const parsedLimit = parseInt(limit) || 10;
+  const skip = (parsedPage - 1) * parsedLimit;
+  return { parsedPage, parsedLimit, skip };
 };
 
-export const getCompletedChallenges = async (userId) => {
-  const completedChallenges = await prisma.participate.findMany({
-    where: {
-      userId,
-      challenge: { progress: false },
+export const getOngoingChallenges = async (userId, page, limit) => {
+  const { parsedPage, parsedLimit, skip } = getPaginationData(page, limit);
+
+  const [ongoingChallenges, totalCount] = await Promise.all([
+    prisma.participate.findMany({
+      where: {
+        userId,
+        challenge: { progress: true },
+      },
+      include: { challenge: true },
+      skip,
+      take: parsedLimit,
+    }),
+    prisma.participate.count({
+      where: {
+        userId,
+        challenge: { progress: true },
+      },
+    }),
+  ]);
+
+  return {
+    challenges: ongoingChallenges,
+    meta: {
+      currentPage: parsedPage,
+      pageSize: parsedLimit,
+      totalCount,
+      totalPages: Math.ceil(totalCount / parsedLimit),
     },
-    include: { challenge: true },
-  });
+  };
+};
 
-  if (completedChallenges.length === 0) {
-    throw new NotFoundException('완료된 챌린지가 없습니다.');
-  }
+export const getCompletedChallenges = async (userId, page, limit) => {
+  const { parsedPage, parsedLimit, skip } = getPaginationData(page, limit);
 
-  return completedChallenges;
+  const [completedChallenges, totalCount] = await Promise.all([
+    prisma.participate.findMany({
+      where: {
+        userId,
+        challenge: { progress: false },
+      },
+      include: { challenge: true },
+      skip,
+      take: parsedLimit,
+    }),
+    prisma.participate.count({
+      where: {
+        userId,
+        challenge: { progress: false },
+      },
+    }),
+  ]);
+
+  return {
+    challenges: completedChallenges,
+    meta: {
+      currentPage: parsedPage,
+      pageSize: parsedLimit,
+      totalCount,
+      totalPages: Math.ceil(totalCount / parsedLimit),
+    },
+  };
 };
 
 export const getAppliedChallenges = async (
@@ -117,8 +156,12 @@ export const getAppliedChallenges = async (
   status,
   sortBy = 'appliedAt',
   sortOrder = 'desc',
-  searchTerm = ''
+  searchTerm = '',
+  page,
+  limit
 ) => {
+  const { parsedPage, parsedLimit, skip } = getPaginationData(page, limit);
+
   const whereClause = { userId };
   if (status) {
     whereClause.status = status;
@@ -143,27 +186,36 @@ export const getAppliedChallenges = async (
     orderBy.push({ appliedAt: 'desc' });
   }
 
-  const appliedChallenges = await prisma.application.findMany({
-    where: whereClause,
-    orderBy,
-    include: {
-      challenge: true,
-    },
-  });
+  const [appliedChallenges, totalCount] = await Promise.all([
+    prisma.application.findMany({
+      where: whereClause,
+      orderBy,
+      include: { challenge: true },
+      skip,
+      take: parsedLimit,
+    }),
+    prisma.application.count({ where: whereClause }),
+  ]);
 
-  if (appliedChallenges.length === 0) {
-    throw new NotFoundException('조건에 맞는 신청한 챌린지가 없습니다.');
-  }
-
-  return appliedChallenges.map((app) => ({
-    ...app,
-    status: applicationStatusConverter(app.status),
-    appliedAt: app.appliedAt.toISOString(),
-    challenge: {
-      ...app.challenge,
-      deadline: app.challenge.deadline.toISOString(),
+  return {
+    challenges: appliedChallenges.map((app) => ({
+      ...app,
+      status: applicationStatusConverter(app.status),
+      appliedAt: app.appliedAt.toISOString(),
+      challenge: {
+        ...app.challenge,
+        deadline: app.challenge.deadline.toISOString(),
+      },
+    })),
+    meta: {
+      currentPage: parsedPage,
+      pageSize: parsedLimit,
+      totalCount,
+      totalPages: Math.ceil(totalCount / parsedLimit),
+      filter: { status, search: searchTerm },
+      sort: { by: sortBy, order: sortOrder },
     },
-  }));
+  };
 };
 
 export const getCurrentUser = async (userId) => {
