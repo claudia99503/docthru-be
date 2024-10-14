@@ -16,7 +16,6 @@ app.use(express.json());
 
 app.use('/api/challenges', challengeRoutes);
 app.use('/api/users', userRoutes);
-
 app.use('/api/works', workRoutes);
 
 app.use(errorHandler);
@@ -25,4 +24,3 @@ const PORT = process.env.PORT || 3001;
 app.listen(PORT, () =>
   console.log(`Server is running on port http://localhost:${PORT}`)
 );
-
