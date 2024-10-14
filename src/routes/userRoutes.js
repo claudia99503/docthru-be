@@ -14,8 +14,8 @@ router.post('/logout', userController.logout);
 router.get('/me', userController.getCurrentUser);
 router.get('/:id', userController.getUserById);
 
-router.get('/challenges/ongoing', userController.getOngoingChallenges);
-router.get('/challenges/completed', userController.getCompletedChallenges);
-router.get('/challenges/applications', userController.getAppliedChallenges);
+router.get('/me/challenges/ongoing', userController.getOngoingChallenges);
+router.get('/me/challenges/completed', userController.getCompletedChallenges);
+router.get('/me/challenges/applications', userController.getAppliedChallenges);
 
 export default router;

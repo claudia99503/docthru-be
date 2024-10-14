@@ -41,6 +41,18 @@ export class UnauthorizedException extends CommonException {
   }
 }
 
+// 허용되지 않는 메소드일때
+export class NotAllowedMethodException extends CommonException {
+  constructor(message = '허용되지 않은 메소드입니다') {
+    super({
+      status: HttpStatus.METHOD_NOT_ALLOWED,
+      code: ExceptionCode.METHOD_NOT_ALLOWED,
+      message,
+      identifier: ExceptionIdentifier.METHOD_NOT_ALLOWED,
+    });
+  }
+}
+
 // 권한이 없어서 접근할 수 없을 때
 export class ForbiddenException extends CommonException {
   constructor(message = '권한이 없습니다') {

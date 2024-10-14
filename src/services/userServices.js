@@ -80,49 +80,142 @@ export const verifyRefreshToken = async (refreshToken) => {
   return user;
 };
 
-export const getOngoingChallenges = async (userId) => {
-  const ongoingChallenges = await prisma.participate.findMany({
-    where: {
-      userId,
-      challenge: { progress: true },
-    },
-    include: { challenge: true },
-  });
-
-  if (ongoingChallenges.length === 0) {
-    throw new NotFoundException('진행 중인 챌린지가 없습니다.');
-  }
-
-  return ongoingChallenges;
+const getPaginationData = (page, limit) => {
+  const parsedPage = parseInt(page) || 1;
+  const parsedLimit = parseInt(limit) || 10;
+  const skip = (parsedPage - 1) * parsedLimit;
+  return { parsedPage, parsedLimit, skip };
 };
 
-export const getCompletedChallenges = async (userId) => {
-  const completedChallenges = await prisma.participate.findMany({
-    where: {
-      userId,
-      challenge: { progress: false },
+export const getOngoingChallenges = async (userId, page, limit) => {
+  const { parsedPage, parsedLimit, skip } = getPaginationData(page, limit);
+
+  const [ongoingChallenges, totalCount] = await Promise.all([
+    prisma.participate.findMany({
+      where: {
+        userId,
+        challenge: { progress: true },
+      },
+      include: { challenge: true },
+      skip,
+      take: parsedLimit,
+    }),
+    prisma.participate.count({
+      where: {
+        userId,
+        challenge: { progress: true },
+      },
+    }),
+  ]);
+
+  return {
+    challenges: ongoingChallenges,
+    meta: {
+      currentPage: parsedPage,
+      pageSize: parsedLimit,
+      totalCount,
+      totalPages: Math.ceil(totalCount / parsedLimit),
     },
-    include: { challenge: true },
-  });
-
-  if (completedChallenges.length === 0) {
-    throw new NotFoundException('완료된 챌린지가 없습니다.');
-  }
-
-  return completedChallenges;
+  };
 };
 
-export const getAppliedChallenges = async (userId) => {
-  const appliedChallenges = await prisma.application.findMany({
-    where: { userId },
-    include: { challenge: true },
-  });
+export const getCompletedChallenges = async (userId, page, limit) => {
+  const { parsedPage, parsedLimit, skip } = getPaginationData(page, limit);
 
-  if (appliedChallenges.length === 0) {
-    throw new NotFoundException('신청한 챌린지가 없습니다.');
+  const [completedChallenges, totalCount] = await Promise.all([
+    prisma.participate.findMany({
+      where: {
+        userId,
+        challenge: { progress: false },
+      },
+      include: { challenge: true },
+      skip,
+      take: parsedLimit,
+    }),
+    prisma.participate.count({
+      where: {
+        userId,
+        challenge: { progress: false },
+      },
+    }),
+  ]);
+
+  return {
+    challenges: completedChallenges,
+    meta: {
+      currentPage: parsedPage,
+      pageSize: parsedLimit,
+      totalCount,
+      totalPages: Math.ceil(totalCount / parsedLimit),
+    },
+  };
+};
+
+export const getAppliedChallenges = async (
+  userId,
+  status,
+  sortBy = 'appliedAt',
+  sortOrder = 'desc',
+  searchTerm = '',
+  page,
+  limit
+) => {
+  const { parsedPage, parsedLimit, skip } = getPaginationData(page, limit);
+
+  const whereClause = { userId };
+  if (status) {
+    whereClause.status = status;
   }
 
-  return appliedChallenges;
+  if (searchTerm) {
+    whereClause.challenge = {
+      OR: [
+        { title: { contains: searchTerm, mode: 'insensitive' } },
+        { description: { contains: searchTerm, mode: 'insensitive' } },
+      ],
+    };
+  }
+
+  const orderBy = [];
+  if (sortBy === 'appliedAt') {
+    orderBy.push({ appliedAt: sortOrder });
+  } else if (sortBy === 'deadline') {
+    orderBy.push({ challenge: { deadline: sortOrder } });
+  }
+  if (sortBy !== 'appliedAt') {
+    orderBy.push({ appliedAt: 'desc' });
+  }
+
+  const [appliedChallenges, totalCount] = await Promise.all([
+    prisma.application.findMany({
+      where: whereClause,
+      orderBy,
+      include: { challenge: true },
+      skip,
+      take: parsedLimit,
+    }),
+    prisma.application.count({ where: whereClause }),
+  ]);
+
+  return {
+    challenges: appliedChallenges.map((app) => ({
+      ...app,
+      status: applicationStatusConverter(app.status),
+      appliedAt: app.appliedAt.toISOString(),
+      challenge: {
+        ...app.challenge,
+        deadline: app.challenge.deadline.toISOString(),
+      },
+    })),
+    meta: {
+      currentPage: parsedPage,
+      pageSize: parsedLimit,
+      totalCount,
+      totalPages: Math.ceil(totalCount / parsedLimit),
+      filter: { status, search: searchTerm },
+      sort: { by: sortBy, order: sortOrder },
+    },
+  };
 };
 
 export const getCurrentUser = async (userId) => {
