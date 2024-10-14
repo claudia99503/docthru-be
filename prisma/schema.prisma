@@ -57,17 +57,18 @@ model User {
   works          Work[]
   feedbacks      Feedback[]
   likes          Like[]
+  notifications Notification[]
 }
 
 model Challenge {
-  id              Int            @id @default(autoincrement())
-  title           String         @db.VarChar(200)
+  id              Int           @id @default(autoincrement())
+  title           String        @db.VarChar(200)
   field           ChallengeField
   docType         DocType
-  description     String         @db.Text
-  docUrl          String         @db.VarChar(200)
+  description     String        @db.Text
+  docUrl          String        @db.VarChar(200)
   deadline        DateTime
-  progress        Boolean        @default(false)
+  progress        Boolean       @default(false)
   participates    Int?
   maxParticipates Int?
   applications    Application[]
@@ -131,3 +132,13 @@ model Like {
   @@unique([userId, workId])
 }
 
+model Notification {
+  id          Int      @id @default(autoincrement())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      Int
+  type        String   // 'CHANGE', 'STATUS', 'NEW_WORK', 'NEW_FEEDBACK', 'DEADLINE', 'ADMIN_ACTION' 등의 뭔가 타입?
+  content     String
+  relatedId   Int?     
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
