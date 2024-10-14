@@ -1,16 +1,16 @@
-import { PrismaClient } from '@prisma/client';
+// import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 
-// 신청 생성 서비스 함수
-export const createApplication = async (userId, challengeId) => {
-  return prisma.application.create({
-    data: {
-      userId,
-      challengeId,
-    },
-  });
-};
+// // 신청 생성 서비스 함수
+// export const createApplication = async ({ userId, challengeId }) => {
+//   return prisma.application.create({
+//     data: {
+//       userId,
+//       challengeId,
+//     },
+//   });
+// };
 
 // 신청 목록 조회 서비스 함수
 export const getApplications = async () => {
