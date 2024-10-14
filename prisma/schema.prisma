@@ -74,8 +74,6 @@ model Challenge {
   participations  Participate[]
   works           Work[]
 }
-// 미리 계산해서 넘겨준다.
-// 
 
 model Application {
   id                   Int               @id @default(autoincrement())
