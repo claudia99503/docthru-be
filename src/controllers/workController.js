@@ -102,14 +102,13 @@ export const likeCancelWork = async (req, res, next) => {
   }
 };
 
-//작업물 피드백 조회
 export const feedbacksWork = async (req, res, next) => {
   try {
     const { workId } = req.params;
-    const { page = 1, limit = 3 } = req.query;
+    const { cursorId = null, limit = 3 } = req.query;
     const feedbackData = await workService.getFeedbacks({
       workId,
-      page,
+      cursorId,
       limit,
     });
     res.status(200).json(feedbackData);

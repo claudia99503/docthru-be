@@ -197,14 +197,14 @@ export const likeCancelWork = async ({ workId, userId }) => {
   }
 };
 
-export const getFeedbacks = async ({ workId, page, limit }) => {
-  const offset = (page - 1) * limit;
-
+//커서 기반
+export const getFeedbacks = async ({ workId, cursorId, limit }) => {
+  
   const feedbacks = await prisma.feedback.findMany({
     where: { workId: Number(workId) },
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-    skip: offset,
-    take: Number(limit),
+    ...(cursorId && { cursor: { id: Number(cursorId) } }),
+    take: Number(limit + 1),
     include: {
       user: {
         select: {
@@ -215,13 +215,12 @@ export const getFeedbacks = async ({ workId, page, limit }) => {
     },
   });
 
-  const total = await prisma.feedback.count({
-    where: {
-      workId: Number(workId),
-    },
-  });
+  const nextCursor = feedbacks.slice(limit)[0]?.id || null;
 
-  return { total, totalPages: Math.ceil(total / limit), feedbacks };
+  const hasNext = feedbacks.length > limit ? true : false;
+  const list = feedbacks.slice(0, limit);
+
+  return { hasNext, nextCursor, list };
 };
 
 const challengeDeadlineWithWorkId = async (workId) => {
