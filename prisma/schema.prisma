@@ -60,14 +60,14 @@ model User {
 }
 
 model Challenge {
-  id              Int           @id @default(autoincrement())
-  title           String        @db.VarChar(200)
+  id              Int            @id @default(autoincrement())
+  title           String         @db.VarChar(200)
   field           ChallengeField
   docType         DocType
-  description     String        @db.Text
-  docUrl          String        @db.VarChar(200)
+  description     String         @db.Text
+  docUrl          String         @db.VarChar(200)
   deadline        DateTime
-  progress        Boolean       @default(false)
+  progress        Boolean        @default(false)
   participates    Int?
   maxParticipates Int?
   applications    Application[]
@@ -130,3 +130,4 @@ model Like {
 
   @@unique([userId, workId])
 }
+
