@@ -19,10 +19,9 @@
   },
   "type": "module",
   "scripts": {
-    "dev": "nodemon src/app.js"
-  },
-  "scripts": {
-    "start": "node src/app.js",
-    "build": "echo '빌드는 X'"
+    "dev": "nodemon src/app.js",
+    "start": "node src/index.js",
+    "build": "prisma generate && next build",
+    "vercel-build": "prisma generate && prisma migrate deploy"
   }
 }

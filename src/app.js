@@ -17,7 +17,6 @@ app.use(express.json());
 
 app.use('/api/challenges', challengeRoutes);
 app.use('/api/users', userRoutes);
-
 app.use('/api/works', workRoutes);
 app.use('/api/applications', applicationRotes);
 
