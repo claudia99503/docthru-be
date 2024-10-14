@@ -9,14 +9,15 @@ import {
 export async function getChallenges(req, res, next) {
   try {
     const page = parseInt(req.query.page) || 1;
-    const take = parseInt(req.query.take) || 10;
+    const limit = parseInt(req.query.take) || 10;
     const skip = (page - 1) * take;
-    const orderByField = req.query.orderByField || 'id';
-    const orderByDir = req.query.orderByDir || 'asc';
+    const sortBy = req.query.orderByField || 'id';
+    const sortOrder = req.query.orderByDir || 'asc';
+    const totalCount = await prisma.challenge.count();
     const challenges = await prisma.challenge.findMany({
       skip,
-      take,
-      orderBy: { [orderByField]: orderByDir },
+      limit,
+      orderBy: { [sortBy]: sortOrder },
       where: {
         applications: {
           some: {
@@ -26,7 +27,9 @@ export async function getChallenges(req, res, next) {
       },
     });
 
-    return res.status(200).json(challenges);
+    return res.status(200).json(challenges, {
+      totalCount,
+    });
   } catch (error) {
     next(error);
   }
@@ -50,6 +53,10 @@ export async function getChallengeById(req, res, next) {
         },
       },
     });
+
+    if (!challenge) {
+      throw new NotFoundException('챌린지가 없습니다.');
+    }
 
     const dataFilter = {
       id: challenge.id,
@@ -142,7 +149,6 @@ export async function deleteChallengeById(req, res, next) {
     if (!challenge) {
       throw new NotFoundException('챌린지가 없습니다.');
     }
-    console.log(challenge);
 
     const deletedApplications = await prisma.application.updateMany({
       where: { challengeId: parseInt(challengeId, 10) },
@@ -151,11 +157,52 @@ export async function deleteChallengeById(req, res, next) {
       },
     });
 
-    return res.sendStatus(204);
+    return res.sendStatus(204, deletedApplications);
   } catch (error) {
     next(error);
   }
 }
 
-// export async function getChallengesUrl(req, res, next) {
-//   try {
+export async function getChallengesUrl(req, res, next) {
+  try {
+    const challenges = await prisma.challenge.findUnique({
+      where: { id: parseInt(req.params.challengeId, 10) },
+      select: {
+        docUrl: true,
+      },
+    });
+    if (!challenges) {
+      throw new NotFoundException('챌린지가 없습니다.');
+    }
+    return res.status(200).json(challenges);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function postChallengeParticipate(req, res, next) {
+  try {
+    const { challengeId } = req.params;
+    const { userId } = req.user;
+    const challenge = await prisma.challenge.findUnique({
+      where: { id: parseInt(challengeId, 10) },
+    });
+    if (!challenge) {
+      throw new NotFoundException('챌린지가 없습니다.');
+    }
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new NotFoundException('사용자가 없습니다.');
+    }
+    const data = {
+      challengeId: parseInt(challengeId, 10),
+      userId,
+    };
+    const participate = await prisma.participate.create({ data });
+    return res.status(201).json(participate);
+  } catch (error) {
+    next(error);
+  }
+}

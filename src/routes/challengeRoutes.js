@@ -4,14 +4,22 @@ import {
   getChallengeById,
   patchChallengeById,
   deleteChallengeById,
+  getChallengesUrl,
+  postChallengeParticipate,
 } from '../controllers/challengeController.js';
 import { authenticateAccessToken } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
 router.get('/', getChallenges);
-router.get('/:challengeId', getChallengeById);
+router.get('/:challengeId', authenticateAccessToken, getChallengeById);
 router.patch('/:challengeId', authenticateAccessToken, patchChallengeById);
 router.delete('/:challengeId', authenticateAccessToken, deleteChallengeById);
+router.get('/:challengeId/original', authenticateAccessToken, getChallengesUrl);
+router.post(
+  '/:challengeId/participation',
+  authenticateAccessToken,
+  postChallengeParticipate
+);
 
 export default router;

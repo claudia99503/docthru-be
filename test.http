@@ -8,7 +8,7 @@ Content-Type: application/json
 
 
 ### 챌린저 내용 변경
-PATCH http://localhost:3001/api/challenges/4
+PATCH http://localhost:3001/api/challenges/1
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTcyODU1MjA2OCwiZXhwIjoxNzI4NTUyOTY4fQ.IyFyrkcmSyGKD0PSH_vGq35x-bI0ZChQuGy4gnGIzfs
 
@@ -43,3 +43,13 @@ Content-Type: application/json
   "email" : "test@test.c",
   "password" : "12341234"
 }
+
+### URL 조회
+GET http://localhost:3001/api/challenges/2/original
+Content-Type: application/json
+
+
+### 챌린지 참여하기
+POST http://localhost:3001/api/challenges/1/participation
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQsImlhdCI6MTcyODg3MTQ3NCwiZXhwIjoxNzI4ODcyMzc0fQ.o0ruLxWUHUOj8GsrF_PSm6MolIuirKyf613Wa_TDNgc
