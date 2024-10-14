@@ -20,5 +20,9 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon src/app.js"
+  },
+  "scripts": {
+    "start": "node src/app.js",
+    "build": "echo '빌드는 X'"
   }
 }

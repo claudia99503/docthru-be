@@ -1,15 +1,41 @@
 import * as applicationService from '../services/applicationService.js';
+import { PrismaClient } from '@prisma/client';
+
+const Prisma = new PrismaClient();
 
 // 신청 생성 함수 (일반 유저 접근 가능)
 export const createApplication = async (req, res, next) => {
   try {
-    const { challengeId } = req.params;
-    const userId = req.user.id; // 인증 미들웨어에서 설정된 사용자 정보 사용
+    const {
+      title,
+      field,
+      docType,
+      description,
+      docUrl,
+      deadline,
+      maxParticipates,
+    } = req.body;
 
-    const application = await applicationService.createApplication(
-      userId,
-      parseInt(challengeId)
-    );
+    const data = {
+      title,
+      field,
+      docType,
+      description,
+      docUrl,
+      deadline: new Date(deadline),
+      maxParticipates,
+    };
+    const challenge = await Prisma.challenge.create({ data });
+
+    const challengeId = challenge.id;
+    const userId = req.user.userId; // 인증 미들웨어에서 설정된 사용자 정보 사용
+    console.log(userId, challengeId);
+    const application = await Prisma.application.create({
+      data: {
+        userId,
+        challengeId,
+      },
+    });
     res.status(201).json(application);
   } catch (error) {
     next(error);
