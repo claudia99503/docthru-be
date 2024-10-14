@@ -4,36 +4,18 @@ import { authenticateAccessToken } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-router.post(
-  '/:challengeId/post',
-  authenticateAccessToken,
-  workController.postWork
-);
-router.post('/:workId/likes', authenticateAccessToken, workController.likeWork);
+router.use(authenticateAccessToken);
 
-router.patch('/list/:workId', authenticateAccessToken, workController.editWork);
+router.post('/:challengeId/post', workController.postWork);
+router.post('/:workId/likes', workController.likeWork);
 
-router.delete(
-  '/:workId/delete',
-  authenticateAccessToken,
-  workController.deleteWork
-);
-router.delete(
-  '/:workId/likes',
-  authenticateAccessToken,
-  workController.likeCancelWork
-);
+router.patch('/list/:workId', workController.editWork);
 
-router.get(
-  '/list/:challengeId',
-  authenticateAccessToken,
-  workController.worksList
-);
-router.get('/:workId', authenticateAccessToken, workController.works);
-router.get(
-  '/:workId/feedbacks',
-  authenticateAccessToken,
-  workController.feedbacksWork
-);
+router.delete('/:workId/delete', workController.deleteWork);
+router.delete('/:workId/likes', workController.likeCancelWork);
+
+router.get('/list/:challengeId', workController.worksList);
+router.get('/:workId', workController.works);
+router.get('/:workId/feedbacks', workController.feedbacksWork);
 
 export default router;

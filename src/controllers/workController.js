@@ -6,8 +6,6 @@ export const worksList = async (req, res, next) => {
     const { challengeId } = req.params;
     const { userId } = req.user;
 
-    console.log(userId);
-
     const { page = 1, limit = 5 } = req.query;
     const worksWithIsLiked = await workService.getWorksWithLikes({
       challengeId,
@@ -26,8 +24,6 @@ export const works = async (req, res, next) => {
   try {
     const { workId } = req.params;
     const { userId } = req.user;
-
-    console.log(userId);
 
     const workDetail = await workService.getWorkDetail({ workId, userId });
     res.status(200).json(workDetail);
