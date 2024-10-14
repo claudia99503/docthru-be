@@ -9,14 +9,13 @@ import {
 export async function getChallenges(req, res, next) {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.take) || 10;
-    const skip = (page - 1) * take;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
     const sortBy = req.query.orderByField || 'id';
     const sortOrder = req.query.orderByDir || 'asc';
-    const totalCount = await prisma.challenge.count();
     const challenges = await prisma.challenge.findMany({
       skip,
-      limit,
+      take : limit,
       orderBy: { [sortBy]: sortOrder },
       where: {
         applications: {
@@ -27,9 +26,7 @@ export async function getChallenges(req, res, next) {
       },
     });
 
-    return res.status(200).json(challenges, {
-      totalCount,
-    });
+    return res.status(200).json({challenges});
   } catch (error) {
     next(error);
   }
