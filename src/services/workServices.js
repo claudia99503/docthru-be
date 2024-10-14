@@ -8,7 +8,6 @@ export const getWorksWithLikes = async ({
   page,
   limit,
 }) => {
-
   //마감하면 베스트 게시물 조회
   // const challengeDeadlineBoolean = await challengeDeadline(challengeId);
 
@@ -32,7 +31,7 @@ export const getWorksWithLikes = async ({
     },
     orderBy: sortOrder,
     skip: offset,
-    take: 5,
+    take: Number(limit),
     include: {
       likes: {
         select: {
@@ -205,7 +204,7 @@ export const getFeedbacks = async ({ workId, page, limit }) => {
     where: { workId: Number(workId) },
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     skip: offset,
-    take: 3,
+    take: Number(limit),
     include: {
       user: {
         select: {
