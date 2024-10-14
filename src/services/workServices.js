@@ -17,7 +17,12 @@ export const getWorksWithLikes = async (challengeId, userId, page, limit) => {
     skip: offset,
     take: 5,
     include: {
-      like: true, // likes 관계를 포함
+      likes: {
+        select: {
+          userId: true,
+          workId: true,
+        },
+      },
     },
   });
 
@@ -27,33 +32,23 @@ export const getWorksWithLikes = async (challengeId, userId, page, limit) => {
     },
   });
 
-  const likes = await prisma.like.findMany({
-    where: {
-      workId: Number(1), // 특정 workId에 대한 likes 조회
-    },
+  const worksWithIsLiked = works.map((work) => {
+    const isLiked = userId
+      ? work.likes.some(
+          (like) => like.userId === userId && like.workId === work.id
+        )
+      : false;
+
+    return {
+      ...work,
+      isLiked,
+    };
   });
-  console.log(likes);
-
-  // const worksWithIsLiked = works.map((work) => {
-  //   const isLiked = userId
-  //     ? work.like.some(
-  //         (isLike) => isLike.userId === userId && isLike.workId === work.id
-  //       )
-  //     : false;
-
-  //   return {
-  //     ...work,
-  //     isLiked,
-  //   };
-  // });
-
-  // console.log(works[0].like);
 
   return {
     totalPages: Math.ceil(total / limit),
     total,
-    works,
-    // worksWithIsLiked,
+    worksWithIsLiked,
   };
 };
 
