@@ -2,16 +2,16 @@ import prisma from '../lib/prisma.js';
 import * as notificationService from './notificationService.js';
 
 export const createFeedback = async ({ workId, content, userId }) => {
-  const workInfo = await prisma.work.findUnique({
-    where: { id: Number(workId) },
-  });
-
   const feedback = await prisma.feedback.create({
     data: {
       content: content,
       userId: Number(userId),
       workId: Number(workId),
     },
+  });
+
+  const workInfo = await prisma.work.findUnique({
+    where: { id: Number(workId) },
   });
 
   //작업물 작성자한테 알림
