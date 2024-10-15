@@ -1,5 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import prisma from '../lib/prisma';
 import { getCurrentUser } from '../services/userServices.js';
 import {
   ForbiddenException,

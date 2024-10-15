@@ -1,12 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma';
 import {
   BadRequestException,
   UnauthorizedException,
   NotFoundException,
   ConflictException,
 } from '../errors/customException.js';
-
-const prisma = new PrismaClient();
 
 export const getWorksWithLikes = async ({
   challengeId,

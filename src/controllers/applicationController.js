@@ -1,7 +1,5 @@
 import * as applicationService from '../services/applicationService.js';
-import { PrismaClient } from '@prisma/client';
-
-const Prisma = new PrismaClient();
+import prisma from '../lib/prisma';
 
 // 신청 생성 함수 (일반 유저 접근 가능)
 export const createApplication = async (req, res, next) => {
