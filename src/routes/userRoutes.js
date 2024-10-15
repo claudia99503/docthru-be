@@ -8,7 +8,7 @@ router.post('/register', userController.register);
 router.post('/login', userController.login);
 router.post('/token/refresh', userController.refreshToken);
 
-router.use(authenticateAccessToken); // 인증 문제 있을 경우 제거할것
+router.use(authenticateAccessToken);
 
 router.post('/logout', userController.logout);
 router.get('/me', userController.getCurrentUser);
