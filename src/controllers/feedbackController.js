@@ -24,10 +24,12 @@ export const editFeedback = async (req, res, next) => {
   try {
     const { feedbackId } = req.params;
     const { content } = req.body;
+    const { userId } = req.user;
 
     const updateFeedback = await feedbackService.updateFeedback({
       feedbackId,
       content,
+      userId,
     });
     res.status(201).json(updateFeedback);
   } catch (error) {
@@ -39,8 +41,9 @@ export const editFeedback = async (req, res, next) => {
 export const deleteFeedback = async (req, res, next) => {
   try {
     const { feedbackId } = req.params;
+    const { userId } = req.user;
 
-    await feedbackService.deleteFeedback({ feedbackId });
+    await feedbackService.deleteFeedback({ feedbackId, userId });
 
     res.status(200).json({ message: '피드백이 삭제됐습니다.' });
   } catch (error) {
