@@ -36,12 +36,12 @@ export const works = async (req, res, next) => {
 export const postWork = async (req, res, next) => {
   try {
     const { challengeId } = req.params;
-    const { description } = req.body;
+    const { content } = req.body;
     const { userId } = req.user;
 
     const newWork = await workService.createWork({
       challengeId,
-      description,
+      content,
       userId,
     });
     res.status(201).json({ newWork });
@@ -54,9 +54,9 @@ export const postWork = async (req, res, next) => {
 export const editWork = async (req, res, next) => {
   try {
     const { workId } = req.params;
-    const { description } = req.body;
+    const { content } = req.body;
 
-    const updatedWork = await workService.updatedWork({ workId, description });
+    const updatedWork = await workService.updatedWork({ workId, content });
     res.status(201).json({ updatedWork });
   } catch (error) {
     next(error);

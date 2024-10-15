@@ -10,9 +10,9 @@ const { REFRESH_TOKEN_SECRET, ACCESS_TOKEN_SECRET } = process.env;
 // 회원가입
 export const register = async (req, res, next) => {
   try {
-    const { nickName, email, password } = req.body;
+    const { nickname, email, password } = req.body;
 
-    const user = await userServices.registerUser(nickName, email, password);
+    const user = await userServices.registerUser(nickname, email, password);
     res.status(201).json({ message: '회원가입 성공', userId: user.id });
   } catch (error) {
     next(error);
