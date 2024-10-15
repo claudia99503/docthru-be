@@ -1,12 +1,15 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import prisma from '../lib/prisma';
+import { PrismaClient } from '@prisma/client';
+import { formatDate } from '../utils/dateUtils';
 import {
   BadRequestException,
   UnauthorizedException,
   NotFoundException,
   ConflictException,
 } from '../errors/customException.js';
+
+const prisma = new PrismaClient();
 
 const { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } = process.env;
 
@@ -233,7 +236,10 @@ export const getCurrentUser = async (userId) => {
     throw new NotFoundException('사용자를 찾을 수 없습니다.');
   }
 
-  return user;
+  return {
+    ...user,
+    createdAt: formatDate(user.createdAt),
+  };
 };
 
 export const getUserById = async (id) => {
@@ -252,5 +258,8 @@ export const getUserById = async (id) => {
     throw new NotFoundException('사용자를 찾을 수 없습니다.');
   }
 
-  return user;
+  return {
+    ...user,
+    createdAt: formatDate(user.createdAt),
+  };
 };
