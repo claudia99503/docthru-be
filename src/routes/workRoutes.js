@@ -1,6 +1,5 @@
 import express from 'express';
 import * as workController from '../controllers/workController.js';
-import * as feedbackController from '../controllers/feedbackController.js';
 import { authenticateAccessToken } from '../middlewares/authMiddleware.js';
 import {
   authWorkAction,
@@ -59,12 +58,6 @@ router.get(
   '/:workId/feedbacks',
   authenticateAccessToken,
   workController.feedbacksWork
-);
-
-router.post(
-  '/:workId/feedbacks',
-  authenticateAccessToken,
-  feedbackController.postFeedback
 );
 
 export default router;

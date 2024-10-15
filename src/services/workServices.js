@@ -1,12 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma.js';
 import {
   BadRequestException,
   UnauthorizedException,
   NotFoundException,
   ConflictException,
 } from '../errors/customException.js';
-
-const prisma = new PrismaClient();
 
 export const getWorksWithLikes = async ({
   challengeId,
@@ -178,7 +176,7 @@ export const deleteWork = async ({ workId, userId }) => {
         id: Number(workId),
       },
     });
-    
+
     await prisma.participate.delete({
       where: {
         id: Number(participate.id),

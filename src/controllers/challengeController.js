@@ -1,31 +1,26 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import prisma from '../lib/prisma.js';
 import { getCurrentUser } from '../services/userServices.js';
 import {
   ForbiddenException,
   NotFoundException,
+  BadRequestException,
 } from '../errors/customException.js';
+import { ChallengeService } from '../services/challengeServices.js';
 
 export async function getChallenges(req, res, next) {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
     const sortBy = req.query.orderByField || 'id';
     const sortOrder = req.query.orderByDir || 'asc';
-    const challenges = await prisma.challenge.findMany({
-      skip,
-      take: limit,
-      orderBy: { [sortBy]: sortOrder },
-      where: {
-        applications: {
-          some: {
-            status: 'ACCEPTED',
-          },
-        },
-      },
+
+    const list = await ChallengeService.getChallenges({
+      page,
+      limit,
+      sortBy,
+      sortOrder,
     });
-    return res.status(200).json({ challenges });
+    return res.status(200).json({ list });
   } catch (error) {
     next(error);
   }
@@ -34,60 +29,23 @@ export async function getChallenges(req, res, next) {
 export async function getChallengeById(req, res, next) {
   try {
     const { challengeId } = req.params;
-    const challenge = await prisma.challenge.findUnique({
-      where: { id: parseInt(challengeId, 10) },
-      include: {
-        applications: {
-          include: {
-            user: {
-              select: {
-                nickname: true,
-                grade: true,
-              },
-            },
-          },
-        },
-      },
-    });
+    const challenge = await ChallengeService.getChallengeById(challengeId);
 
-    if (!challenge) {
-      throw new NotFoundException('챌린지가 없습니다.');
-    }
-
-    const dataFilter = {
-      id: challenge.id,
-      title: challenge.title,
-      field: challenge.field,
-      docType: challenge.docType,
-      description: challenge.description,
-      docUrl: challenge.docUrl,
-      deadline: challenge.deadline,
-      progress: challenge.progress,
-      participates: challenge.participates,
-      maxParticipates: challenge.maxParticipates,
-      applications: challenge.applications.map((app) => ({
-        id: app.id,
-        userId: app.userId,
-        nickname: app.user.nickname,
-        grade: app.user.grade,
-        appliedAt: app.appliedAt,
-      })),
-    };
-
-    return res.status(200).json(dataFilter);
+    return res.status(200).json(challenge);
   } catch (error) {
     next(error);
   }
 }
 
 export async function patchChallengeById(req, res, next) {
-  const userId = req.user.userId;
-  const { role } = await getCurrentUser(userId);
-
-  if (role !== 'ADMIN') {
-    return next(new ForbiddenException());
-  }
   try {
+    const userId = req.user.userId;
+    const { role } = await ChallengeService.getCurrentUser(userId);
+
+    if (role !== 'ADMIN') {
+      return next(new ForbiddenException());
+    }
+
     const { challengeId } = req.params;
     const {
       title,
@@ -101,27 +59,20 @@ export async function patchChallengeById(req, res, next) {
       maxParticipates,
     } = req.body;
 
-    const challenge = await prisma.challenge.findUnique({
-      where: { id: parseInt(challengeId, 10) },
-    });
-    if (!challenge) {
-      throw new NotFoundException('챌린지가 없습니다.');
-    }
-
-    const updatedChallenge = await prisma.challenge.update({
-      where: { id: parseInt(challengeId, 10) },
-      data: {
-        title: title || challenge.title,
-        field: field || challenge.field,
-        docType: docType || challenge.docType,
-        description: description || challenge.description,
-        docUrl: docUrl || challenge.docUrl,
-        deadline: deadline || challenge.deadline,
-        progress: progress || challenge.progress,
-        participates: participates || challenge.participates,
-        maxParticipates: maxParticipates || challenge.maxParticipates,
-      },
-    });
+    const updatedChallenge = await ChallengeService.updateChallengeById(
+      challengeId,
+      {
+        title,
+        field,
+        docType,
+        description,
+        docUrl,
+        deadline,
+        progress,
+        participates,
+        maxParticipates,
+      }
+    );
 
     return res.status(200).json(updatedChallenge);
   } catch (error) {
@@ -130,30 +81,18 @@ export async function patchChallengeById(req, res, next) {
 }
 
 export async function deleteChallengeById(req, res, next) {
-  const userId = req.user.userId;
-  const { role } = await getCurrentUser(userId);
-
-  if (role !== 'ADMIN') {
-    return next(new ForbiddenException());
-  }
-
   try {
-    const { challengeId } = req.params;
-    const challenge = await prisma.challenge.findUnique({
-      where: { id: parseInt(challengeId, 10) },
-    });
-    if (!challenge) {
-      throw new NotFoundException('챌린지가 없습니다.');
+    const userId = req.user.userId;
+    const { role } = await ChallengeService.getCurrentUser(userId);
+
+    if (role !== 'ADMIN') {
+      return next(new ForbiddenException());
     }
 
-    const deletedApplications = await prisma.application.updateMany({
-      where: { challengeId: parseInt(challengeId, 10) },
-      data: {
-        status: 'DELETED',
-      },
-    });
+    const { challengeId } = req.params;
+    await ChallengeService.deleteChallengeById(challengeId);
 
-    return res.sendStatus(204, deletedApplications);
+    return res.sendStatus(204);
   } catch (error) {
     next(error);
   }
@@ -161,15 +100,8 @@ export async function deleteChallengeById(req, res, next) {
 
 export async function getChallengesUrl(req, res, next) {
   try {
-    const challenges = await prisma.challenge.findUnique({
-      where: { id: parseInt(req.params.challengeId, 10) },
-      select: {
-        docUrl: true,
-      },
-    });
-    if (!challenges) {
-      throw new NotFoundException('챌린지가 없습니다.');
-    }
+    const { challengeId } = req.params;
+    const challenges = await ChallengeService.getChallengesUrl(challengeId);
     return res.status(200).json(challenges);
   } catch (error) {
     next(error);
@@ -180,23 +112,10 @@ export async function postChallengeParticipate(req, res, next) {
   try {
     const { challengeId } = req.params;
     const { userId } = req.user;
-    const challenge = await prisma.challenge.findUnique({
-      where: { id: parseInt(challengeId, 10) },
-    });
-    if (!challenge) {
-      throw new NotFoundException('챌린지가 없습니다.');
-    }
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-    if (!user) {
-      throw new NotFoundException('사용자가 없습니다.');
-    }
-    const data = {
-      challengeId: parseInt(challengeId, 10),
-      userId,
-    };
-    const participate = await prisma.participate.create({ data });
+    const participate = await ChallengeService.postChallengeParticipate(
+      challengeId,
+      userId
+    );
     return res.status(201).json(participate);
   } catch (error) {
     next(error);
