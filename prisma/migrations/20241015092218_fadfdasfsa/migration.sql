@@ -26,6 +26,7 @@ CREATE TABLE "User" (
     "password" VARCHAR(255) NOT NULL,
     "refreshToken" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "bestCount" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );

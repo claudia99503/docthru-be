@@ -1,11 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
-import { getCurrentUser } from '../services/userServices.js';
-import {
-  ForbiddenException,
-  NotFoundException,
-  BadRequestException,
-} from '../errors/customException.js';
+import { ForbiddenException } from '../errors/customException.js';
 import { ChallengeService } from '../services/challengeServices.js';
 
 export async function getChallenges(req, res, next) {

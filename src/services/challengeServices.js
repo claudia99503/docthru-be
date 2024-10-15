@@ -1,4 +1,8 @@
 import { PrismaClient } from '@prisma/client';
+import {
+  NotFoundException,
+  BadRequestException,
+} from '../services/challengeServices.js';
 
 const prisma = new PrismaClient();
 

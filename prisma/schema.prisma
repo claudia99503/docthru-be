@@ -58,6 +58,7 @@ model User {
   password       String        @db.VarChar(255)
   refreshToken   String?       @db.Text
   createdAt      DateTime      @default(now())
+  bestCount      Int           @default(0)
   applications   Application[]
   participations Participate[]
   works          Work[]
