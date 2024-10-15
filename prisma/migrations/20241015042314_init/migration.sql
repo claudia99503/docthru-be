@@ -13,12 +13,15 @@ CREATE TYPE "DocType" AS ENUM ('OFFICIAL', 'BLOG');
 -- CreateEnum
 CREATE TYPE "ApplicationStatus" AS ENUM ('WAITING', 'ACCEPTED', 'REJECTED', 'DELETED');
 
+-- CreateEnum
+CREATE TYPE "NotificationType" AS ENUM ('CHANGE', 'STATUS', 'NEW_WORK', 'NEW_FEEDBACK', 'DEADLINE', 'ADMIN_ACTION');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
     "role" "UserRole" NOT NULL DEFAULT 'USER',
     "grade" "UserGrade",
-    "nickName" VARCHAR(10) NOT NULL,
+    "nickname" VARCHAR(20) NOT NULL,
     "email" VARCHAR(255) NOT NULL,
     "password" VARCHAR(255) NOT NULL,
     "refreshToken" TEXT,
@@ -70,7 +73,7 @@ CREATE TABLE "Work" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
     "challengeId" INTEGER NOT NULL,
-    "description" TEXT,
+    "content" TEXT,
     "lastModifiedAt" TIMESTAMP(3) NOT NULL,
     "isSubmitted" BOOLEAN NOT NULL DEFAULT false,
     "submittedAt" TIMESTAMP(3),
@@ -104,17 +107,20 @@ CREATE TABLE "Like" (
 CREATE TABLE "Notification" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
-    "type" TEXT NOT NULL,
+    "type" "NotificationType" NOT NULL,
     "content" TEXT NOT NULL,
     "relatedId" INTEGER,
     "isRead" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "challengeId" INTEGER,
+    "workId" INTEGER,
+    "feedbackId" INTEGER,
 
     CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_nickName_key" ON "User"("nickName");
+CREATE UNIQUE INDEX "User_nickname_key" ON "User"("nickname");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
@@ -157,3 +163,12 @@ ALTER TABLE "Like" ADD CONSTRAINT "Like_workId_fkey" FOREIGN KEY ("workId") REFE
 
 -- AddForeignKey
 ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Notification" ADD CONSTRAINT "Notification_challengeId_fkey" FOREIGN KEY ("challengeId") REFERENCES "Challenge"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Notification" ADD CONSTRAINT "Notification_workId_fkey" FOREIGN KEY ("workId") REFERENCES "Work"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Notification" ADD CONSTRAINT "Notification_feedbackId_fkey" FOREIGN KEY ("feedbackId") REFERENCES "Feedback"("id") ON DELETE SET NULL ON UPDATE CASCADE;
