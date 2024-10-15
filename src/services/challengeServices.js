@@ -1,4 +1,11 @@
-import prisma from '../lib/prisma.js';
+
+import { PrismaClient } from '@prisma/client';
+import {
+  NotFoundException,
+  BadRequestException,
+} from '../services/challengeServices.js';
+
+const prisma = new PrismaClient();
 
 export const ChallengeService = {
   getChallenges: async ({ page, limit, sortBy, sortOrder }) => {
