@@ -55,7 +55,7 @@ export const authCreateWorkAction = async (req, res, next) => {
   );
 
   if (!isParticipating) {
-    throw new UnauthorizedException('접근 권한이 없습니다');
+    throw new UnauthorizedException('신청한 회원만 쓸 수 있습니다.');
   }
 
   const hasSubmittedWork = challengeInfo.works.some(
