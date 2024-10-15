@@ -16,27 +16,29 @@ export const createApplication = async (req, res, next) => {
       maxParticipates,
     } = req.body;
 
-    const data = {
-      title,
-      field,
-      docType,
-      description,
-      docUrl,
-      deadline: new Date(deadline),
-      maxParticipates,
-    };
-    const challenge = await Prisma.challenge.create({ data });
+    await Prisma.$transaction(async (prisma) => {
+      const data = {
+        title,
+        field,
+        docType,
+        description,
+        docUrl,
+        deadline: new Date(deadline),
+        participates: 0,
+        maxParticipates,
+      };
+      const challenge = await prisma.challenge.create({ data });
 
-    const challengeId = challenge.id;
-    const userId = req.user.userId; // 인증 미들웨어에서 설정된 사용자 정보 사용
-    console.log(userId, challengeId);
-    const application = await Prisma.application.create({
-      data: {
-        userId,
-        challengeId,
-      },
+      const challengeId = challenge.id;
+      const userId = req.user.userId;
+      await prisma.application.create({
+        data: {
+          userId,
+          challengeId,
+        },
+      });
     });
-    res.status(201).json(application);
+    res.status(201).json(createApplication);
   } catch (error) {
     next(error);
   }
