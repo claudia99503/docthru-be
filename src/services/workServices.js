@@ -178,7 +178,7 @@ export const deleteWork = async ({ workId, userId }) => {
         id: Number(workId),
       },
     });
-
+    
     await prisma.participate.delete({
       where: {
         id: Number(participate.id),
