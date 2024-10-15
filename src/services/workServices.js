@@ -9,13 +9,12 @@ export const getWorksWithLikes = async ({
   limit,
 }) => {
   //마감하면 베스트 게시물 조회
-  // const challengeDeadlineBoolean = await challengeDeadline(challengeId);
+  let bestWorks;
+  const challengeDeadlineBoolean = await challengeDeadline(challengeId);
 
-  // if (!!challengeDeadlineBoolean.progress) {
-  //   const bestWorks = await bestWorksList(challengeId);
-
-  //   console.log(bestWorks);
-  // }
+  if (!!challengeDeadlineBoolean.progress) {
+    bestWorks = await bestWorksList({ challengeId, userId });
+  }
 
   const offset = (page - 1) * limit;
 
@@ -48,7 +47,7 @@ export const getWorksWithLikes = async ({
     },
   });
 
-  const worksWithIsLiked = works.map((work) => {
+  const worksList = works.map((work) => {
     const isLiked = userId
       ? work.likes.some(
           (like) => like.userId === userId && like.workId === work.id
@@ -64,7 +63,8 @@ export const getWorksWithLikes = async ({
   return {
     totalPages: Math.ceil(total / limit),
     total,
-    worksWithIsLiked,
+    bestWorksList: bestWorks,
+    worksList,
   };
 };
 
@@ -199,7 +199,6 @@ export const likeCancelWork = async ({ workId, userId }) => {
 
 //커서 기반
 export const getFeedbacks = async ({ workId, cursorId, limit }) => {
-  
   const feedbacks = await prisma.feedback.findMany({
     where: { workId: Number(workId) },
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
@@ -246,10 +245,12 @@ const challengeDeadline = async (challengeId) => {
     },
   });
 
+  console.log(challengeInfo);
+
   return challengeInfo;
 };
 
-const bestWorksList = async (challengeId) => {
+const bestWorksList = async ({ challengeId, userId }) => {
   let sortOrder = [
     { likeCount: 'desc' },
     { lastModifiedAt: 'desc' },
@@ -267,13 +268,35 @@ const bestWorksList = async (challengeId) => {
     return work.likeCount;
   });
 
-  const NumberLikeCount = Math.max(workLikeCount);
+  const NumberLikeCount = Math.max(...workLikeCount);
 
-  // const bestWorkList = await prisma.work.findMany({
-  //   where: {
-  //     likeCount: Number(workLikeCount),
-  //   },
-  // });
+  const bestWorkList = await prisma.work.findMany({
+    where: {
+      challengeId: Number(challengeId),
+      likeCount: Number(NumberLikeCount),
+    },
+    include: {
+      likes: {
+        select: {
+          userId: true,
+          workId: true,
+        },
+      },
+    },
+  });
 
-  console.log(NumberLikeCount);
+  const bestWorksWithIsLiked = bestWorkList.map((work) => {
+    const isLiked = userId
+      ? work.likes.some(
+          (like) => like.userId === userId && like.workId === work.id
+        )
+      : false;
+
+    return {
+      ...work,
+      isLiked,
+    };
+  });
+
+  return bestWorksWithIsLiked;
 };
