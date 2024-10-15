@@ -1,10 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma.js';
 import {
   UnauthorizedException,
   NotFoundException,
 } from '../errors/customException.js';
-
-const prisma = new PrismaClient();
 
 export const autFeedbackAction = async (req, res, next) => {
   const user = req.user;
