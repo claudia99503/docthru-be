@@ -15,7 +15,7 @@ router.get('/', getChallenges);
 router.get('/:challengeId', authenticateAccessToken, getChallengeById);
 router.patch('/:challengeId', authenticateAccessToken, patchChallengeById);
 router.delete('/:challengeId', authenticateAccessToken, deleteChallengeById);
-router.get('/:challengeId/original', authenticateAccessToken, getChallengesUrl);
+router.get('/:challengeId/original', getChallengesUrl);
 router.post(
   '/:challengeId/participation',
   authenticateAccessToken,
