@@ -1,15 +1,14 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../lib/prisma.js';
 
 export const createFeedback = async ({ workId, content, userId }) => {
-  const feedback = await prisma.work.create({
+  const feedback = await prisma.feedback.create({
     data: {
       content: content,
       userId: Number(userId),
       workId: Number(workId),
     },
   });
+
   return feedback;
 };
 
