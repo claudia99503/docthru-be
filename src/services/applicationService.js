@@ -12,7 +12,6 @@
 //   });
 // };
 
-// 신청 목록 조회 서비스 함수
 export const getApplications = async () => {
   return prisma.application.findMany({
     include: {

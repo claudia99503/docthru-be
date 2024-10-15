@@ -32,7 +32,7 @@ Content-Type: application/json
 {
   "email" : "test@test.c",
   "password" : "12341234",
-  "nickName" : "test",
+  "nickname" : "test",
   "role" : "ADMIN",
   "grade" : "EXPERT"
 }
