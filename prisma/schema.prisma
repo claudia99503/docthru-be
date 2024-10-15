@@ -53,7 +53,7 @@ model User {
   id             Int           @id @default(autoincrement())
   role           UserRole      @default(USER)
   grade          UserGrade?
-  nickName       String        @unique @db.VarChar(10)
+  nickname       String        @unique @db.VarChar(10)
   email          String        @unique @db.VarChar(255)
   password       String        @db.VarChar(255)
   refreshToken   String?       @db.Text
@@ -109,7 +109,7 @@ model Work {
   userId          Int
   challenge       Challenge     @relation(fields: [challengeId], references: [id])
   challengeId     Int
-  description     String?       @db.Text
+  content         String?       @db.Text
   lastModifiedAt  DateTime      @updatedAt
   isSubmitted     Boolean       @default(false)
   submittedAt     DateTime?

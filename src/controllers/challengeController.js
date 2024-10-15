@@ -15,7 +15,7 @@ export async function getChallenges(req, res, next) {
     const sortOrder = req.query.orderByDir || 'asc';
     const challenges = await prisma.challenge.findMany({
       skip,
-      take : limit,
+      take: limit,
       orderBy: { [sortBy]: sortOrder },
       where: {
         applications: {
@@ -26,7 +26,6 @@ export async function getChallenges(req, res, next) {
       },
     });
     return res.status(200).json({ challenges });
-
   } catch (error) {
     next(error);
   }
@@ -42,7 +41,7 @@ export async function getChallengeById(req, res, next) {
           include: {
             user: {
               select: {
-                nickName: true,
+                nickname: true,
                 grade: true,
               },
             },
@@ -69,7 +68,7 @@ export async function getChallengeById(req, res, next) {
       applications: challenge.applications.map((app) => ({
         id: app.id,
         userId: app.userId,
-        nickName: app.user.nickName,
+        nickname: app.user.nickname,
         grade: app.user.grade,
         appliedAt: app.appliedAt,
       })),
