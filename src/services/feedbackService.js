@@ -25,33 +25,25 @@ export const createFeedback = async ({ workId, content, userId }) => {
 };
 
 export const updateFeedback = async ({ feedbackId, content, userId }) => {
-  const [feedback, userInfo, feedbackInfo] = await prisma.$transaction([
-    prisma.feedback.update({
-      where: { id: Number(feedbackId) },
-      data: { content },
-    }),
-    prisma.user.findUnique({
-      where: { id: Number(userId) },
-    }),
-    prisma.feedback.findUnique({
-      where: { id: Number(feedbackId) },
-      include: { user: true },
-    }),
-  ]);
+  const feedback = await prisma.feedback.update({
+    where: { id: Number(feedbackId) },
+    data: { content },
+  });
 
-  //피드백 작성자한테 알림
-  if (userInfo && userInfo.role === 'ADMIN') {
-    await notificationService.notifyAdminFeedbackAction(
-      Number(feedbackInfo.user.id),
-      Number(feedbackId),
-      '수정'
-    );
-  }
+  await notifyAdminAboutFeedback(userId, feedbackId, '수정 ');
 
   return feedback;
 };
 
 export const deleteFeedback = async ({ feedbackId, userId }) => {
+  await notifyAdminAboutFeedback(userId, feedbackId, '삭제');
+
+  await prisma.feedback.delete({
+    where: { id: Number(feedbackId) },
+  });
+};
+
+const notifyAdminAboutFeedback = async (userId, feedbackId, type) => {
   const [userInfo, feedbackInfo] = await prisma.$transaction([
     prisma.user.findUnique({
       where: { id: Number(userId) },
@@ -67,11 +59,7 @@ export const deleteFeedback = async ({ feedbackId, userId }) => {
     await notificationService.notifyAdminFeedbackAction(
       Number(feedbackInfo.user.id),
       Number(feedbackId),
-      '삭제'
+      type === '삭제' ? '삭제' : '수정'
     );
   }
-
-  await prisma.feedback.delete({
-    where: { id: Number(feedbackId) },
-  });
 };
