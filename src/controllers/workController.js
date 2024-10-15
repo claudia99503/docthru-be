@@ -55,8 +55,13 @@ export const editWork = async (req, res, next) => {
   try {
     const { workId } = req.params;
     const { content } = req.body;
+    const { userId } = req.user;
 
-    const updatedWork = await workService.updatedWork({ workId, content });
+    const updatedWork = await workService.updatedWork({
+      workId,
+      content,
+      userId,
+    });
     res.status(201).json(updatedWork);
   } catch (error) {
     next(error);
@@ -67,8 +72,9 @@ export const editWork = async (req, res, next) => {
 export const deleteWork = async (req, res, next) => {
   try {
     const { workId } = req.params;
+    const { userId } = req.user;
 
-    await workService.deleteWork({ workId });
+    await workService.deleteWork({ workId, userId });
     res.status(200).json({ message: '작업물이 삭제됐습니다.' });
   } catch (error) {
     next(error);
