@@ -18,15 +18,15 @@ const generateAccessToken = (userId) =>
 const generateRefreshToken = (userId) =>
   jwt.sign({ userId }, REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
 
-export const registerUser = async (nickName, email, password) => {
-  if (!nickName || !email || !password) {
+export const registerUser = async (nickname, email, password) => {
+  if (!nickname || !email || !password) {
     throw new BadRequestException(
       '닉네임, 이메일, 비밀번호는 필수 입력 항목입니다.'
     );
   }
 
   const existingUser = await prisma.user.findFirst({
-    where: { OR: [{ nickName }, { email }] },
+    where: { OR: [{ nickname }, { email }] },
   });
   if (existingUser) {
     throw new ConflictException('이미 존재하는 닉네임 또는 이메일입니다.');
@@ -35,7 +35,7 @@ export const registerUser = async (nickName, email, password) => {
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const user = await prisma.user.create({
-    data: { nickName, email, password: hashedPassword },
+    data: { nickname, email, password: hashedPassword },
   });
 
   return user;
@@ -171,7 +171,7 @@ export const getAppliedChallenges = async (
     whereClause.challenge = {
       OR: [
         { title: { contains: searchTerm, mode: 'insensitive' } },
-        { description: { contains: searchTerm, mode: 'insensitive' } },
+        { content: { contains: searchTerm, mode: 'insensitive' } },
       ],
     };
   }
@@ -223,7 +223,7 @@ export const getCurrentUser = async (userId) => {
     where: { id: userId },
     select: {
       id: true,
-      nickName: true,
+      nickname: true,
       email: true,
       role: true,
       grade: true,
@@ -243,7 +243,7 @@ export const getUserById = async (id) => {
     where: { id: Number(id) },
     select: {
       id: true,
-      nickName: true,
+      nickname: true,
       role: true,
       grade: true,
       createdAt: true,
