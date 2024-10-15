@@ -1,5 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import prisma from '../lib/prisma';
 import { getCurrentUser } from '../services/userServices.js';
 import {
   ForbiddenException,
@@ -45,7 +44,7 @@ export async function getChallengeById(req, res, next) {
           include: {
             user: {
               select: {
-                nickName: true,
+                nickname: true,
                 grade: true,
               },
             },
@@ -72,7 +71,7 @@ export async function getChallengeById(req, res, next) {
       applications: challenge.applications.map((app) => ({
         id: app.id,
         userId: app.userId,
-        nickName: app.user.nickName,
+        nickname: app.user.nickname,
         grade: app.user.grade,
         appliedAt: app.appliedAt,
       })),

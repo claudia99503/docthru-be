@@ -18,7 +18,7 @@ CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
     "role" "UserRole" NOT NULL DEFAULT 'USER',
     "grade" "UserGrade",
-    "nickName" VARCHAR(10) NOT NULL,
+    "nickname" VARCHAR(10) NOT NULL,
     "email" VARCHAR(255) NOT NULL,
     "password" VARCHAR(255) NOT NULL,
     "refreshToken" TEXT,
@@ -70,7 +70,7 @@ CREATE TABLE "Work" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
     "challengeId" INTEGER NOT NULL,
-    "description" TEXT,
+    "content" TEXT,
     "lastModifiedAt" TIMESTAMP(3) NOT NULL,
     "isSubmitted" BOOLEAN NOT NULL DEFAULT false,
     "submittedAt" TIMESTAMP(3),
@@ -114,7 +114,7 @@ CREATE TABLE "Notification" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_nickName_key" ON "User"("nickName");
+CREATE UNIQUE INDEX "User_nickname_key" ON "User"("nickname");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");

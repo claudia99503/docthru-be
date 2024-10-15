@@ -6,7 +6,8 @@ import errorHandler from './middlewares/errorHandler.js';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import challengeRoutes from './routes/challengeRoutes.js';
-import applicationRotes from './routes/applicationRoutes.js';
+import applicationRoutes from './routes/applicationRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 
 dotenv.config();
 
@@ -15,10 +16,11 @@ app.use(cookieParser());
 app.use(cors());
 app.use(express.json());
 
+app.use('/api', notificationRoutes);
 app.use('/api/challenges', challengeRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/works', workRoutes);
-app.use('/api/applications', applicationRotes);
+app.use('/api/applications', applicationRoutes);
 
 app.use(errorHandler);
 

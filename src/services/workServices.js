@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../lib/prisma';
 
 export const getWorksWithLikes = async ({
   challengeId,
@@ -83,7 +81,7 @@ export const getWorkDetail = async ({ userId, workId }) => {
       },
       user: {
         select: {
-          nickName: true,
+          nickname: true,
         },
       },
     },
@@ -101,10 +99,10 @@ export const getWorkDetail = async ({ userId, workId }) => {
   return { works, isLike };
 };
 
-export const createWork = async ({ challengeId, description, userId }) => {
+export const createWork = async ({ challengeId, content, userId }) => {
   const works = await prisma.work.create({
     data: {
-      description: description,
+      content: content,
       userId: Number(userId),
       challengeId: Number(challengeId),
       isSubmitted: true,
@@ -113,11 +111,11 @@ export const createWork = async ({ challengeId, description, userId }) => {
   return works;
 };
 
-export const updatedWork = async ({ workId, description }) => {
+export const updatedWork = async ({ workId, content }) => {
   const works = await prisma.work.update({
     where: { id: Number(workId) },
     data: {
-      description: description,
+      content: content,
     },
   });
   return works;
@@ -208,7 +206,7 @@ export const getFeedbacks = async ({ workId, page, limit }) => {
     include: {
       user: {
         select: {
-          nickName: true,
+          nickname: true,
           grade: true,
         },
       },
