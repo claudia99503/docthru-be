@@ -6,6 +6,7 @@ import errorHandler from './middlewares/errorHandler.js';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import challengeRoutes from './routes/challengeRoutes.js';
+import applicationRotes from './routes/applicationRoutes.js';
 
 dotenv.config();
 
@@ -16,8 +17,8 @@ app.use(express.json());
 
 app.use('/api/challenges', challengeRoutes);
 app.use('/api/users', userRoutes);
-
 app.use('/api/works', workRoutes);
+app.use('/api/applications', applicationRotes);
 
 app.use(errorHandler);
 
@@ -25,4 +26,3 @@ const PORT = process.env.PORT || 3001;
 app.listen(PORT, () =>
   console.log(`Server is running on port http://localhost:${PORT}`)
 );
-

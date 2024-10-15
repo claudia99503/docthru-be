@@ -15,7 +15,7 @@ export async function getChallenges(req, res, next) {
     const sortOrder = req.query.orderByDir || 'asc';
     const challenges = await prisma.challenge.findMany({
       skip,
-      take: limit,
+      take : limit,
       orderBy: { [sortBy]: sortOrder },
       where: {
         applications: {
@@ -25,8 +25,8 @@ export async function getChallenges(req, res, next) {
         },
       },
     });
-
     return res.status(200).json({ challenges });
+
   } catch (error) {
     next(error);
   }

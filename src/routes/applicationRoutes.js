@@ -5,6 +5,7 @@ import {
   deleteApplication,
   updateApplication,
 } from '../controllers/applicationController.js';
+import { authenticateAccessToken } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -30,11 +31,7 @@ const isAdmin = (req, res, next) => {
 };
 
 // 신청 생성 라우트 (일반 유저 접근 가능)
-router.post(
-  '/challenges/:challengeId/applications',
-  isAuthenticated,
-  createApplication
-);
+router.post('/create', authenticateAccessToken, createApplication);
 
 // 신청 목록 조회 라우트 (관리자만 접근 가능)
 router.get('/applications', isAuthenticated, isAdmin, getApplications);

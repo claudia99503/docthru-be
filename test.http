@@ -53,3 +53,19 @@ Content-Type: application/json
 POST http://localhost:3001/api/challenges/1/participation
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQsImlhdCI6MTcyODg3MTQ3NCwiZXhwIjoxNzI4ODcyMzc0fQ.o0ruLxWUHUOj8GsrF_PSm6MolIuirKyf613Wa_TDNgc
+
+### 챌린지 생성
+POST http://localhost:3001/api/applications/create
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQsImlhdCI6MTcyODg5Mjk5MywiZXhwIjoxNzI4ODkzODkzfQ.9FP4mDTDHxjRw82Q2Yia6Hto8QXSmWIkkDDG-9ycVE8
+
+{
+  "title" : "343242314",
+  "field" : "API",
+  "docType" : "BLOG",
+  "description" : "4321412412",
+  "docUrl" : "http://www.naver.com",
+  "deadline" : "2024-01-01",
+  "maxParticipates" : 1
+  
+}
