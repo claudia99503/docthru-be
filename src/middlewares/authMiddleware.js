@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import { ACCESS_TOKEN_SECRET } from '../configs/config.js';
 import { UnauthorizedException } from '../errors/customException.js';
 
-export const verifyToken = (req, res, next) => {
+export const authenticateAccessToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 

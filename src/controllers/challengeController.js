@@ -1,4 +1,4 @@
-import prisma from '../lib/prisma';
+import prisma from '../lib/prisma.js';
 import { getCurrentUser } from '../services/userServices.js';
 import {
   ForbiddenException,

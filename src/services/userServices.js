@@ -6,7 +6,7 @@ import {
   REFRESH_TOKEN_SECRET,
   TOKEN_EXPIRY,
   REFRESH_TOKEN_EXPIRY,
-} from '../config.js';
+} from '../configs/config.js';
 import {
   BadRequestException,
   UnauthorizedException,

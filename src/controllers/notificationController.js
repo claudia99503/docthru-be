@@ -1,4 +1,4 @@
-import * as notificationService from '../services/notificationService';
+import * as notificationService from '../services/notificationService.js';
 import { BadRequestException } from '../errors/customException.js';
 
 export const getNotifications = async (req, res, next) => {

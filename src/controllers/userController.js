@@ -9,7 +9,7 @@ import {
   TOKEN_EXPIRY,
   REFRESH_TOKEN_EXPIRY,
   REFRESH_TOKEN_MAX_AGE,
-} from '../config.js';
+} from '../configs/config.js';
 import jwt from 'jsonwebtoken';
 
 const sendRefreshToken = (res, token) => {
