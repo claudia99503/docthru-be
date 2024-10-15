@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import challengeRoutes from './routes/challengeRoutes.js';
 import applicationRotes from './routes/applicationRoutes.js';
+import feedbackRoutes from './routes/feedbackRoutes.js';
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ app.use('/api/challenges', challengeRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/works', workRoutes);
 app.use('/api/applications', applicationRotes);
+app.use('/api/feedbacks', feedbackRoutes);
 
 app.use(errorHandler);
 
