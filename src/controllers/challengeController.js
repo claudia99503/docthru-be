@@ -25,8 +25,8 @@ export async function getChallenges(req, res, next) {
         },
       },
     });
+    return res.status(200).json({ challenges });
 
-    return res.status(200).json({challenges});
   } catch (error) {
     next(error);
   }

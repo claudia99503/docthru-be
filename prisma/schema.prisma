@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -43,6 +40,15 @@ enum ApplicationStatus {
   DELETED
 }
 
+enum NotificationType {
+  CHANGE
+  STATUS
+  NEW_WORK
+  NEW_FEEDBACK
+  DEADLINE
+  ADMIN_ACTION
+}
+
 model User {
   id             Int           @id @default(autoincrement())
   role           UserRole      @default(USER)
@@ -57,7 +63,7 @@ model User {
   works          Work[]
   feedbacks      Feedback[]
   likes          Like[]
-  notifications Notification[]
+  notifications  Notification[]
 }
 
 model Challenge {
@@ -74,6 +80,7 @@ model Challenge {
   applications    Application[]
   participations  Participate[]
   works           Work[]
+  notifications   Notification[]
 }
 
 model Application {
@@ -97,28 +104,30 @@ model Participate {
 }
 
 model Work {
-  id              Int       @id @default(autoincrement())
-  user            User      @relation(fields: [userId], references: [id])
+  id              Int           @id @default(autoincrement())
+  user            User          @relation(fields: [userId], references: [id])
   userId          Int
-  challenge       Challenge @relation(fields: [challengeId], references: [id])
+  challenge       Challenge     @relation(fields: [challengeId], references: [id])
   challengeId     Int
-  description     String?   @db.Text
-  lastModifiedAt  DateTime  @updatedAt
-  isSubmitted     Boolean   @default(false)
+  description     String?       @db.Text
+  lastModifiedAt  DateTime      @updatedAt
+  isSubmitted     Boolean       @default(false)
   submittedAt     DateTime?
   feedbacks       Feedback[]
   likes           Like[]    
-  likeCount       Int       @default(0)
+  likeCount       Int           @default(0)
+  notifications   Notification[]
 }
 
 model Feedback {
-  id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    Int
-  work      Work     @relation(fields: [workId], references: [id])
-  workId    Int
-  content   String   @db.Text
-  createdAt DateTime @default(now())
+  id            Int           @id @default(autoincrement())
+  user          User          @relation(fields: [userId], references: [id])
+  userId        Int
+  work          Work          @relation(fields: [workId], references: [id])
+  workId        Int
+  content       String        @db.Text
+  createdAt     DateTime      @default(now())
+  notifications Notification[]
 }
 
 model Like {
@@ -133,12 +142,18 @@ model Like {
 }
 
 model Notification {
-  id          Int      @id @default(autoincrement())
-  user        User     @relation(fields: [userId], references: [id])
+  id          Int               @id @default(autoincrement())
+  user        User              @relation(fields: [userId], references: [id])
   userId      Int
-  type        String   // 'CHANGE', 'STATUS', 'NEW_WORK', 'NEW_FEEDBACK', 'DEADLINE', 'ADMIN_ACTION' 등의 뭔가 타입?
+  type        NotificationType
   content     String
   relatedId   Int?     
-  isRead      Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  isRead      Boolean           @default(false)
+  createdAt   DateTime          @default(now())
+  challenge   Challenge?        @relation(fields: [challengeId], references: [id])
+  challengeId Int?
+  work        Work?             @relation(fields: [workId], references: [id])
+  workId      Int?
+  feedback    Feedback?         @relation(fields: [feedbackId], references: [id])
+  feedbackId  Int?
 }
