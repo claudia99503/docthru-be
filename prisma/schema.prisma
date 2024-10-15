@@ -109,7 +109,7 @@ model Work {
   userId          Int
   challenge       Challenge     @relation(fields: [challengeId], references: [id])
   challengeId     Int
-  content     String?       @db.Text
+  content         String?       @db.Text
   lastModifiedAt  DateTime      @updatedAt
   isSubmitted     Boolean       @default(false)
   submittedAt     DateTime?

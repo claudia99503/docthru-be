@@ -17,11 +17,14 @@
   "devDependencies": {
     "prisma": "^5.20.0"
   },
-  "type": "module",
   "scripts": {
     "dev": "nodemon src/app.js",
     "start": "node src/index.js",
     "build": "prisma generate && next build",
-    "vercel-build": "prisma generate && prisma migrate deploy"
+    "vercel-build": "prisma generate && prisma migrate deploy",
+    "seed": "prisma db seed"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   }
 }
