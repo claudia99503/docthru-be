@@ -53,7 +53,7 @@ model User {
   id             Int           @id @default(autoincrement())
   role           UserRole      @default(USER)
   grade          UserGrade?
-  nickname       String        @unique @db.VarChar(10)
+  nickname       String        @unique @db.VarChar(20)
   email          String        @unique @db.VarChar(255)
   password       String        @db.VarChar(255)
   refreshToken   String?       @db.Text
