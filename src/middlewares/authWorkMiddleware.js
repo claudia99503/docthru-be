@@ -1,5 +1,9 @@
-import { UnauthorizedException } from '../errors/customException.js';
 import { PrismaClient } from '@prisma/client';
+import {
+  BadRequestException,
+  UnauthorizedException,
+  NotFoundException,
+} from '../errors/customException.js';
 
 const prisma = new PrismaClient();
 
@@ -20,7 +24,7 @@ export const authWorkAction = async (req, res, next) => {
   if (userInfo.id === workInfo.userId || userInfo.role === 'ADMIN') {
     next();
   } else {
-    throw new UnauthorizedException('접근 권한이 없습니다');
+    next(new UnauthorizedException('접근 권한이 없습니다'));
   }
 };
 
@@ -43,11 +47,11 @@ export const authCreateWorkAction = async (req, res, next) => {
   });
 
   if (!challengeInfo) {
-    return res.status(404).json({ message: '챌린지를 찾을 수 없습니다.' });
+    next(new NotFoundException('등록된 챌린지가 없습니다.'));
   }
 
   if (!userInfo) {
-    throw new UnauthorizedException('사용자 정보가 없습니다');
+    next(new UnauthorizedException('사용자 정보가 없습니다'));
   }
 
   const isParticipating = challengeInfo.participations.some(
@@ -55,7 +59,7 @@ export const authCreateWorkAction = async (req, res, next) => {
   );
 
   if (!isParticipating) {
-    throw new UnauthorizedException('신청한 회원만 쓸 수 있습니다.');
+    next(new UnauthorizedException('신청한 회원만 쓸 수 있습니다.'));
   }
 
   const hasSubmittedWork = challengeInfo.works.some(
@@ -63,7 +67,7 @@ export const authCreateWorkAction = async (req, res, next) => {
   );
 
   if (hasSubmittedWork) {
-    return res.status(403).json({ message: '이미 작업을 제출하였습니다.' });
+    next(new BadRequestException('이미 작업물을 등록했습니다.'));
   }
 
   next();
