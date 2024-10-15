@@ -163,10 +163,13 @@ export const updatedWork = async ({ workId, content }) => {
   return works;
 };
 
-export const deleteWork = async ({ workId, userId }) => {
+export const deleteWork = async ({ workId }) => {
+  const workInfo = await prisma.work.findFirst({
+    where: { id: Number(workId) },
+  });
   const participate = await prisma.participate.findFirst({
     where: {
-      userId: Number(userId),
+      userId: Number(workInfo.userId),
     },
   });
 
