@@ -1,4 +1,10 @@
 import { PrismaClient } from '@prisma/client';
+import {
+  BadRequestException,
+  UnauthorizedException,
+  NotFoundException,
+  ConflictException,
+} from '../errors/customException.js';
 
 const prisma = new PrismaClient();
 
@@ -8,14 +14,6 @@ export const getWorksWithLikes = async ({
   page,
   limit,
 }) => {
-  //마감하면 베스트 게시물 조회
-  let bestWorks;
-  const challengeDeadlineBoolean = await challengeDeadline(challengeId);
-
-  if (!!challengeDeadlineBoolean.progress) {
-    bestWorks = await bestWorksList({ challengeId, userId });
-  }
-
   const offset = (page - 1) * limit;
 
   let sortOrder = [
@@ -31,15 +29,37 @@ export const getWorksWithLikes = async ({
     orderBy: sortOrder,
     skip: offset,
     take: Number(limit),
-    include: {
-      likes: {
-        select: {
-          userId: true,
-          workId: true,
-        },
+    select: {
+      id: true,
+      userId: true,
+      challengeId: true,
+      content: true,
+      lastModifiedAt: true,
+      isSubmitted: false,
+      submittedAt: false,
+      likeCount: true,
+    },
+  });
+
+  const userLikes = await prisma.like.findMany({
+    where: {
+      userId: userId,
+      workId: {
+        in: works.map((work) => work.id),
       },
     },
   });
+
+  const worksList = works.map((work) => {
+    const isLiked = userLikes.some((like) => like.workId === work.id);
+    return {
+      ...work,
+      isLiked,
+    };
+  });
+
+  //마감하면 베스트 게시물 조회
+  const bestWorks = await bestWorksList({ challengeId, userId });
 
   const total = await prisma.work.count({
     where: {
@@ -47,24 +67,11 @@ export const getWorksWithLikes = async ({
     },
   });
 
-  const worksList = works.map((work) => {
-    const isLiked = userId
-      ? work.likes.some(
-          (like) => like.userId === userId && like.workId === work.id
-        )
-      : false;
-
-    return {
-      ...work,
-      isLiked,
-    };
-  });
-
   return {
     totalPages: Math.ceil(total / limit),
     total,
-    bestWorksList: bestWorks,
-    worksList,
+    bestList: bestWorks,
+    list: worksList,
   };
 };
 
@@ -98,10 +105,27 @@ export const getWorkDetail = async ({ userId, workId }) => {
 
   const isLike = likedId ? true : false;
 
-  return { works, isLike };
+  return {
+    userId: works.id,
+    nickname: works.user.nickname,
+    content: works.content,
+    lastModifiedAt: works.lastModifiedAt,
+    likeCount: works.likeCount,
+    isLike,
+    challenge: {
+      id: works.challengeId,
+      title: works.challenge.title,
+      field: works.challenge.field,
+      docType: works.challenge.docType,
+    },
+  };
 };
 
 export const createWork = async ({ challengeId, content, userId }) => {
+  if (!content) {
+    throw new BadRequestException('내용 입력은 필수입니다.');
+  }
+
   const works = await prisma.work.create({
     data: {
       content: content,
@@ -109,15 +133,33 @@ export const createWork = async ({ challengeId, content, userId }) => {
       challengeId: Number(challengeId),
       isSubmitted: true,
     },
+    select: {
+      id: true,
+      userId: true,
+      challengeId: true,
+      content: true,
+      lastModifiedAt: true,
+    },
   });
   return works;
 };
 
 export const updatedWork = async ({ workId, content }) => {
+  if (!content) {
+    throw new BadRequestException('내용 입력은 필수입니다.');
+  }
+
   const works = await prisma.work.update({
     where: { id: Number(workId) },
     data: {
       content: content,
+    },
+    select: {
+      id: true,
+      userId: true,
+      challengeId: true,
+      content: true,
+      lastModifiedAt: true,
     },
   });
   return works;
@@ -142,11 +184,18 @@ export const deleteWork = async ({ workId, userId }) => {
         id: Number(participate.id),
       },
     });
+
+    await prisma.challenge.update({
+      where: {
+        id: Number(participate.challengeId),
+      },
+      data: { participates: { decrement: 1 } },
+    });
   });
 };
 
 export const likeWork = async ({ workId, userId }) => {
-  const challengeDeadlineBoolean = await challengeDeadlineWithWorkId(workId);
+  const challengeDeadlineBoolean = await challengeDeadline(workId);
 
   if (!!!challengeDeadlineBoolean.progress) {
     await prisma.$transaction([
@@ -167,7 +216,7 @@ export const likeWork = async ({ workId, userId }) => {
 };
 
 export const likeCancelWork = async ({ workId, userId }) => {
-  const challengeDeadlineBoolean = await challengeDeadlineWithWorkId(workId);
+  const challengeDeadlineBoolean = await challengeDeadline(workId);
 
   if (!!!challengeDeadlineBoolean.progress) {
     const existingLike = await prisma.like.findFirst({
@@ -222,7 +271,7 @@ export const getFeedbacks = async ({ workId, cursorId, limit }) => {
   return { hasNext, nextCursor, list };
 };
 
-const challengeDeadlineWithWorkId = async (workId) => {
+const challengeDeadline = async (workId) => {
   const workInfo = await prisma.work.findFirst({
     where: {
       id: Number(workId),
@@ -238,65 +287,71 @@ const challengeDeadlineWithWorkId = async (workId) => {
   return challengeInfo;
 };
 
-const challengeDeadline = async (challengeId) => {
-  const challengeInfo = await prisma.challenge.findFirst({
+const bestWorksList = async ({ challengeId, userId }) => {
+  const challengeInfo = await prisma.challenge.findUnique({
     where: {
       id: Number(challengeId),
     },
   });
 
-  console.log(challengeInfo);
+  if (!!challengeInfo.progress) {
+    let sortOrder = [
+      { likeCount: 'desc' },
+      { lastModifiedAt: 'desc' },
+      { id: 'desc' },
+    ];
 
-  return challengeInfo;
-};
+    const workList = await prisma.work.findMany({
+      where: {
+        challengeId: Number(challengeId),
+      },
+      orderBy: sortOrder,
+    });
 
-const bestWorksList = async ({ challengeId, userId }) => {
-  let sortOrder = [
-    { likeCount: 'desc' },
-    { lastModifiedAt: 'desc' },
-    { id: 'desc' },
-  ];
+    const workLikeCount = workList.map((work) => {
+      return work.likeCount;
+    });
 
-  const workList = await prisma.work.findMany({
-    where: {
-      challengeId: Number(challengeId),
-    },
-    orderBy: sortOrder,
-  });
+    const NumberLikeCount = Math.max(...workLikeCount);
 
-  const workLikeCount = workList.map((work) => {
-    return work.likeCount;
-  });
+    const bestWorks = await prisma.work.findMany({
+      where: {
+        challengeId: Number(challengeId),
+        likeCount: Number(NumberLikeCount),
+      },
+      orderBy: sortOrder,
 
-  const NumberLikeCount = Math.max(...workLikeCount);
+      select: {
+        id: true,
+        userId: true,
+        challengeId: true,
+        content: true,
+        lastModifiedAt: true,
+        isSubmitted: false,
+        submittedAt: false,
+        likeCount: true,
+      },
+    });
 
-  const bestWorkList = await prisma.work.findMany({
-    where: {
-      challengeId: Number(challengeId),
-      likeCount: Number(NumberLikeCount),
-    },
-    include: {
-      likes: {
-        select: {
-          userId: true,
-          workId: true,
+    const userLikes = await prisma.like.findMany({
+      where: {
+        userId: userId,
+        workId: {
+          in: bestWorks.map((work) => work.id),
         },
       },
-    },
-  });
+    });
 
-  const bestWorksWithIsLiked = bestWorkList.map((work) => {
-    const isLiked = userId
-      ? work.likes.some(
-          (like) => like.userId === userId && like.workId === work.id
-        )
-      : false;
+    const bestWorkList = bestWorks.map((work) => {
+      const isLiked = userLikes.some((like) => like.workId === work.id);
+      return {
+        ...work,
+        isLiked,
+      };
+    });
 
-    return {
-      ...work,
-      isLiked,
-    };
-  });
-
-  return bestWorksWithIsLiked;
+    return bestWorkList;
+  } else {
+    return;
+  }
 };
