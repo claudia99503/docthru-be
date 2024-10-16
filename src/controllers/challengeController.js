@@ -78,13 +78,14 @@ export async function deleteChallengeById(req, res, next) {
   try {
     const userId = req.user.userId;
     const { role } = await ChallengeService.getCurrentUser(userId);
+    const { message } = req.body;
 
     if (role !== 'ADMIN') {
       return next(new ForbiddenException());
     }
 
     const { challengeId } = req.params;
-    await ChallengeService.deleteChallengeById(challengeId);
+    await ChallengeService.deleteChallengeById(challengeId, message);
 
     return res.sendStatus(204);
   } catch (error) {
