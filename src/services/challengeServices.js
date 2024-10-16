@@ -1,10 +1,9 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma.js';
 import {
   NotFoundException,
   BadRequestException,
 } from '../errors/customException.js';
-
-const prisma = new PrismaClient();
+import { notifyChallengeStatusChange } from './notificationService.js';
 
 export const ChallengeService = {
   getChallenges: async ({ page, limit, sortBy, sortOrder }) => {
@@ -23,6 +22,7 @@ export const ChallengeService = {
     });
     return list;
   },
+
   getChallengeById: async (challengeId) => {
     const challenge = await prisma.challenge.findUnique({
       where: { id: parseInt(challengeId, 10) },
@@ -44,30 +44,10 @@ export const ChallengeService = {
       throw new NotFoundException('챌린지가 없습니다.');
     }
 
-    const dataFilter = {
-      id: challenge.id,
-      title: challenge.title,
-      field: challenge.field,
-      docType: challenge.docType,
-      description: challenge.description,
-      docUrl: challenge.docUrl,
-      deadline: challenge.deadline,
-      progress: challenge.progress,
-      participants: challenge.participants,
-      maxParticipants: challenge.maxParticipants,
-      writer: challenge.applications.map((app) => ({
-        id: app.id,
-        userId: app.userId,
-        nickname: app.user.nickname,
-        grade: app.user.grade,
-        appliedAt: app.appliedAt,
-      })),
-    };
-
-    return dataFilter;
+    return challenge;
   },
+
   getCurrentUser: async (userId) => {
-    // Implement the logic to get the current user's role and other details
     return await prisma.user.findUnique({
       where: { id: userId },
       select: { role: true },
@@ -84,38 +64,50 @@ export const ChallengeService = {
 
     const updatedChallenge = await prisma.challenge.update({
       where: { id: parseInt(challengeId, 10) },
-      data: {
-        title: updateData.title || challenge.title,
-        field: updateData.field || challenge.field,
-        docType: updateData.docType || challenge.docType,
-        description: updateData.description || challenge.description,
-        docUrl: updateData.docUrl || challenge.docUrl,
-        deadline: updateData.deadline || challenge.deadline,
-        progress: updateData.progress || challenge.progress,
-        participants: updateData.participants || challenge.participants,
-        maxParticipants:
-          updateData.maxParticipants || challenge.maxParticipants,
-      },
+      data: updateData,
     });
 
     return updatedChallenge;
   },
-  deleteChallengeById: async (challengeId, message) => {
+
+  updateChallengeStatus: async (challengeId, newStatus, reason = '') => {
     const challenge = await prisma.challenge.findUnique({
       where: { id: parseInt(challengeId, 10) },
+      include: { applications: true },
     });
+
     if (!challenge) {
-      throw new NotFoundException('챌린지가 없습니다.');
+      throw new NotFoundException('챌린지를 찾을 수 없습니다.');
     }
 
-    await prisma.application.updateMany({
-      where: { challengeId: parseInt(challengeId, 10) },
-      data: {
-        status: 'DELETED',
-        message: message,
-      },
+    const updatedChallenge = await prisma.challenge.update({
+      where: { id: parseInt(challengeId, 10) },
+      data: { status: newStatus },
     });
+
+    const changeDate = new Date();
+
+    // 모든 신청자에게 알림 전송
+    for (const application of challenge.applications) {
+      await notifyChallengeStatusChange(
+        application.userId,
+        challengeId,
+        newStatus,
+        changeDate
+      );
+    }
+
+    // 상태가 삭제됨일 경우 관련 애플리케이션도 업데이트
+    if (newStatus === 'DELETED') {
+      await prisma.application.updateMany({
+        where: { challengeId: parseInt(challengeId, 10) },
+        data: { status: 'DELETED', message: reason },
+      });
+    }
+
+    return updatedChallenge;
   },
+
   getChallengesUrl: async (challengeId) => {
     const challenges = await prisma.challenge.findUnique({
       where: { id: parseInt(challengeId, 10) },
@@ -128,6 +120,7 @@ export const ChallengeService = {
     }
     return challenges;
   },
+
   postChallengeParticipate: async (challengeId, userId) => {
     const challenge = await prisma.challenge.findUnique({
       where: { id: parseInt(challengeId, 10) },
