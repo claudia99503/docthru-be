@@ -33,8 +33,8 @@ export async function getChallengeById(req, res, next) {
 
 export async function patchChallengeById(req, res, next) {
   try {
-    const userId = req.user.userId;
-    const { role } = await ChallengeService.getCurrentUser(userId);
+    const adminUserId = req.user.userId;
+    const { role } = await ChallengeService.getCurrentUser(adminUserId);
 
     if (role !== 'ADMIN') {
       return next(new ForbiddenException());
@@ -45,7 +45,8 @@ export async function patchChallengeById(req, res, next) {
 
     const updatedChallenge = await ChallengeService.updateChallengeById(
       challengeId,
-      updateData
+      updateData,
+      adminUserId // 딱히 전달할 필요는 없기는 한데 혹시몰라서? 실질 쓰임새는 권한검증뿐이긴 합니다
     );
 
     return res.status(200).json(updatedChallenge);
