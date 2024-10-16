@@ -1,4 +1,3 @@
-
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -51,17 +50,17 @@ enum NotificationType {
 }
 
 model User {
-  id             Int           @id @default(autoincrement())
-  role           UserRole      @default(USER)
+  id             Int             @id @default(autoincrement())
+  role           UserRole        @default(USER)
   grade          UserGrade?
-  nickname       String        @unique @db.VarChar(10)
-  email          String        @unique @db.VarChar(255)
-  password       String        @db.VarChar(255)
-  refreshToken   String?       @db.Text
-  createdAt      DateTime      @default(now())
-  bestCount      Int           @default(0)
+  nickname       String          @unique @db.VarChar(10)
+  email          String          @unique @db.VarChar(255)
+  password       String          @db.VarChar(255)
+  refreshToken   String?         @db.Text
+  createdAt      DateTime        @default(now())
+  bestCount      Int             @default(0)
   applications   Application[]
-  participations Participate[]
+  participations Participation[]
   works          Work[]
   feedbacks      Feedback[]
   likes          Like[]
@@ -69,35 +68,35 @@ model User {
 }
 
 model Challenge {
-  id              Int           @id @default(autoincrement())
-  title           String        @db.VarChar(200)
+  id              Int             @id @default(autoincrement())
+  title           String          @db.VarChar(200)
   field           ChallengeField
   docType         DocType
-  description     String        @db.Text
-  docUrl          String        @db.VarChar(200)
+  description     String          @db.Text
+  docUrl          String          @db.VarChar(200)
   deadline        DateTime
-  progress        Boolean       @default(false)
-  participates    Int?
-  maxParticipates Int?
+  progress        Boolean         @default(false)
+  participants    Int?
+  maxParticipants Int?
   applications    Application[]
-  participations  Participate[]
+  participations  Participation[]
   works           Work[]
   notifications   Notification[]
 }
 
 model Application {
-  id                   Int               @id @default(autoincrement())
-  user                 User              @relation(fields: [userId], references: [id])
-  userId               Int
-  challenge            Challenge         @relation(fields: [challengeId], references: [id])
-  challengeId          Int               @unique
-  status               ApplicationStatus @default(WAITING)
-  appliedAt            DateTime          @default(now())
-  invalidationComment  String?           @db.VarChar(200)
-  invalidatedAt        DateTime?
+  id          Int               @id @default(autoincrement())
+  user        User              @relation(fields: [userId], references: [id])
+  userId      Int
+  challenge   Challenge         @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  challengeId Int               @unique
+  status      ApplicationStatus @default(WAITING)
+  appliedAt   DateTime          @default(now())
+  message     String?           @db.VarChar(200)
+  updatedAt   DateTime          @updatedAt
 }
 
-model Participate {
+model Participation {
   id          Int       @id @default(autoincrement())
   user        User      @relation(fields: [userId], references: [id])
   userId      Int
@@ -106,29 +105,29 @@ model Participate {
 }
 
 model Work {
-  id              Int           @id @default(autoincrement())
-  user            User          @relation(fields: [userId], references: [id])
-  userId          Int
-  challenge       Challenge     @relation(fields: [challengeId], references: [id])
-  challengeId     Int
-  content         String?       @db.Text
-  lastModifiedAt  DateTime      @updatedAt
-  isSubmitted     Boolean       @default(false)
-  submittedAt     DateTime?
-  feedbacks       Feedback[]
-  likes           Like[]    
-  likeCount       Int           @default(0)
-  notifications   Notification[]
+  id             Int            @id @default(autoincrement())
+  user           User           @relation(fields: [userId], references: [id])
+  userId         Int
+  challenge      Challenge      @relation(fields: [challengeId], references: [id])
+  challengeId    Int
+  content        String?        @db.Text
+  lastModifiedAt DateTime       @updatedAt
+  isSubmitted    Boolean        @default(false)
+  submittedAt    DateTime?
+  feedbacks      Feedback[]
+  likes          Like[]
+  likeCount      Int            @default(0)
+  notifications  Notification[]
 }
 
 model Feedback {
-  id            Int           @id @default(autoincrement())
-  user          User          @relation(fields: [userId], references: [id])
+  id            Int            @id @default(autoincrement())
+  user          User           @relation(fields: [userId], references: [id])
   userId        Int
-  work          Work          @relation(fields: [workId], references: [id])
+  work          Work           @relation(fields: [workId], references: [id])
   workId        Int
-  content       String        @db.Text
-  createdAt     DateTime      @default(now())
+  content       String         @db.Text
+  createdAt     DateTime       @default(now())
   notifications Notification[]
 }
 
@@ -144,19 +143,18 @@ model Like {
 }
 
 model Notification {
-  id          Int               @id @default(autoincrement())
-  user        User              @relation(fields: [userId], references: [id])
+  id          Int              @id @default(autoincrement())
+  user        User             @relation(fields: [userId], references: [id])
   userId      Int
   type        NotificationType
   content     String
-  relatedId   Int?     
-  isRead      Boolean           @default(false)
-  createdAt   DateTime          @default(now())
-  challenge   Challenge?        @relation(fields: [challengeId], references: [id])
+  relatedId   Int?
+  isRead      Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  challenge   Challenge?       @relation(fields: [challengeId], references: [id])
   challengeId Int?
-  work        Work?             @relation(fields: [workId], references: [id])
+  work        Work?            @relation(fields: [workId], references: [id])
   workId      Int?
-  feedback    Feedback?         @relation(fields: [feedbackId], references: [id])
+  feedback    Feedback?        @relation(fields: [feedbackId], references: [id])
   feedbackId  Int?
 }
-

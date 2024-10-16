@@ -10,7 +10,7 @@ const errorHandler = (err, req, res, next) => {
         message: err.message,
         identifier: err.identifier,
         reason: err.reason,
-        occuredAt: err.occuredAt,
+        occurredAt: err.occurredAt,
       },
     });
   }
