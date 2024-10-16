@@ -51,9 +51,20 @@ export const registerUser = async (nickname, email, password) => {
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-  return prisma.user.create({
+  const user = await prisma.user.create({
     data: { nickname, email, password: hashedPassword },
   });
+
+  const accessToken = generateToken(user.id, ACCESS_TOKEN_SECRET, TOKEN_EXPIRY);
+  const refreshToken = generateToken(
+    user.id,
+    REFRESH_TOKEN_SECRET,
+    REFRESH_TOKEN_EXPIRY
+  );
+
+  await updateRefreshToken(user.id, refreshToken);
+
+  return { accessToken, refreshToken, userId: user.id };
 };
 
 export const loginUser = async (email, password) => {

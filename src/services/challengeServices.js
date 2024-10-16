@@ -100,7 +100,7 @@ export const ChallengeService = {
 
     return updatedChallenge;
   },
-  deleteChallengeById: async (challengeId) => {
+  deleteChallengeById: async (challengeId, message) => {
     const challenge = await prisma.challenge.findUnique({
       where: { id: parseInt(challengeId, 10) },
     });
@@ -112,6 +112,7 @@ export const ChallengeService = {
       where: { challengeId: parseInt(challengeId, 10) },
       data: {
         status: 'DELETED',
+        message: message,
       },
     });
   },
