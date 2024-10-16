@@ -9,10 +9,7 @@ import {
   getAdminApplicationById,
   updateApplicationDetails,
 } from '../controllers/applicationController.js';
-import {
-  authenticateAccessToken,
-  isAdmin,
-} from '../middlewares/authMiddleware.js';
+import { authenticateAccessToken } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -34,16 +31,16 @@ router.get(
 // 신청 취소 (일반 사용자 - WAITING 상태에서만 가능, 전체 목록에서 제외)
 router.put('/applications/:applicationId/cancel', cancelApplication);
 
-// 관리자용 신청 목록 조회 (어드민 전용)
-router.get('/applications', isAdmin, getAdminApplications);
+// // 관리자용 신청 목록 조회 (어드민 전용)
+// router.get('/applications', isAdmin, getAdminApplications);
 
-// 관리자용 신청 상세 조회 (어드민 전용)
-router.get('/applications/:applicationId', isAdmin, getAdminApplicationById);
+// // 관리자용 신청 상세 조회 (어드민 전용)
+// router.get('/applications/:applicationId', isAdmin, getAdminApplicationById);
 
-// 신청 상태 업데이트 (승인, 거절, 삭제 - 어드민 전용)
-router.put('/applications/:applicationId', isAdmin, updateApplication);
+// // 신청 상태 업데이트 (승인, 거절, 삭제 - 어드민 전용)
+// router.put('/applications/:applicationId', isAdmin, updateApplication);
 
-// 신청 수정 (어드민 전용)
-router.patch('/applications/:applicationId', isAdmin, updateApplicationDetails);
+// // 신청 수정 (어드민 전용)
+// router.patch('/applications/:applicationId', isAdmin, updateApplicationDetails);
 
 export default router;

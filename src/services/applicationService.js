@@ -7,6 +7,21 @@ export const ApplicationService = {
     challengeId,
     { title, field, docType, description, docUrl, deadline, maxParticipants }
   ) => {
+    const data = {
+      title,
+      field,
+      docType,
+      description,
+      docUrl,
+      deadline: new Date(deadline),
+      participants: 0,
+      maxParticipants,
+    };
+    const challenge = await prisma.challenge.create({ data });
+
+    const challengeId = challenge.id;
+    const userId = req.user.userId;
+
     return prisma.application.create({
       data: {
         userId,
