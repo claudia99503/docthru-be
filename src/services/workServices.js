@@ -136,15 +136,15 @@ export const createWork = async ({ challengeId, content, userId }) => {
     },
   });
 
-  // const challengeInfo = await prisma.application.findUnique({
-  //   where: { id: Number(challengeId) },
-  // });
+  const challengeInfo = await prisma.application.findUnique({
+    where: { id: Number(challengeId) },
+  });
 
-  // await notificationService.notifyNewWork(
-  //   Number(challengeInfo.userId),
-  //   Number(challengeId),
-  //   Number(works.id)
-  // ); -> 챌린지 아이디와 어플리케이션 아이디가 같은지?
+  await notificationService.notifyNewWork(
+    Number(challengeInfo.userId),
+    Number(challengeId),
+    Number(works.id)
+  );
 
   return works;
 };

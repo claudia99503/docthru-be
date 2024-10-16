@@ -92,7 +92,7 @@ export const notifyChallengeStatusChange = async (
   );
 };
 
-// 새 작업물 알림
+// 새 작업물 알림 - work
 export const notifyNewWork = async (userId, challengeId, workId) => {
   const content = `신청하신 챌린지에 새로운 작업물이 추가되었습니다.`;
   return createNotification(
@@ -105,7 +105,7 @@ export const notifyNewWork = async (userId, challengeId, workId) => {
   );
 };
 
-// 새 피드백 알림
+// 새 피드백 알림 - feedback
 export const notifyNewFeedback = async (userId, workId, feedbackId) => {
   const content = `작업물에 새로운 피드백이 추가되었습니다.`;
   return createNotification(
@@ -136,7 +136,7 @@ export const notifyAdminChallengeAction = async (
   return createNotification(userId, 'ADMIN_ACTION', content, null, challengeId);
 };
 
-// 관리자 피드백 액션 알림
+// 관리자 피드백 액션 알림 -feedback
 export const notifyAdminFeedbackAction = async (userId, feedbackId, action) => {
   const content = `관리자가 피드백을 ${action}했습니다.`;
   return createNotification(
@@ -147,5 +147,19 @@ export const notifyAdminFeedbackAction = async (userId, feedbackId, action) => {
     null,
     null,
     feedbackId
+  );
+};
+
+// 관리자 작업물 액션 알림 -work
+export const notifyAdminWorkAction = async (userId, workId, action) => {
+  const content = `관리자가 작업물을 ${action}했습니다.`;
+  return createNotification(
+    userId,
+    'ADMIN_ACTION',
+    content,
+    null,
+    null,
+    workId,
+    null
   );
 };
