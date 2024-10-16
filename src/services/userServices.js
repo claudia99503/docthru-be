@@ -18,7 +18,6 @@ import {
   isValidPassword,
   validateUserInput,
 } from '../utils/authValidation.js';
-import { formatDate } from '../utils/dateUtils.js';
 
 const applicationStatusConverter = (status) => {
   switch (status) {
@@ -312,7 +311,7 @@ export const getCurrentUser = async (userId) => {
 
   return {
     ...user,
-    createdAt: formatDate(user.createdAt),
+    createdAt: user.createdAt,
   };
 };
 
@@ -334,7 +333,7 @@ export const getUserById = async (id) => {
 
   return {
     ...user,
-    createdAt: formatDate(user.createdAt),
+    createdAt: user.createdAt,
   };
 };
 
