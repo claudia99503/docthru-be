@@ -5,6 +5,7 @@ import workRoutes from './routes/workRoutes.js';
 import errorHandler from './middlewares/errorHandler.js';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import helmet from 'helmet';
 import challengeRoutes from './routes/challengeRoutes.js';
 import applicationRoutes from './routes/applicationRoutes.js';
 import feedbackRoutes from './routes/feedbackRoutes.js';
@@ -24,6 +25,21 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());
+
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      connectSrc: ["'self'", process.env.CLIENT_URL || 'http://localhost:3000'],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'https:'],
+      fontSrc: ["'self'", 'https:', 'data:'],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: [],
+    },
+  })
+);
 
 app.use('/api', notificationRoutes);
 app.use('/api/challenges', challengeRoutes);
