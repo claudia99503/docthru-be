@@ -4,7 +4,6 @@ import {
   BadRequestException,
 } from '../errors/customException.js';
 
-// 알림 조회
 export const getNotifications = async (userId, includeRead = false) => {
   try {
     return await prisma.notification.findMany({
@@ -21,7 +20,6 @@ export const getNotifications = async (userId, includeRead = false) => {
   }
 };
 
-// 읽음 표시하기
 export const markNotificationAsRead = async (id) => {
   try {
     const notification = await prisma.notification.update({
@@ -38,7 +36,6 @@ export const markNotificationAsRead = async (id) => {
   }
 };
 
-// 알림 생성 함수
 export const createNotification = async (
   userId,
   type,
@@ -65,24 +62,28 @@ export const createNotification = async (
   }
 };
 
-// 변경사항 알림
-export const notifyChangeEvent = async (
-  userId,
-  entityType,
-  entityId,
-  changeType
-) => {
-  const content = `${entityType}이(가) ${changeType}되었습니다.`;
-  return createNotification(userId, 'CHANGE', content, entityId);
-};
-
-// 챌린지 상태 변경 알림
 export const notifyChallengeStatusChange = async (
   userId,
   challengeId,
-  newStatus
+  newStatus,
+  changeDate
 ) => {
-  const content = `신청하신 챌린지의 상태가 ${newStatus}(으)로 변경되었습니다.`;
+  let content;
+  switch (newStatus) {
+    case 'ACCEPTED':
+      content = `신청하신 챌린지가 승인되었습니다.`;
+      break;
+    case 'REJECTED':
+      content = `신청하신 챌린지가 거절되었습니다.`;
+      break;
+    case 'DELETED':
+      content = `신청하신 챌린지가 삭제되었습니다.`;
+      break;
+    default:
+      content = `신청하신 챌린지의 상태가 변경되었습니다.`;
+  }
+  content += ` (변경일: ${changeDate.toISOString().split('T')[0]})`;
+
   return createNotification(
     userId,
     'CHALLENGE_STATUS',
@@ -92,9 +93,11 @@ export const notifyChallengeStatusChange = async (
   );
 };
 
-// 새 작업물 알림 - work
 export const notifyNewWork = async (userId, challengeId, workId) => {
-  const content = `신청하신 챌린지에 새로운 작업물이 추가되었습니다.`;
+  const changeDate = new Date();
+  const content = `신청하신 챌린지에 새로운 작업물이 추가되었습니다. (추가 날짜: ${
+    changeDate.toISOString().split('T')[0]
+  })`;
   return createNotification(
     userId,
     'NEW_WORK',
@@ -105,9 +108,11 @@ export const notifyNewWork = async (userId, challengeId, workId) => {
   );
 };
 
-// 새 피드백 알림 - feedback
 export const notifyNewFeedback = async (userId, workId, feedbackId) => {
-  const content = `작업물에 새로운 피드백이 추가되었습니다.`;
+  const changeDate = new Date();
+  const content = `작업물에 새로운 피드백이 추가되었습니다. (추가 날짜: ${
+    changeDate.toISOString().split('T')[0]
+  })`;
   return createNotification(
     userId,
     'NEW_FEEDBACK',
@@ -119,26 +124,66 @@ export const notifyNewFeedback = async (userId, workId, feedbackId) => {
   );
 };
 
-// 마감 알림
 export const notifyDeadline = async (userId, challengeId) => {
-  const content = `신청하신 챌린지가 마감되었습니다.`;
+  const changeDate = new Date();
+  const content = `신청하신 챌린지가 마감되었습니다. (마감 날짜: ${
+    changeDate.toISOString().split('T')[0]
+  })`;
   return createNotification(userId, 'DEADLINE', content, null, challengeId);
 };
 
-// 관리자 챌린지 액션 알림
 export const notifyAdminChallengeAction = async (
   userId,
   challengeId,
   action,
   reason
 ) => {
-  const content = `관리자가 챌린지를 ${action}했습니다. 사유: ${reason}`;
+  const changeDate = new Date();
+  const content = `관리자가 챌린지를 ${action}했습니다. 사유: ${reason} (처리 날짜: ${
+    changeDate.toISOString().split('T')[0]
+  })`;
   return createNotification(userId, 'ADMIN_ACTION', content, null, challengeId);
 };
 
-// 관리자 피드백 액션 알림 -feedback
+export const notifyContentChange = async (
+  userId,
+  entityType,
+  entityName,
+  action,
+  changeDate = new Date()
+) => {
+  let content;
+  switch (entityType) {
+    case 'WORK':
+      content = `신청하신 챌린지 "${entityName}"의 도전 작업물이 ${action}되었습니다.`;
+      break;
+    case 'CHALLENGE':
+      content = `신청하신 챌린지 "${entityName}"가 ${action}되었습니다.`;
+      break;
+    case 'FEEDBACK':
+      content = `작성하신 피드백 "${entityName}"이 ${action}되었습니다.`;
+      break;
+    default:
+      content = `관련 내용이 ${action}되었습니다.`;
+  }
+  content += ` (${action} 날짜: ${changeDate.toISOString().split('T')[0]})`;
+
+  return createNotification(
+    userId,
+    'CONTENT_CHANGE',
+    content,
+    null,
+    entityType === 'CHALLENGE' ? entityName : null,
+    entityType === 'WORK' ? entityName : null,
+    entityType === 'FEEDBACK' ? entityName : null
+  );
+};
+
 export const notifyAdminFeedbackAction = async (userId, feedbackId, action) => {
-  const content = `관리자가 피드백을 ${action}했습니다.`;
+  const changeDate = new Date();
+  const content = `관리자가 피드백을 ${action}했습니다. (처리 날짜: ${
+    changeDate.toISOString().split('T')[0]
+  })`;
   return createNotification(
     userId,
     'ADMIN_ACTION',
@@ -147,19 +192,5 @@ export const notifyAdminFeedbackAction = async (userId, feedbackId, action) => {
     null,
     null,
     feedbackId
-  );
-};
-
-// 관리자 작업물 액션 알림 -work
-export const notifyAdminWorkAction = async (userId, workId, action) => {
-  const content = `관리자가 작업물을 ${action}했습니다.`;
-  return createNotification(
-    userId,
-    'ADMIN_ACTION',
-    content,
-    null,
-    null,
-    workId,
-    null
   );
 };

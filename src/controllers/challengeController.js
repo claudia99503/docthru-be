@@ -41,31 +41,35 @@ export async function patchChallengeById(req, res, next) {
     }
 
     const { challengeId } = req.params;
-    const {
-      title,
-      field,
-      docType,
-      description,
-      docUrl,
-      deadline,
-      progress,
-      participants,
-      maxParticipants,
-    } = req.body;
+    const updateData = req.body;
 
     const updatedChallenge = await ChallengeService.updateChallengeById(
       challengeId,
-      {
-        title,
-        field,
-        docType,
-        description,
-        docUrl,
-        deadline,
-        progress,
-        participants,
-        maxParticipants,
-      }
+      updateData
+    );
+
+    return res.status(200).json(updatedChallenge);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateChallengeStatus(req, res, next) {
+  try {
+    const userId = req.user.userId;
+    const { role } = await ChallengeService.getCurrentUser(userId);
+
+    if (role !== 'ADMIN') {
+      return next(new ForbiddenException());
+    }
+
+    const { challengeId } = req.params;
+    const { newStatus, reason } = req.body;
+
+    const updatedChallenge = await ChallengeService.updateChallengeStatus(
+      challengeId,
+      newStatus,
+      reason
     );
 
     return res.status(200).json(updatedChallenge);
@@ -78,14 +82,18 @@ export async function deleteChallengeById(req, res, next) {
   try {
     const userId = req.user.userId;
     const { role } = await ChallengeService.getCurrentUser(userId);
-    const { message } = req.body;
+    const { reason } = req.body;
 
     if (role !== 'ADMIN') {
       return next(new ForbiddenException());
     }
 
     const { challengeId } = req.params;
-    await ChallengeService.deleteChallengeById(challengeId, message);
+    await ChallengeService.updateChallengeStatus(
+      challengeId,
+      'DELETED',
+      reason
+    );
 
     return res.sendStatus(204);
   } catch (error) {
