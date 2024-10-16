@@ -164,7 +164,7 @@ export const updatedWork = async ({ workId, content }) => {
 };
 
 export const deleteWork = async ({ workId, userId }) => {
-  const participate = await prisma.participate.findFirst({
+  const participations = await prisma.participations.findFirst({
     where: {
       userId: Number(userId),
     },
@@ -177,17 +177,17 @@ export const deleteWork = async ({ workId, userId }) => {
       },
     });
 
-    await prisma.participate.delete({
+    await prisma.participations.delete({
       where: {
-        id: Number(participate.id),
+        id: Number(participations.id),
       },
     });
 
     await prisma.challenge.update({
       where: {
-        id: Number(participate.challengeId),
+        id: Number(participations.challengeId),
       },
-      data: { participates: { decrement: 1 } },
+      data: { participants: { decrement: 1 } },
     });
   });
 };

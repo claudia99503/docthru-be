@@ -67,23 +67,33 @@ export const loginUser = async (email, password) => {
     );
   }
 
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user || !(await bcrypt.compare(password, user.password))) {
-    throw new UnauthorizedException(
-      '이메일 또는 비밀번호가 일치하지 않습니다.'
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      throw new BadRequestException(
+        '이메일 또는 비밀번호가 일치하지 않습니다.'
+      );
+    }
+
+    const accessToken = generateToken(
+      user.id,
+      ACCESS_TOKEN_SECRET,
+      TOKEN_EXPIRY
     );
+    const refreshToken = generateToken(
+      user.id,
+      REFRESH_TOKEN_SECRET,
+      REFRESH_TOKEN_EXPIRY
+    );
+
+    await updateRefreshToken(user.id, refreshToken);
+
+    return { accessToken, refreshToken, userId: user.id };
+  } catch (error) {
+    if (error.code === 'P2000') {
+      throw new BadRequestException('유효하지 않은 요청입니다');
+    }
   }
-
-  const accessToken = generateToken(user.id, ACCESS_TOKEN_SECRET, TOKEN_EXPIRY);
-  const refreshToken = generateToken(
-    user.id,
-    REFRESH_TOKEN_SECRET,
-    REFRESH_TOKEN_EXPIRY
-  );
-
-  await updateRefreshToken(user.id, refreshToken);
-
-  return { accessToken, refreshToken, userId: user.id };
 };
 
 export const logoutUser = async (userId) => {
@@ -160,13 +170,13 @@ export const getOngoingChallenges = async (userId, page, limit) => {
   const { parsedPage, parsedLimit, skip } = getPaginationData(page, limit);
 
   const [ongoingChallenges, totalCount] = await Promise.all([
-    prisma.participate.findMany({
+    prisma.participations.findMany({
       where: { userId, challenge: { progress: true } },
       include: { challenge: true },
       skip,
       take: parsedLimit,
     }),
-    prisma.participate.count({
+    prisma.participations.count({
       where: { userId, challenge: { progress: true } },
     }),
   ]);
@@ -186,13 +196,13 @@ export const getCompletedChallenges = async (userId, page, limit) => {
   const { parsedPage, parsedLimit, skip } = getPaginationData(page, limit);
 
   const [completedChallenges, totalCount] = await Promise.all([
-    prisma.participate.findMany({
+    prisma.participations.findMany({
       where: { userId, challenge: { progress: false } },
       include: { challenge: true },
       skip,
       take: parsedLimit,
     }),
-    prisma.participate.count({
+    prisma.participations.count({
       where: { userId, challenge: { progress: false } },
     }),
   ]);

@@ -53,8 +53,8 @@ export const ChallengeService = {
       docUrl: challenge.docUrl,
       deadline: challenge.deadline,
       progress: challenge.progress,
-      participates: challenge.participates,
-      maxParticipates: challenge.maxParticipates,
+      participants: challenge.participants,
+      maxParticipants: challenge.maxParticipants,
       writer: challenge.applications.map((app) => ({
         id: app.id,
         userId: app.userId,
@@ -92,9 +92,9 @@ export const ChallengeService = {
         docUrl: updateData.docUrl || challenge.docUrl,
         deadline: updateData.deadline || challenge.deadline,
         progress: updateData.progress || challenge.progress,
-        participates: updateData.participates || challenge.participates,
-        maxParticipates:
-          updateData.maxParticipates || challenge.maxParticipates,
+        participants: updateData.participants || challenge.participants,
+        maxParticipants:
+          updateData.maxParticipants || challenge.maxParticipants,
       },
     });
 
@@ -149,7 +149,7 @@ export const ChallengeService = {
     if (!user) {
       throw new NotFoundException('사용자가 없습니다.');
     }
-    if (challenge.participates > challenge.maxParticipates) {
+    if (challenge.participants > challenge.maxParticipants) {
       throw new BadRequestException('참여 자리가 없음');
     }
 
@@ -157,12 +157,12 @@ export const ChallengeService = {
       challengeId: parseInt(challengeId, 10),
       userId,
     };
-    const participate = await prisma.participate.create({ data });
+    const participations = await prisma.participations.create({ data });
 
     await prisma.challenge.update({
       where: { id: parseInt(challengeId, 10) },
-      data: { participates: { increment: 1 } },
+      data: { participants: { increment: 1 } },
     });
-    return participate;
+    return participations;
   },
 };
