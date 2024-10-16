@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '../errors/customException.js';
 
-export const autFeedbackAction = async (req, res, next) => {
+export const authFeedbackAction = async (req, res, next) => {
   const user = req.user;
   const { feedbackId } = req.params;
 
@@ -29,6 +29,8 @@ export const autFeedbackAction = async (req, res, next) => {
     const userInfo = await prisma.user.findUnique({
       where: { id: Number(user.userId) },
     });
+
+    console.log(userInfo.role);
 
     if (!userInfo) {
       return next(new UnauthorizedException('사용자 정보가 없습니다.'));
