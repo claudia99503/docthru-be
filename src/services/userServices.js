@@ -340,3 +340,38 @@ export const getUserById = async (id) => {
     createdAt: formatDate(user.createdAt),
   };
 };
+
+export const updateUserGrade = async (userId) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      participations: {
+        include: {
+          challenge: true,
+        },
+      },
+    },
+  });
+
+  // 마감된(progress가 true인) 챌린지 참여 횟수 계산
+  const challengeParticipationCount = user.participations.filter(
+    (participation) => participation.challenge.progress
+  ).length;
+
+  const bestCount = user.bestCount;
+
+  let newGrade = 'NORMAL';
+
+  if (
+    (challengeParticipationCount >= 5 && bestCount >= 5) ||
+    challengeParticipationCount >= 10 ||
+    bestCount >= 10
+  ) {
+    newGrade = 'EXPERT';
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { grade: newGrade },
+  });
+};

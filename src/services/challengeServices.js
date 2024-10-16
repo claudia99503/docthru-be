@@ -3,7 +3,10 @@ import {
   NotFoundException,
   BadRequestException,
 } from '../errors/customException.js';
-import { notifyChallengeStatusChange } from './notificationService.js';
+import {
+  notifyChallengeStatusChange,
+  notifyContentChange,
+} from './notificationService.js';
 
 export const ChallengeService = {
   getChallenges: async ({ page, limit, sortBy, sortOrder }) => {
@@ -54,7 +57,7 @@ export const ChallengeService = {
     });
   },
 
-  updateChallengeById: async (challengeId, updateData) => {
+  updateChallengeById: async (challengeId, updateData, userId) => {
     const challenge = await prisma.challenge.findUnique({
       where: { id: parseInt(challengeId, 10) },
     });
@@ -66,6 +69,15 @@ export const ChallengeService = {
       where: { id: parseInt(challengeId, 10) },
       data: updateData,
     });
+
+    // 챌린지 수정 알림 생성
+    await notifyContentChange(
+      userId,
+      'CHALLENGE',
+      updatedChallenge.title,
+      '수정',
+      new Date()
+    );
 
     return updatedChallenge;
   },
@@ -103,6 +115,17 @@ export const ChallengeService = {
         where: { challengeId: parseInt(challengeId, 10) },
         data: { status: 'DELETED', message: reason },
       });
+
+      // 챌린지 삭제 알림 생성
+      for (const application of challenge.applications) {
+        await notifyContentChange(
+          application.userId,
+          'CHALLENGE',
+          challenge.title,
+          '삭제',
+          changeDate
+        );
+      }
     }
 
     return updatedChallenge;
@@ -160,6 +183,16 @@ export const ChallengeService = {
       where: { id: parseInt(challengeId, 10) },
       data: { participants: { increment: 1 } },
     });
+
+    // 챌린지 참여 알림 생성
+    await notifyContentChange(
+      userId,
+      'CHALLENGE',
+      challenge.title,
+      '참여',
+      new Date()
+    );
+
     return Participation;
   },
 };
