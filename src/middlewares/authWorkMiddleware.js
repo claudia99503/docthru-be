@@ -64,11 +64,7 @@ export const authCreateWorkAction = async (req, res, next) => {
     }
 
     if (challengeInfo.progress) {
-      if (userInfo.role === 'ADMIN') {
-        return next();
-      } else {
-        return next(new UnauthorizedException('챌린지가 마감됐습니다.'));
-      }
+      return next(new UnauthorizedException('챌린지가 마감됐습니다.'));
     }
 
     const isParticipating = challengeInfo.participations.some(
