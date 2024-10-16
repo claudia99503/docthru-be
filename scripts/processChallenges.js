@@ -34,15 +34,18 @@ async function processChallenges() {
       await notifyDeadline(participation.userId, challenge.id);
     }
 
-    // 베스트 작품 선정 (가장 많은 좋아요를 받은 작품)
-    const bestWork = challenge.works.reduce(
-      (prev, current) =>
-        prev.likes.length > current.likes.length ? prev : current,
-      null
+    // 가장 많은 좋아요 수 찾기 [추가!!]
+    const maxLikes = Math.max(
+      ...challenge.works.map((work) => work.likes.length)
     );
 
-    if (bestWork) {
-      // 베스트 작품 작성자의 bestCount 증가
+    // 가장 많은 좋아요를 받은 모든 작품 찾기 [추가!!]
+    const bestWorks = challenge.works.filter(
+      (work) => work.likes.length === maxLikes
+    );
+
+    // 베스트 작품 작성자들의 bestCount 증가
+    for (const bestWork of bestWorks) {
       await prisma.user.update({
         where: { id: bestWork.userId },
         data: { bestCount: { increment: 1 } },
