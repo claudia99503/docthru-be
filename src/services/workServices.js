@@ -3,6 +3,7 @@ import {
   BadRequestException,
   ForbiddenException,
 } from '../errors/customException.js';
+import * as notificationService from './notificationService.js';
 
 export const getWorksWithLikes = async ({
   challengeId,
@@ -137,10 +138,21 @@ export const createWork = async ({ challengeId, content, userId }) => {
       lastModifiedAt: true,
     },
   });
+
+  const challengeInfo = await prisma.application.findUnique({
+    where: { id: Number(challengeId) },
+  });
+
+  await notificationService.notifyNewWork(
+    Number(challengeInfo.userId),
+    Number(challengeId),
+    Number(works.id)
+  );
+
   return works;
 };
 
-export const updatedWork = async ({ workId, content }) => {
+export const updatedWork = async ({ workId, content, userId }) => {
   if (!content) {
     throw new BadRequestException('내용 입력은 필수입니다.');
   }
@@ -158,13 +170,18 @@ export const updatedWork = async ({ workId, content }) => {
       lastModifiedAt: true,
     },
   });
+
+  await notifyAdminAboutWork(userId, workId, '수정');
+
   return works;
 };
 
 export const deleteWork = async ({ workId, userId }) => {
-  const participations = await prisma.participations.findFirst({
+  const workInfo = await notifyAdminAboutWork(userId, workId, '삭제');
+
+  const participateInfo = await prisma.participation.findFirst({
     where: {
-      userId: Number(userId),
+      userId: Number(workInfo.userId),
     },
   });
 
@@ -175,15 +192,15 @@ export const deleteWork = async ({ workId, userId }) => {
       },
     });
 
-    await prisma.participations.delete({
+    await prisma.participation.delete({
       where: {
-        id: Number(participations.id),
+        id: Number(participateInfo.id),
       },
     });
 
     await prisma.challenge.update({
       where: {
-        id: Number(participations.challengeId),
+        id: Number(participateInfo.challengeId),
       },
       data: { participants: { decrement: 1 } },
     });
@@ -350,4 +367,28 @@ const bestWorksList = async ({ challengeId, userId }) => {
   } else {
     return;
   }
+};
+
+const notifyAdminAboutWork = async (userId, workId, type) => {
+  const [userInfo, workInfo] = await prisma.$transaction([
+    prisma.user.findUnique({
+      where: { id: Number(userId) },
+    }),
+    prisma.work.findUnique({
+      where: { id: Number(workId) },
+      include: {
+        user: true,
+      },
+    }),
+  ]);
+
+  if (userInfo && userInfo.role === 'ADMIN') {
+    await notificationService.notifyAdminWorkAction(
+      Number(workInfo.userId),
+      Number(workId),
+      type === '삭제' ? '삭제' : '수정'
+    );
+  }
+
+  return workInfo;
 };

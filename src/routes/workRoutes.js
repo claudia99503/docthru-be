@@ -1,11 +1,11 @@
 import express from 'express';
 import * as workController from '../controllers/workController.js';
+import * as feedbackController from '../controllers/feedbackController.js';
 import { authenticateAccessToken } from '../middlewares/authMiddleware.js';
 import {
   authWorkAction,
   authCreateWorkAction,
 } from '../middlewares/authWorkMiddleware.js';
-import * as feedbackController from '../controllers/feedbackController.js';
 
 const router = express.Router();
 
