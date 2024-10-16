@@ -117,8 +117,8 @@ const challenges = [
     description: '번역 부탁 드립니다!',
     docUrl: 'https://www.example.com',
     deadline: '1970-01-01T00:00:00.000Z',
-    participates: 0,
-    maxParticipates: 5,
+    participants: 0,
+    maxParticipants: 5,
   },
   {
     title: 'API 가이드 번역 챌린지',
@@ -127,8 +127,8 @@ const challenges = [
     description: 'API 사용 방법을 번역해 주세요.',
     docUrl: 'https://www.example.com/api',
     deadline: '1970-01-01T00:00:00.000Z',
-    participates: 0,
-    maxParticipates: 10,
+    participants: 0,
+    maxParticipants: 10,
   },
   {
     title: 'CAREER 관련 문서 번역 챌린지',
@@ -137,8 +137,8 @@ const challenges = [
     description: '커리어 관련 공식 문서를 번역해 주세요.',
     docUrl: 'https://www.example.com/career',
     deadline: '1970-01-01T00:00:00.000Z',
-    participates: 0,
-    maxParticipates: 8,
+    participants: 0,
+    maxParticipants: 8,
   },
   {
     title: 'MODERNJS 블로그 번역 챌린지',
@@ -147,8 +147,8 @@ const challenges = [
     description: '모던 자바스크립트에 대한 블로그 글을 번역해 주세요.',
     docUrl: 'https://www.example.com/modernjs',
     deadline: '1970-01-01T00:00:00.000Z',
-    participates: 0,
-    maxParticipates: 7,
+    participants: 0,
+    maxParticipants: 7,
   },
   {
     title: 'WEB 기술 공식 문서 번역 챌린지',
@@ -157,8 +157,8 @@ const challenges = [
     description: '웹 기술 관련 공식 문서를 번역해 주세요.',
     docUrl: 'https://www.example.com/web',
     deadline: '1970-01-01T00:00:00.000Z',
-    participates: 0,
-    maxParticipates: 6,
+    participants: 0,
+    maxParticipants: 6,
   },
   {
     title: 'NEXTJS 블로그 번역 챌린지',
@@ -167,8 +167,8 @@ const challenges = [
     description: 'NEXTJS 관련 블로그 글을 번역해 주세요.',
     docUrl: 'https://www.example.com/nextjs-blog',
     deadline: '1970-01-01T00:00:00.000Z',
-    participates: 0,
-    maxParticipates: 5,
+    participants: 0,
+    maxParticipants: 5,
   },
   {
     title: 'API 공식 문서 번역 챌린지',
@@ -177,8 +177,8 @@ const challenges = [
     description: 'API에 대한 공식 문서를 번역해 주세요.',
     docUrl: 'https://www.example.com/api-official',
     deadline: '1970-01-01T00:00:00.000Z',
-    participates: 0,
-    maxParticipates: 9,
+    participants: 0,
+    maxParticipants: 9,
   },
   {
     title: 'CAREER 블로그 번역 챌린지',
@@ -187,8 +187,8 @@ const challenges = [
     description: '커리어 관련 블로그 글을 번역해 주세요.',
     docUrl: 'https://www.example.com/career-blog',
     deadline: '1970-01-01T00:00:00.000Z',
-    participates: 0,
-    maxParticipates: 4,
+    participants: 0,
+    maxParticipants: 4,
   },
   {
     title: 'MODERNJS 공식 문서 번역 챌린지',
@@ -197,8 +197,8 @@ const challenges = [
     description: '모던 자바스크립트에 대한 공식 문서를 번역해 주세요.',
     docUrl: 'https://www.example.com/modernjs-official',
     deadline: '1970-01-01T00:00:00.000Z',
-    participates: 0,
-    maxParticipates: 6,
+    participants: 0,
+    maxParticipants: 6,
   },
   {
     title: 'WEB 블로그 번역 챌린지',
@@ -207,8 +207,8 @@ const challenges = [
     description: '웹 기술 관련 블로그 글을 번역해 주세요.',
     docUrl: 'https://www.example.com/web-blog',
     deadline: '1970-01-01T00:00:00.000Z',
-    participates: 0,
-    maxParticipates: 8,
+    participants: 0,
+    maxParticipants: 8,
   },
 ];
 
@@ -265,7 +265,7 @@ const applications = [
   },
 ];
 
-const participates = [
+const participants = [
   {
     userId: 1,
     challengeId: 1,
@@ -461,7 +461,7 @@ async function main() {
   await prisma.feedback.deleteMany();
   await prisma.work.deleteMany();
   await prisma.challenge.deleteMany();
-  await prisma.participate.deleteMany();
+  await prisma.participation.deleteMany();
   await prisma.like.deleteMany();
   await prisma.application.deleteMany();
   await prisma.user.createMany({
@@ -473,8 +473,8 @@ async function main() {
   await prisma.application.createMany({
     data: applications,
   });
-  await prisma.participate.createMany({
-    data: participates,
+  await prisma.participation.createMany({
+    data: participants,
   });
   await prisma.work.createMany({
     data: works,

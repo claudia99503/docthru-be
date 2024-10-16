@@ -55,7 +55,7 @@ export const authCreateWorkAction = async (req, res, next) => {
   }
 
   const isParticipating = challengeInfo.participations.some(
-    (participation) => participation.userId === userInfo.id
+    (participations) => participations.userId === userInfo.id
   );
 
   if (!isParticipating) {

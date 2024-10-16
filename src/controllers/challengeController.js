@@ -1,4 +1,3 @@
-
 import { ForbiddenException } from '../errors/customException.js';
 import { ChallengeService } from '../services/challengeServices.js';
 
@@ -50,8 +49,8 @@ export async function patchChallengeById(req, res, next) {
       docUrl,
       deadline,
       progress,
-      participates,
-      maxParticipates,
+      participants,
+      maxParticipants,
     } = req.body;
 
     const updatedChallenge = await ChallengeService.updateChallengeById(
@@ -64,8 +63,8 @@ export async function patchChallengeById(req, res, next) {
         docUrl,
         deadline,
         progress,
-        participates,
-        maxParticipates,
+        participants,
+        maxParticipants,
       }
     );
 
@@ -107,11 +106,11 @@ export async function postChallengeParticipate(req, res, next) {
   try {
     const { challengeId } = req.params;
     const { userId } = req.user;
-    const participate = await ChallengeService.postChallengeParticipate(
+    const participations = await ChallengeService.postChallengeParticipate(
       challengeId,
       userId
     );
-    return res.status(201).json(participate);
+    return res.status(201).json(participations);
   } catch (error) {
     next(error);
   }

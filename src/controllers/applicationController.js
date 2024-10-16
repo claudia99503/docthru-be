@@ -11,7 +11,7 @@ export const createApplication = async (req, res, next) => {
       description,
       docUrl,
       deadline,
-      maxParticipates,
+      maxParticipants,
     } = req.body;
 
     await Prisma.$transaction(async (prisma) => {
@@ -22,8 +22,8 @@ export const createApplication = async (req, res, next) => {
         description,
         docUrl,
         deadline: new Date(deadline),
-        participates: 0,
-        maxParticipates,
+        participants: 0,
+        maxParticipants,
       };
       const challenge = await prisma.challenge.create({ data });
 
@@ -88,11 +88,11 @@ export const updateApplication = async (req, res, next) => {
     }
 
     const { applicationId } = req.params;
-    const { status, invalidationComment } = req.body;
+    const { status, message } = req.body;
     const updatedApplication = await applicationService.updateApplication(
       parseInt(applicationId),
       status,
-      invalidationComment
+      message
     );
     res.json(updatedApplication);
   } catch (error) {
