@@ -26,34 +26,26 @@ export const getWorksWithLikes = async ({
     orderBy: sortOrder,
     skip: offset,
     take: Number(limit),
-    select: {
-      id: true,
-      userId: true,
-      challengeId: true,
-      content: true,
-      lastModifiedAt: true,
-      isSubmitted: false,
-      submittedAt: false,
-      likeCount: true,
-    },
-  });
-
-  const userLikes = await prisma.like.findMany({
-    where: {
-      userId: userId,
-      workId: {
-        in: works.map((work) => work.id),
-      },
-    },
+    include: { likes: true },
   });
 
   const worksList = works.map((work) => {
-    const isLiked = userLikes.some((like) => like.workId === work.id);
+    const isLiked = work.likes.some((like) => like.userId === userId);
     return {
       ...work,
       isLiked,
     };
   });
+
+  const data = worksList.map((workList) => ({
+    id: workList.id,
+    userId: workList.userId,
+    challengeId: workList.challengeId,
+    content: workList.content,
+    lastModifiedAt: workList.lastModifiedAt,
+    likeCount: workList.likeCount,
+    isLiked: workList.isLiked,
+  }));
 
   //마감하면 베스트 게시물 조회
   const bestWorks = await bestWorksList({ challengeId, userId });
@@ -68,7 +60,7 @@ export const getWorksWithLikes = async ({
     totalPages: Math.ceil(total / limit),
     total,
     bestList: bestWorks,
-    list: worksList,
+    list: data,
   };
 };
 
@@ -327,43 +319,38 @@ const bestWorksList = async ({ challengeId, userId }) => {
 
     const NumberLikeCount = Math.max(...workLikeCount);
 
+    if (NumberLikeCount === 0) {
+      return [];
+    }
+
     const bestWorks = await prisma.work.findMany({
       where: {
         challengeId: Number(challengeId),
         likeCount: Number(NumberLikeCount),
       },
       orderBy: sortOrder,
-
-      select: {
-        id: true,
-        userId: true,
-        challengeId: true,
-        content: true,
-        lastModifiedAt: true,
-        isSubmitted: false,
-        submittedAt: false,
-        likeCount: true,
-      },
-    });
-
-    const userLikes = await prisma.like.findMany({
-      where: {
-        userId: userId,
-        workId: {
-          in: bestWorks.map((work) => work.id),
-        },
-      },
+      include: { likes: true },
     });
 
     const bestWorkList = bestWorks.map((work) => {
-      const isLiked = userLikes.some((like) => like.workId === work.id);
+      const isLiked = bestWorks.likes?.some((like) => like.userId === userId);
       return {
         ...work,
         isLiked,
       };
     });
 
-    return bestWorkList;
+    const data = bestWorkList.map((bestWork) => ({
+      id: bestWork.id,
+      userId: bestWork.userId,
+      challengeId: bestWork.challengeId,
+      content: bestWork.content,
+      lastModifiedAt: bestWork.lastModifiedAt,
+      likeCount: bestWork.likeCount,
+      isLiked: bestWork.isLiked,
+    }));
+
+    return data;
   } else {
     return;
   }
