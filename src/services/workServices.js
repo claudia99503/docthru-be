@@ -1,9 +1,7 @@
 import prisma from '../lib/prisma.js';
 import {
   BadRequestException,
-  UnauthorizedException,
-  NotFoundException,
-  ConflictException,
+  ForbiddenException,
 } from '../errors/customException.js';
 
 export const getWorksWithLikes = async ({
@@ -209,7 +207,7 @@ export const likeWork = async ({ workId, userId }) => {
       }),
     ]);
   } else {
-    throw new Error('챌린지가 마감됐습니다.');
+    throw new BadRequestException('챌린지가 마감됐습니다.');
   }
 };
 
@@ -237,10 +235,10 @@ export const likeCancelWork = async ({ workId, userId }) => {
         }),
       ]);
     } else {
-      throw new Error('좋아요가 존재하지 않습니다.');
+      throw new ForbiddenException('좋아요가 존재하지 않습니다.');
     }
   } else {
-    throw new Error('챌린지가 마감됐습니다.');
+    throw new BadRequestException('챌린지가 마감됐습니다.');
   }
 };
 
