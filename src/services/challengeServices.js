@@ -11,6 +11,8 @@ import {
 export const ChallengeService = {
   getChallenges: async ({ page, limit, sortBy, sortOrder }) => {
     const skip = (page - 1) * limit;
+
+    // 챌린지 목록 조회
     const list = await prisma.challenge.findMany({
       skip,
       take: limit,
@@ -23,7 +25,29 @@ export const ChallengeService = {
         },
       },
     });
-    return list;
+
+    // 전체 챌린지 수 조회
+    const totalCount = await prisma.challenge.count({
+      where: {
+        applications: {
+          some: {
+            status: 'ACCEPTED',
+          },
+        },
+      },
+    });
+
+    // 총 페이지 수 계산
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return {
+      list,
+      meta: {
+        currentPage: page,
+        totalCount,
+        totalPages,
+      },
+    };
   },
 
   getChallengeById: async (challengeId) => {

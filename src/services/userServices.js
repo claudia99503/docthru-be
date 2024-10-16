@@ -287,11 +287,8 @@ export const getAppliedChallenges = async (
     })),
     meta: {
       currentPage: parsedPage,
-      pageSize: parsedLimit,
       totalCount,
       totalPages: Math.ceil(totalCount / parsedLimit),
-      filter: { status, search: searchTerm },
-      sort: { by: sortBy, order: sortOrder },
     },
   };
 };
