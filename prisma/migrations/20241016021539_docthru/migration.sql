@@ -41,8 +41,8 @@ CREATE TABLE "Challenge" (
     "docUrl" VARCHAR(200) NOT NULL,
     "deadline" TIMESTAMP(3) NOT NULL,
     "progress" BOOLEAN NOT NULL DEFAULT false,
-    "participates" INTEGER,
-    "maxParticipates" INTEGER,
+    "participants" INTEGER,
+    "maxParticipants" INTEGER,
 
     CONSTRAINT "Challenge_pkey" PRIMARY KEY ("id")
 );
@@ -54,19 +54,19 @@ CREATE TABLE "Application" (
     "challengeId" INTEGER NOT NULL,
     "status" "ApplicationStatus" NOT NULL DEFAULT 'WAITING',
     "appliedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "invalidationComment" VARCHAR(200),
-    "invalidatedAt" TIMESTAMP(3),
+    "message" VARCHAR(200),
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Application_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "Participate" (
+CREATE TABLE "Participation" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
     "challengeId" INTEGER NOT NULL,
 
-    CONSTRAINT "Participate_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Participation_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -136,13 +136,13 @@ CREATE UNIQUE INDEX "Like_userId_workId_key" ON "Like"("userId", "workId");
 ALTER TABLE "Application" ADD CONSTRAINT "Application_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Application" ADD CONSTRAINT "Application_challengeId_fkey" FOREIGN KEY ("challengeId") REFERENCES "Challenge"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Application" ADD CONSTRAINT "Application_challengeId_fkey" FOREIGN KEY ("challengeId") REFERENCES "Challenge"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Participate" ADD CONSTRAINT "Participate_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Participation" ADD CONSTRAINT "Participation_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Participate" ADD CONSTRAINT "Participate_challengeId_fkey" FOREIGN KEY ("challengeId") REFERENCES "Challenge"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Participation" ADD CONSTRAINT "Participation_challengeId_fkey" FOREIGN KEY ("challengeId") REFERENCES "Challenge"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Work" ADD CONSTRAINT "Work_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
