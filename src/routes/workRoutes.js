@@ -5,6 +5,7 @@ import {
   authWorkAction,
   authCreateWorkAction,
 } from '../middlewares/authWorkMiddleware.js';
+import * as feedbackController from '../controllers/feedbackController.js';
 
 const router = express.Router();
 
@@ -58,6 +59,12 @@ router.get(
   '/:workId/feedbacks',
   authenticateAccessToken,
   workController.feedbacksWork
+);
+
+router.post(
+  '/:workId/feedbacks',
+  authenticateAccessToken,
+  feedbackController.postFeedback
 );
 
 export default router;
