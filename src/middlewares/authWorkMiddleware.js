@@ -8,7 +8,7 @@ import {
 const prisma = new PrismaClient();
 
 export const authWorkAction = async (req, res, next) => {
-  const user = req.user;
+  const { userId } = req.user;
   const { workId } = req.params;
 
   try {
@@ -21,7 +21,7 @@ export const authWorkAction = async (req, res, next) => {
     }
 
     const userInfo = await prisma.user.findUnique({
-      where: { id: Number(user.userId) },
+      where: { id: Number(userId) },
     });
 
     if (!userInfo) {
@@ -39,7 +39,7 @@ export const authWorkAction = async (req, res, next) => {
 };
 
 export const authCreateWorkAction = async (req, res, next) => {
-  const user = req.user;
+  const { userId } = req.user;
   const { challengeId } = req.params;
 
   try {
@@ -56,7 +56,7 @@ export const authCreateWorkAction = async (req, res, next) => {
     }
 
     const userInfo = await prisma.user.findUnique({
-      where: { id: Number(user.userId) },
+      where: { id: Number(userId) },
     });
 
     if (!userInfo) {
