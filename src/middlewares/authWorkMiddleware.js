@@ -28,6 +28,18 @@ export const authWorkAction = async (req, res, next) => {
       return next(new UnauthorizedException('사용자 정보가 없습니다.'));
     }
 
+    const challengeInfo = await prisma.challenge.findUnique({
+      where: { id: Number(workInfo.challengeId) },
+    });
+
+    if (challengeInfo.progress) {
+      if (userInfo.role === 'ADMIN') {
+        return next();
+      } else {
+        return next(new UnauthorizedException('챌린지가 마감됐습니다.'));
+      }
+    }
+
     if (userInfo.id === workInfo.userId || userInfo.role === 'ADMIN') {
       return next();
     }
