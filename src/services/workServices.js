@@ -50,15 +50,16 @@ export const getWorksWithLikes = async ({
   //마감하면 베스트 게시물 조회
   const bestWorks = await bestWorksList({ challengeId, userId });
 
-  const total = await prisma.work.count({
+  const totalCount = await prisma.work.count({
     where: {
       challengeId: Number(challengeId),
     },
   });
 
+  const totalPages = Math.ceil(totalCount / limit);
+
   return {
-    totalPages: Math.ceil(total / limit),
-    total,
+    meta: { totalPages, totalCount, currentPage: Number(page) },
     bestList: bestWorks,
     list: data,
   };
@@ -273,7 +274,7 @@ export const getFeedbacks = async ({ workId, cursorId, limit }) => {
   const hasNext = feedbacks.length > limit ? true : false;
   const list = feedbacks.slice(0, limit);
 
-  return { hasNext, nextCursor, list };
+  return { meta: { hasNext, nextCursor }, list };
 };
 
 const challengeDeadline = async (workId) => {

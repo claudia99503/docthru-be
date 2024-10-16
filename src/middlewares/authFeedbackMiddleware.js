@@ -30,8 +30,6 @@ export const authFeedbackAction = async (req, res, next) => {
       where: { id: Number(user.userId) },
     });
 
-    console.log(userInfo.role);
-
     if (!userInfo) {
       return next(new UnauthorizedException('사용자 정보가 없습니다.'));
     }
