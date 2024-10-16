@@ -12,7 +12,7 @@ export const ChallengeService = {
   getChallenges: async ({ page, limit, sortBy, sortOrder }) => {
     const skip = (page - 1) * limit;
 
-    // 챌린지 목록 조회
+    // 챌린지 목록 조회입니다~
     const list = await prisma.challenge.findMany({
       skip,
       take: limit,
@@ -26,7 +26,7 @@ export const ChallengeService = {
       },
     });
 
-    // 전체 챌린지 수 조회
+    // 전체 챌린지 수 조회입니다!
     const totalCount = await prisma.challenge.count({
       where: {
         applications: {
@@ -37,9 +37,10 @@ export const ChallengeService = {
       },
     });
 
-    // 총 페이지 수 계산
+    // 총 페이지 수 계산입니다!
     const totalPages = Math.ceil(totalCount / limit);
 
+    // 리턴값입니다~
     return {
       list,
       meta: {
