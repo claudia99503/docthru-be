@@ -6,7 +6,6 @@ import {
   authWorkAction,
   authCreateWorkAction,
 } from '../middlewares/authWorkMiddleware.js';
-import * as feedbackController from '../controllers/feedbackController.js';
 
 const router = express.Router();
 
