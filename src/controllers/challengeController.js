@@ -107,11 +107,11 @@ export async function postChallengeParticipate(req, res, next) {
   try {
     const { challengeId } = req.params;
     const { userId } = req.user;
-    const participations = await ChallengeService.postChallengeParticipate(
+    const Participation = await ChallengeService.postChallengeParticipate(
       challengeId,
       userId
     );
-    return res.status(201).json(participations);
+    return res.status(201).json(Participation);
   } catch (error) {
     next(error);
   }
