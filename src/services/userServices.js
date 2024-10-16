@@ -34,9 +34,6 @@ const applicationStatusConverter = (status) => {
 };
 
 // 토큰 생성 유틸리티 함수
-const generateToken = (userId, secret, expiresIn) =>
-  jwt.sign({ userId }, secret, { expiresIn });
-
 export const registerUser = async (nickname, email, password) => {
   const validationErrors = validateUserInput(nickname, email, password);
   if (validationErrors.length > 0) {
@@ -51,9 +48,20 @@ export const registerUser = async (nickname, email, password) => {
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-  return prisma.user.create({
+  const user = await prisma.user.create({
     data: { nickname, email, password: hashedPassword },
   });
+
+  const accessToken = generateToken(user.id, ACCESS_TOKEN_SECRET, TOKEN_EXPIRY);
+  const refreshToken = generateToken(
+    user.id,
+    REFRESH_TOKEN_SECRET,
+    REFRESH_TOKEN_EXPIRY
+  );
+
+  await updateRefreshToken(user.id, refreshToken);
+
+  return { accessToken, refreshToken, userId: user.id };
 };
 
 export const loginUser = async (email, password) => {
