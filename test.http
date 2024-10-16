@@ -12,7 +12,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE2LCJpY
 ### 챌린저 내용 변경
 PATCH http://localhost:3001/api/challenges/1
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE2LCJpYXQiOjE3Mjg5NzcxMDMsImV4cCI6MTcyODk3ODAwM30.jcf9oyhTrg3UbE_Dtzmi3yn8jKSE3_qfbvIwVdpI0NU
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE2LCJpYXQiOjE3MjkwNDYxNDgsImV4cCI6MTcyOTA0NzA0OH0.T6spjbtYDAHlxEAKH1FYxfk3e2Ha-utfIg1gA1GbsFE
 
 {
   "title" : "제목 변경",
@@ -20,9 +20,13 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE2LCJpY
 }
 
 ### 챌린저 삭제
-DELETE  http://localhost:3001/api/challenges/2
+DELETE  https://docthru-be.vercel.app/api/challenges/2
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE2LCJpYXQiOjE3Mjg5NzcxMDMsImV4cCI6MTcyODk3ODAwM30.jcf9oyhTrg3UbE_Dtzmi3yn8jKSE3_qfbvIwVdpI0NU
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE2LCJpYXQiOjE3MjkwNDYxNDgsImV4cCI6MTcyOTA0NzA0OH0.T6spjbtYDAHlxEAKH1FYxfk3e2Ha-utfIg1gA1GbsFE
+
+{
+  "message" : "삭제 사유"
+}
 
 
 ### 회원가입
@@ -42,7 +46,7 @@ POST http://localhost:3001/api/users/login
 Content-Type: application/json
 
 {
-  "email" : "test@test.c",
+  "email" : "test@test.com",
   "password" : "12341234"
 }
 
