@@ -8,13 +8,13 @@ export async function getChallenges(req, res, next) {
     const sortBy = req.query.orderByField || 'id';
     const sortOrder = req.query.orderByDir || 'asc';
 
-    const list = await ChallengeService.getChallenges({
+    const result = await ChallengeService.getChallenges({
       page,
       limit,
       sortBy,
       sortOrder,
     });
-    return res.status(200).json({ list });
+    return res.status(200).json(result);
   } catch (error) {
     next(error);
   }
