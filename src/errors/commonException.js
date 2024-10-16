@@ -6,7 +6,7 @@ export class CommonException extends Error {
     identifier,
     reason,
     origin,
-    occuredAt = new Date().toISOString(),
+    occurredAt = new Date().toISOString(),
   } = {}) {
     super(message);
     this.status = status;
@@ -14,7 +14,7 @@ export class CommonException extends Error {
     this.identifier = identifier;
     this.reason = reason;
     this.origin = origin;
-    this.occuredAt = occuredAt;
+    this.occurredAt = occurredAt;
     Error.captureStackTrace(this, this.constructor);
   }
 }
