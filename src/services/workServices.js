@@ -132,12 +132,12 @@ export const createWork = async ({ challengeId, content, userId }) => {
     },
   });
 
-  const challengeInfo = await prisma.application.findUnique({
+  const applicationInfo = await prisma.application.findUnique({
     where: { id: Number(challengeId) },
   });
 
   await notificationService.notifyNewWork(
-    Number(challengeInfo.userId),
+    Number(applicationInfo.userId),
     Number(challengeId),
     Number(works.id)
   );
@@ -364,17 +364,18 @@ const notifyAdminAboutWork = async (userId, workId, type) => {
     }),
     prisma.work.findUnique({
       where: { id: Number(workId) },
-      include: {
-        user: true,
-      },
+      include: { challenge: true },
     }),
   ]);
 
   if (userInfo && userInfo.role === 'ADMIN') {
-    await notificationService.notifyAdminWorkAction(
+    await notificationService.notifyContentChange(
       Number(workInfo.userId),
+      'WORK',
+      workInfo.challenge.title,
+      type === '삭제' ? '삭제' : '수정',
       Number(workId),
-      type === '삭제' ? '삭제' : '수정'
+      new Date()
     );
   }
 

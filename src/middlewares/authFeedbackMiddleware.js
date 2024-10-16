@@ -51,3 +51,39 @@ export const authFeedbackAction = async (req, res, next) => {
     next(error);
   }
 };
+
+export const authCreateFeedbackAction = async (req, res, next) => {
+  const { userId } = req.user;
+  const { workId } = req.params;
+
+  try {
+    if (!userId) {
+      return next(new UnauthorizedException('로그인이 필요합니다.'));
+    }
+
+    const workWithChallenge = await prisma.work.findUnique({
+      where: { id: Number(workId) },
+      include: {
+        challenge: {
+          include: {
+            participations: true,
+          },
+        },
+      },
+    });
+
+    const challengeInfo = workWithChallenge?.challenge;
+
+    if (!workWithChallenge) {
+      return next(new NotFoundException('등록된 작업물이 없습니다.'));
+    }
+
+    if (challengeInfo.progress) {
+      return next(new UnauthorizedException('챌린지가 마감됐습니다.'));
+    }
+
+    return next();
+  } catch (error) {
+    next(error);
+  }
+};

@@ -6,6 +6,7 @@ import {
   authWorkAction,
   authCreateWorkAction,
 } from '../middlewares/authWorkMiddleware.js';
+import { authCreateFeedbackAction } from '../middlewares/authFeedbackMiddleware.js';
 
 const router = express.Router();
 
@@ -64,6 +65,7 @@ router.get(
 router.post(
   '/:workId/feedbacks',
   authenticateAccessToken,
+  authCreateFeedbackAction,
   feedbackController.postFeedback
 );
 

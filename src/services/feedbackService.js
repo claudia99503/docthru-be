@@ -50,16 +50,23 @@ const notifyAdminAboutFeedback = async (userId, feedbackId, type) => {
     }),
     prisma.feedback.findUnique({
       where: { id: Number(feedbackId) },
-      include: { user: true },
+      include: { user: true, work: true },
     }),
   ]);
 
-  //피드백 작성자한테 알림
+  const challengeInfo = await prisma.challenge.findUnique({
+    where: { id: Number(feedbackInfo.work.challengeId) },
+  });
+
+  // 피드백 작성자한테 알림
   if (userInfo && userInfo.role === 'ADMIN') {
-    await notificationService.notifyAdminFeedbackAction(
+    await notificationService.notifyContentChange(
       Number(feedbackInfo.user.id),
+      'FEEDBACK',
+      challengeInfo.title,
+      type === '삭제' ? '삭제' : '수정',
       Number(feedbackId),
-      type === '삭제' ? '삭제' : '수정'
+      new Date()
     );
   }
 };
