@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import {
   NotFoundException,
   BadRequestException,
-} from '../errors/customException';
+} from '../errors/customException.js';
 
 const prisma = new PrismaClient();
 
