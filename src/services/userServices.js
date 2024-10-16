@@ -34,6 +34,9 @@ const applicationStatusConverter = (status) => {
 };
 
 // 토큰 생성 유틸리티 함수
+const generateToken = (userId, secret, expiresIn) =>
+  jwt.sign({ userId }, secret, { expiresIn });
+
 export const registerUser = async (nickname, email, password) => {
   const validationErrors = validateUserInput(nickname, email, password);
   if (validationErrors.length > 0) {
