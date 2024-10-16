@@ -333,7 +333,7 @@ const bestWorksList = async ({ challengeId, userId }) => {
     });
 
     const bestWorkList = bestWorks.map((work) => {
-      const isLiked = bestWorks.likes?.some((like) => like.userId === userId);
+      const isLiked = bestWorks.likes.some((like) => like.userId === userId);
       return {
         ...work,
         isLiked,
