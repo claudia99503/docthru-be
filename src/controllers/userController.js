@@ -24,8 +24,14 @@ const sendRefreshToken = (res, token) => {
 export const register = async (req, res, next) => {
   const { nickname, email, password } = req.body;
   try {
-    const user = await userServices.registerUser(nickname, email, password);
-    res.status(201).json({ message: '회원가입 성공', userId: user.id });
+    const { accessToken, refreshToken, userId } =
+      await userServices.registerUser(nickname, email, password);
+    sendRefreshToken(res, refreshToken);
+    res.status(201).json({
+      message: '회원가입 성공',
+      accessToken,
+      userId,
+    });
   } catch (error) {
     next(error);
   }
@@ -39,7 +45,11 @@ export const login = async (req, res, next) => {
       password
     );
     sendRefreshToken(res, refreshToken);
-    res.json({ message: '로그인 성공', accessToken, userId });
+    res.json({
+      message: '로그인 성공',
+      accessToken,
+      userId,
+    });
   } catch (error) {
     next(error);
   }

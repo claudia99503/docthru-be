@@ -44,7 +44,7 @@ export const postWork = async (req, res, next) => {
       content,
       userId,
     });
-    res.status(201).json( newWork );
+    res.status(201).json(newWork);
   } catch (error) {
     next(error);
   }
@@ -55,8 +55,13 @@ export const editWork = async (req, res, next) => {
   try {
     const { workId } = req.params;
     const { content } = req.body;
+    const { userId } = req.user;
 
-    const updatedWork = await workService.updatedWork({ workId, content });
+    const updatedWork = await workService.updatedWork({
+      workId,
+      content,
+      userId,
+    });
     res.status(201).json(updatedWork);
   } catch (error) {
     next(error);
@@ -70,7 +75,7 @@ export const deleteWork = async (req, res, next) => {
     const { userId } = req.user;
 
     await workService.deleteWork({ workId, userId });
-    res.sendStatus(204);
+    res.status(200).json({ message: '작업물이 삭제됐습니다.' });
   } catch (error) {
     next(error);
   }
@@ -96,7 +101,7 @@ export const likeCancelWork = async (req, res, next) => {
     const { userId } = req.user;
 
     await workService.likeCancelWork({ workId, userId });
-    res.status(204).json({ message: '좋아요가 취소됐습니다.' });
+    res.status(200).json({ message: '좋아요가 취소됐습니다.' });
   } catch (error) {
     next(error);
   }

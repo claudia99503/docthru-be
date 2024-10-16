@@ -18,7 +18,6 @@ import {
   isValidPassword,
   validateUserInput,
 } from '../utils/authValidation.js';
-import { formatDate } from '../utils/dateUtils.js';
 
 const applicationStatusConverter = (status) => {
   switch (status) {
@@ -51,9 +50,20 @@ export const registerUser = async (nickname, email, password) => {
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-  return prisma.user.create({
+  const user = await prisma.user.create({
     data: { nickname, email, password: hashedPassword },
   });
+
+  const accessToken = generateToken(user.id, ACCESS_TOKEN_SECRET, TOKEN_EXPIRY);
+  const refreshToken = generateToken(
+    user.id,
+    REFRESH_TOKEN_SECRET,
+    REFRESH_TOKEN_EXPIRY
+  );
+
+  await updateRefreshToken(user.id, refreshToken);
+
+  return { accessToken, refreshToken, userId: user.id };
 };
 
 export const loginUser = async (email, password) => {
@@ -67,23 +77,33 @@ export const loginUser = async (email, password) => {
     );
   }
 
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user || !(await bcrypt.compare(password, user.password))) {
-    throw new UnauthorizedException(
-      '이메일 또는 비밀번호가 일치하지 않습니다.'
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      throw new BadRequestException(
+        '이메일 또는 비밀번호가 일치하지 않습니다.'
+      );
+    }
+
+    const accessToken = generateToken(
+      user.id,
+      ACCESS_TOKEN_SECRET,
+      TOKEN_EXPIRY
     );
+    const refreshToken = generateToken(
+      user.id,
+      REFRESH_TOKEN_SECRET,
+      REFRESH_TOKEN_EXPIRY
+    );
+
+    await updateRefreshToken(user.id, refreshToken);
+
+    return { accessToken, refreshToken, userId: user.id };
+  } catch (error) {
+    if (error.code === 'P2000') {
+      throw new BadRequestException('유효하지 않은 요청입니다');
+    }
   }
-
-  const accessToken = generateToken(user.id, ACCESS_TOKEN_SECRET, TOKEN_EXPIRY);
-  const refreshToken = generateToken(
-    user.id,
-    REFRESH_TOKEN_SECRET,
-    REFRESH_TOKEN_EXPIRY
-  );
-
-  await updateRefreshToken(user.id, refreshToken);
-
-  return { accessToken, refreshToken, userId: user.id };
 };
 
 export const logoutUser = async (userId) => {
@@ -160,13 +180,13 @@ export const getOngoingChallenges = async (userId, page, limit) => {
   const { parsedPage, parsedLimit, skip } = getPaginationData(page, limit);
 
   const [ongoingChallenges, totalCount] = await Promise.all([
-    prisma.participate.findMany({
+    prisma.participations.findMany({
       where: { userId, challenge: { progress: true } },
       include: { challenge: true },
       skip,
       take: parsedLimit,
     }),
-    prisma.participate.count({
+    prisma.participations.count({
       where: { userId, challenge: { progress: true } },
     }),
   ]);
@@ -186,13 +206,13 @@ export const getCompletedChallenges = async (userId, page, limit) => {
   const { parsedPage, parsedLimit, skip } = getPaginationData(page, limit);
 
   const [completedChallenges, totalCount] = await Promise.all([
-    prisma.participate.findMany({
+    prisma.participations.findMany({
       where: { userId, challenge: { progress: false } },
       include: { challenge: true },
       skip,
       take: parsedLimit,
     }),
-    prisma.participate.count({
+    prisma.participations.count({
       where: { userId, challenge: { progress: false } },
     }),
   ]);
@@ -266,11 +286,8 @@ export const getAppliedChallenges = async (
     })),
     meta: {
       currentPage: parsedPage,
-      pageSize: parsedLimit,
       totalCount,
       totalPages: Math.ceil(totalCount / parsedLimit),
-      filter: { status, search: searchTerm },
-      sort: { by: sortBy, order: sortOrder },
     },
   };
 };
@@ -294,7 +311,7 @@ export const getCurrentUser = async (userId) => {
 
   return {
     ...user,
-    createdAt: formatDate(user.createdAt),
+    createdAt: user.createdAt,
   };
 };
 
@@ -316,6 +333,41 @@ export const getUserById = async (id) => {
 
   return {
     ...user,
-    createdAt: formatDate(user.createdAt),
+    createdAt: user.createdAt,
   };
+};
+
+export const updateUserGrade = async (userId) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      participations: {
+        include: {
+          challenge: true,
+        },
+      },
+    },
+  });
+
+  // 마감된(progress가 true인) 챌린지 참여 횟수 계산
+  const challengeParticipationCount = user.participations.filter(
+    (participation) => participation.challenge.progress
+  ).length;
+
+  const bestCount = user.bestCount;
+
+  let newGrade = 'NORMAL';
+
+  if (
+    (challengeParticipationCount >= 5 && bestCount >= 5) ||
+    challengeParticipationCount >= 10 ||
+    bestCount >= 10
+  ) {
+    newGrade = 'EXPERT';
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { grade: newGrade },
+  });
 };

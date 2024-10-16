@@ -29,17 +29,13 @@ export const deleteApplication = async (applicationId) => {
 };
 
 // 신청 업데이트 서비스 함수
-export const updateApplication = async (
-  applicationId,
-  status,
-  invalidationComment
-) => {
+export const updateApplication = async (applicationId, status, message) => {
   return prisma.application.update({
     where: { id: applicationId },
     data: {
       status,
-      invalidationComment,
-      invalidatedAt: status === 'REJECTED' ? new Date() : null,
+      message,
+      updatedAt: status === 'REJECTED' ? new Date() : null,
     },
   });
 };
