@@ -6,6 +6,7 @@ import {
 import {
   notifyChallengeStatusChange,
   notifyContentChange,
+  notifyMultipleUsers,
 } from './notificationService.js';
 
 export const ChallengeService = {
@@ -99,30 +100,41 @@ export const ChallengeService = {
       data: updateData,
     });
 
+    const changeDate = new Date();
+
     // 챌린지 소유자에게 수정 알림 생성
     await notifyContentChange(
       challenge.owner.id,
+      adminUserId,
       'CHALLENGE',
       updatedChallenge.title,
       '수정',
-      new Date()
+      changeDate,
+      challengeId
     );
 
     // 챌린지 참가자들에게도 알림 생성
-    for (const participant of challenge.participants) {
-      await notifyContentChange(
-        participant.userId,
-        'CHALLENGE',
-        updatedChallenge.title,
-        '수정',
-        new Date()
-      );
-    }
+    const participantIds = challenge.participants.map((p) => p.userId);
+    await notifyMultipleUsers(
+      participantIds,
+      notifyContentChange,
+      adminUserId,
+      'CHALLENGE',
+      updatedChallenge.title,
+      '수정',
+      changeDate,
+      challengeId
+    );
 
     return updatedChallenge;
   },
 
-  updateChallengeStatus: async (challengeId, newStatus, reason = '') => {
+  updateChallengeStatus: async (
+    challengeId,
+    newStatus,
+    reason = '',
+    adminUserId
+  ) => {
     const challenge = await prisma.challenge.findUnique({
       where: { id: parseInt(challengeId, 10) },
       include: { applications: true },
@@ -140,14 +152,16 @@ export const ChallengeService = {
     const changeDate = new Date();
 
     // 모든 신청자에게 알림 전송
-    for (const application of challenge.applications) {
-      await notifyChallengeStatusChange(
-        application.userId,
-        challengeId,
-        newStatus,
-        changeDate
-      );
-    }
+    const applicantIds = challenge.applications.map((a) => a.userId);
+    await notifyMultipleUsers(
+      applicantIds,
+      notifyChallengeStatusChange,
+      adminUserId,
+      challengeId,
+      challenge.title,
+      newStatus,
+      changeDate
+    );
 
     // 상태가 삭제됨일 경우 관련 애플리케이션도 업데이트
     if (newStatus === 'DELETED') {
@@ -157,15 +171,16 @@ export const ChallengeService = {
       });
 
       // 챌린지 삭제 알림 생성
-      for (const application of challenge.applications) {
-        await notifyContentChange(
-          application.userId,
-          'CHALLENGE',
-          challenge.title,
-          '삭제',
-          changeDate
-        );
-      }
+      await notifyMultipleUsers(
+        applicantIds,
+        notifyContentChange,
+        adminUserId,
+        'CHALLENGE',
+        challenge.title,
+        '삭제',
+        changeDate,
+        challengeId
+      );
     }
 
     return updatedChallenge;
@@ -227,10 +242,12 @@ export const ChallengeService = {
     // 챌린지 참여 알림 생성
     await notifyContentChange(
       userId,
+      userId, // 본인의 액션이므로 actorId도 userId로
       'CHALLENGE',
       challenge.title,
       '참여',
-      new Date()
+      new Date(),
+      challengeId
     );
 
     return Participation;
