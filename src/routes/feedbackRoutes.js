@@ -85,7 +85,7 @@ router.patch(
  *         description: 서버 오류
  */
 
-//본인, 어드민 계정만 수정되게끔
+//본인, 어드민 계정만 삭제
 router.delete(
   '/:feedbackId',
   authenticateAccessToken,
