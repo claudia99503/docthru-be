@@ -10,32 +10,49 @@ import {
 } from './notificationService.js';
 
 export const ChallengeService = {
-  getChallenges: async ({ page, limit, sortBy, sortOrder }) => {
+  getChallenges: async ({
+    page,
+    limit,
+    sortBy,
+    sortOrder,
+    field,
+    docType,
+    progress,
+  }) => {
     const skip = (page - 1) * limit;
+
+    // 필터 조건 설정
+    const filterConditions = {
+      applications: {
+        some: {
+          status: 'ACCEPTED',
+        },
+      },
+    };
+
+    if (field && field.length > 0) {
+      filterConditions.field = { in: field };
+    }
+
+    if (docType) {
+      filterConditions.docType = docType;
+    }
+
+    if (progress !== undefined) {
+      filterConditions.progress = progress;
+    }
 
     // 챌린지 목록 조회입니다~
     const list = await prisma.challenge.findMany({
       skip,
       take: limit,
       orderBy: { [sortBy]: sortOrder },
-      where: {
-        applications: {
-          some: {
-            status: 'ACCEPTED',
-          },
-        },
-      },
+      where: filterConditions,
     });
 
     // 전체 챌린지 수 조회입니다!
     const totalCount = await prisma.challenge.count({
-      where: {
-        applications: {
-          some: {
-            status: 'ACCEPTED',
-          },
-        },
-      },
+      where: filterConditions,
     });
 
     // 총 페이지 수 계산입니다!

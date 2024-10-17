@@ -2,6 +2,12 @@
 GET http://localhost:3001/api/challenges
 Content-Type: application/json
 
+{
+  "field" : ["NEXTJS","CAREER"],
+  "docType" : "BLOG",
+  "progress" : "true"
+}
+
 ### 상세 조회
 GET http://localhost:3001/api/challenges/1
 Content-Type: application/json
