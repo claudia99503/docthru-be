@@ -20,12 +20,11 @@ export const ApplicationService = {
     const challenge = await prisma.challenge.create({ data });
 
     const challengeId = challenge.id;
-    const userId = req.user.userId;
 
     return prisma.application.create({
       data: {
         userId,
-        challengeId: parseInt(challengeId),
+        challengeId: parseInt(challenge.id),
         challenge: {
           connect: { id: parseInt(challengeId) },
         },
