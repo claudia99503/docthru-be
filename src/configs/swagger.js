@@ -1,7 +1,3 @@
-import swaggerJsDoc from 'swagger-jsdoc';
-import swaggerUi from 'swagger-ui-express';
-
-// Swagger 옵션 설정
 const swaggerOptions = {
   swaggerDefinition: {
     openapi: '3.0.0',
@@ -12,7 +8,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: `http://localhost:${process.env.PORT}`,
+        url: 'https://docthru-be.vercel.app',
       },
     ],
     components: {
@@ -27,6 +23,3 @@ const swaggerOptions = {
   },
   apis: ['./src/routes/*.js'],
 };
-
-// Swagger 스펙 생성
-export const swaggerDocs = swaggerJsDoc(swaggerOptions);
