@@ -306,27 +306,23 @@ const bestWorksList = async ({ challengeId, userId }) => {
       orderBy: sortOrder,
     });
 
-    const workLikeCount = workList.map((work) => {
-      return work.likeCount;
-    });
+    const maxLikes = Math.max(...workList.map((work) => work.likeCount));
 
-    const NumberLikeCount = Math.max(...workLikeCount);
-
-    if (NumberLikeCount === 0) {
+    if (maxLikes === 0) {
       return [];
     }
 
     const bestWorks = await prisma.work.findMany({
       where: {
         challengeId: Number(challengeId),
-        likeCount: Number(NumberLikeCount),
+        likeCount: Number(maxLikes),
       },
       orderBy: sortOrder,
       include: { likes: true },
     });
 
     const bestWorkList = bestWorks.map((work) => {
-      const isLiked = bestWorks.likes.some((like) => like.userId === userId);
+      const isLiked = work.likes?.some((like) => like.userId === userId);
       return {
         ...work,
         isLiked,
