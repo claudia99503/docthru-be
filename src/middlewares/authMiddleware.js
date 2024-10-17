@@ -35,7 +35,7 @@ export const authenticateAccessToken = async (req, res, next) => {
     res.clearCookie('refreshToken', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'None',
     });
 
     return next(

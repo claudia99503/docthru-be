@@ -17,7 +17,7 @@ const sendRefreshToken = (res, token) => {
   res.cookie('refreshToken', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: 'None',
     maxAge: parseInt(REFRESH_TOKEN_MAX_AGE, 10),
   });
 };
@@ -91,7 +91,7 @@ export const logout = async (req, res, next) => {
     res.clearCookie('refreshToken', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'None',
     });
     res.json({ message: '로그아웃 성공' });
   } catch (error) {
