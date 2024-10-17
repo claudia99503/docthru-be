@@ -7,34 +7,28 @@ export const ApplicationService = {
     challengeId,
     { title, field, docType, description, docUrl, deadline, maxParticipants }
   ) => {
-    const data = {
-      title,
-      field,
-      docType,
-      description,
-      docUrl,
-      deadline: new Date(deadline),
-      participants: 0,
-      maxParticipants,
-    };
-    const challenge = await prisma.challenge.create({ data });
-
-    const challengeId = challenge.id;
-
-    return prisma.application.create({
+    // 새로운 챌린지를 생성
+    const challenge = await prisma.challenge.create({
       data: {
-        userId,
-        challengeId: parseInt(challenge.id),
-        challenge: {
-          connect: { id: parseInt(challengeId) },
-        },
         title,
         field,
         docType,
         description,
         docUrl,
-        deadline,
+        deadline: new Date(deadline),
+        participants: 0,
         maxParticipants,
+      },
+    });
+
+    // 바로 생성된 challenge의 id를 사용하여 application을 생성
+    return prisma.application.create({
+      data: {
+        userId,
+        challengeId: challenge.id, // 중복 선언 제거
+        challenge: {
+          connect: { id: challenge.id },
+        },
       },
     });
   },

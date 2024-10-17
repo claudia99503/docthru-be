@@ -37,7 +37,7 @@ export const updateFeedbackById = async (req, res, next) => {
   }
 };
 
-//피드백삭제
+// 피드백 삭제
 export const deleteFeedbackById = async (req, res, next) => {
   try {
     const { feedbackId } = req.params;

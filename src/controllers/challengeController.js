@@ -62,6 +62,40 @@ export async function patchChallengeById(req, res, next) {
   }
 }
 
+/**
+ * @swagger
+ * /challenges/{challengeId}/status:
+ *   patch:
+ *     summary: 챌린지 상태 업데이트
+ *     description: 관리자가 챌린지의 상태를 업데이트합니다.
+ *     parameters:
+ *       - in: path
+ *         name: challengeId
+ *         required: true
+ *         description: 챌린지 ID
+ *         schema:
+ *           type: string
+ *       - in: body
+ *         name: statusData
+ *         description: 새로운 상태 및 사유
+ *         schema:
+ *           type: object
+ *           properties:
+ *             newStatus:
+ *               type: string
+ *               enum: [ACTIVE, INACTIVE, DELETED]
+ *             reason:
+ *               type: string
+ *     responses:
+ *       200:
+ *         description: 업데이트된 챌린지 정보
+ *       403:
+ *         description: 관리자 권한 부족
+ *       404:
+ *         description: 챌린지를 찾을 수 없음
+ *       500:
+ *         description: 서버 오류
+ */
 export async function updateChallengeStatus(req, res, next) {
   try {
     const adminUserId = req.user.userId;
