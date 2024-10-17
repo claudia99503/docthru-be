@@ -48,7 +48,7 @@ export const getWorksListById = async ({
   }));
 
   //마감하면 베스트 게시물 조회
-  const bestWorks = await bestWorksList({ challengeId, userId });
+  const bestWorks = await bestWorksList({ challengeId, userId, sortOrder });
 
   const totalCount = await prisma.work.count({
     where: {
@@ -285,7 +285,7 @@ const challengeDeadline = async (workId) => {
   return challengeInfo;
 };
 
-const bestWorksList = async ({ challengeId, userId }) => {
+const bestWorksList = async ({ challengeId, userId, sortOrder }) => {
   const challengeInfo = await prisma.challenge.findUnique({
     where: {
       id: Number(challengeId),
@@ -293,12 +293,6 @@ const bestWorksList = async ({ challengeId, userId }) => {
   });
 
   if (!!challengeInfo.progress) {
-    let sortOrder = [
-      { likeCount: 'desc' },
-      { lastModifiedAt: 'desc' },
-      { id: 'desc' },
-    ];
-
     const workList = await prisma.work.findMany({
       where: {
         challengeId: Number(challengeId),
