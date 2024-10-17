@@ -10,7 +10,7 @@ export const postFeedbackById = async ({ workId, content, userId }) => {
     },
   });
 
-  await notifyCreateAboutFeedback(userId, workId);
+  await notifyCreateAboutFeedback(userId, workId, feedback);
 
   return feedback;
 };
@@ -34,7 +34,7 @@ export const deleteFeedbackById = async ({ feedbackId, userId }) => {
   });
 };
 
-const notifyCreateAboutFeedback = async (userId, workId) => {
+const notifyCreateAboutFeedback = async (userId, workId, feedback) => {
   const workInfo = await prisma.work.findUnique({
     where: { id: Number(workId) },
     include: {

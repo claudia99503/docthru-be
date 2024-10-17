@@ -132,7 +132,7 @@ export const postWorkById = async ({ challengeId, content, userId }) => {
     },
   });
 
-  await notifyCreateAboutWork(userId, challengeId);
+  await notifyCreateAboutWork(userId, challengeId, works);
 
   return works;
 };
@@ -349,7 +349,7 @@ const bestWorksList = async ({ challengeId, userId }) => {
   }
 };
 
-const notifyCreateAboutWork = async (userId, challengeId) => {
+const notifyCreateAboutWork = async (userId, challengeId, works) => {
   const applicationInfo = await prisma.application.findUnique({
     where: { id: Number(challengeId) },
   });
