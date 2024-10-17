@@ -20,7 +20,7 @@ async function processChallenges() {
       },
     });
 
-    console.log(`마감할 챌린지 ${challengesToClose.length}개 처리 시작`);
+    console.log(`${challengesToClose.length}개의 챌린지 처리 시작`);
 
     const challengeUpdates = [];
     const userUpdates = [];
@@ -89,20 +89,14 @@ async function processChallenges() {
           select: { grade: true },
         });
 
-        await updateUserGrade(userId);
+        const newGrade = await updateUserGrade(userId);
 
-        const updatedGrade = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { grade: true },
-        });
-
-        if (initialGrade.grade !== updatedGrade.grade) {
+        if (initialGrade.grade !== newGrade) {
           successCount++;
         } else {
           noChangeCount++;
         }
       } catch (error) {
-        console.error(`Failed to update grade for user ${userId}:`, error);
         failCount++;
       }
     }
@@ -116,7 +110,6 @@ async function processChallenges() {
     console.error('챌린지 처리 중 오류 발생:', error);
   } finally {
     await prisma.$disconnect();
-    console.log('Prisma 연결 종료');
   }
 }
 

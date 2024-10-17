@@ -338,60 +338,40 @@ export const getUserById = async (id) => {
 };
 
 export const updateUserGrade = async (userId) => {
-  console.log(`Updating grade for user ${userId}`);
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: {
-        participations: {
-          include: {
-            challenge: true,
-          },
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      participations: {
+        include: {
+          challenge: true,
         },
       },
-    });
+    },
+  });
 
-    if (!user) {
-      console.error(`User ${userId} not found`);
-      return;
-    }
+  if (!user) return null;
 
-    console.log(`User ${userId} current grade: ${user.grade}`);
-    console.log(`User ${userId} bestCount: ${user.bestCount}`);
+  const challengeParticipationCount = user.participations.filter(
+    (participation) => participation.challenge.progress
+  ).length;
 
-    const challengeParticipationCount = user.participations.filter(
-      (participation) => participation.challenge.progress
-    ).length;
+  const bestCount = user.bestCount;
+  let newGrade = 'NORMAL';
 
-    console.log(
-      `User ${userId} challenge participation count: ${challengeParticipationCount}`
-    );
-
-    const bestCount = user.bestCount;
-
-    let newGrade = 'NORMAL';
-
-    if (
-      (challengeParticipationCount >= 5 && bestCount >= 5) ||
-      challengeParticipationCount >= 10 ||
-      bestCount >= 10
-    ) {
-      newGrade = 'EXPERT';
-    }
-
-    console.log(`User ${userId} new grade: ${newGrade}`);
-
-    if (user.grade !== newGrade) {
-      const updatedUser = await prisma.user.update({
-        where: { id: userId },
-        data: { grade: newGrade },
-      });
-      console.log(`Grade updated for user ${userId} to ${updatedUser.grade}`);
-    } else {
-      console.log(`Grade not changed for user ${userId}`);
-    }
-  } catch (error) {
-    console.error(`Error updating grade for user ${userId}:`, error);
-    throw error;
+  if (
+    bestCount >= 10 ||
+    challengeParticipationCount >= 10 ||
+    (challengeParticipationCount >= 5 && bestCount >= 5)
+  ) {
+    newGrade = 'EXPERT';
   }
+
+  if (user.grade !== newGrade) {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { grade: newGrade },
+    });
+  }
+
+  return newGrade;
 };
