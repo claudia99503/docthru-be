@@ -2,6 +2,7 @@ import * as userServices from '../services/userServices.js';
 import {
   BadRequestException,
   UnauthorizedException,
+  NotFoundException,
 } from '../errors/customException.js';
 import {
   REFRESH_TOKEN_SECRET,
@@ -57,11 +58,36 @@ export const login = async (req, res, next) => {
 
 export const logout = async (req, res, next) => {
   try {
-    if (!req.user || !req.user.userId) {
-      throw new UnauthorizedException('인증되지 않은 사용자입니다.');
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) {
+      throw new BadRequestException('리프레시 토큰이 없습니다.');
     }
 
-    await userServices.logoutUser(req.user.userId);
+    let userId;
+    try {
+      const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
+      userId = decoded.userId;
+    } catch (error) {
+      if (error instanceof jwt.TokenExpiredError) {
+        throw new UnauthorizedException('리프레시 토큰이 만료되었습니다.');
+      } else if (error instanceof jwt.JsonWebTokenError) {
+        throw new UnauthorizedException('유효하지 않은 리프레시 토큰입니다.');
+      } else {
+        throw new UnprocessableEntityException(
+          '리프레시 토큰 검증 중 오류가 발생했습니다.'
+        );
+      }
+    }
+
+    const user = await userServices.findUserByRefreshToken(refreshToken);
+    if (!user) {
+      throw new UnauthorizedException(
+        '저장된 리프레시 토큰과 일치하지 않습니다.'
+      );
+    }
+
+    await userServices.logoutUser(userId);
     res.clearCookie('refreshToken', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -74,28 +100,28 @@ export const logout = async (req, res, next) => {
 };
 
 export const refreshToken = async (req, res, next) => {
-  const { refreshToken } = req.cookies;
+  const refreshToken = req.cookies.refreshToken;
 
   if (!refreshToken) {
-    return next(new UnauthorizedException('리프레시 토큰이 없습니다.'));
+    return next(new BadRequestException('리프레시 토큰이 없습니다.'));
   }
 
   try {
     const user = await userServices.verifyRefreshToken(refreshToken);
 
-    const accessToken = generateToken(
+    const accessToken = userServices.generateToken(
       user.id,
-      ACCESS_TOKEN_SECRET,
-      TOKEN_EXPIRY
+      process.env.ACCESS_TOKEN_SECRET,
+      process.env.TOKEN_EXPIRY
     );
-    const newRefreshToken = generateToken(
+    const newRefreshToken = userServices.generateToken(
       user.id,
-      REFRESH_TOKEN_SECRET,
-      REFRESH_TOKEN_EXPIRY
+      process.env.REFRESH_TOKEN_SECRET,
+      process.env.REFRESH_TOKEN_EXPIRY
     );
 
     await userServices.updateRefreshToken(user.id, newRefreshToken);
-    sendRefreshToken(res, newRefreshToken);
+    userServices.sendRefreshToken(res, newRefreshToken);
 
     res.json({ accessToken });
   } catch (error) {
@@ -107,6 +133,44 @@ export const refreshToken = async (req, res, next) => {
         new UnauthorizedException('유효하지 않은 리프레시 토큰입니다.')
       );
     }
+    if (error instanceof NotFoundException) {
+      return next(new UnauthorizedException('사용자를 찾을 수 없습니다.'));
+    }
+    next(new UnprocessableEntityException('토큰 갱신 중 오류가 발생했습니다.'));
+  }
+};
+
+export const getCurrentUser = async (req, res, next) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+      throw new NotFoundException('액세스 토큰이 없습니다.');
+    }
+
+    let decodedToken;
+    try {
+      decodedToken = jwt.verify(token, ACCESS_TOKEN_SECRET);
+    } catch (error) {
+      if (error instanceof jwt.TokenExpiredError) {
+        throw new UnauthorizedException('토큰이 만료되었습니다.');
+      } else if (error instanceof jwt.JsonWebTokenError) {
+        throw new UnauthorizedException('유효하지 않은 토큰입니다.');
+      } else {
+        throw new InternalServerErrorException(
+          '토큰 검증 중 오류가 발생했습니다.'
+        );
+      }
+    }
+
+    const user = await userServices.getCurrentUser(decodedToken.userId);
+    if (!user) {
+      throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    }
+
+    res.json(user);
+  } catch (error) {
     next(error);
   }
 };
@@ -167,15 +231,6 @@ export const getAppliedChallenges = async (req, res, next) => {
     );
 
     res.json(result);
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const getCurrentUser = async (req, res, next) => {
-  try {
-    const user = await userServices.getCurrentUser(req.user.userId);
-    res.json(user);
   } catch (error) {
     next(error);
   }

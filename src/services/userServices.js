@@ -375,3 +375,10 @@ export const updateUserGrade = async (userId) => {
 
   return newGrade;
 };
+
+export const findUserByRefreshToken = async (refreshToken) => {
+  const user = await prisma.user.findFirst({
+    where: { refreshToken: refreshToken },
+  });
+  return user;
+};
