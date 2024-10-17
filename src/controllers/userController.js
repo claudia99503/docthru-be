@@ -154,7 +154,7 @@ export const getCurrentUser = async (req, res, next) => {
       decodedToken = jwt.verify(token, ACCESS_TOKEN_SECRET);
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
-        throw new UnauthorizedException('토큰이 만료되었습니다.');
+        throw new NotFoundException('토큰이 만료되었습니다.');
       } else if (error instanceof jwt.JsonWebTokenError) {
         throw new UnauthorizedException('유효하지 않은 토큰입니다.');
       } else {
