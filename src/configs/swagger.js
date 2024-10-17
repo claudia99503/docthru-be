@@ -11,7 +11,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: 'https://docthru-be.vercel.app',
+        url: process.env.BASE_URL || 'http://localhost:3001', // 환경변수로 관리
       },
     ],
     components: {
@@ -24,7 +24,7 @@ const swaggerOptions = {
       },
     },
   },
-  apis: ['./routes/*.js'],
+  apis: ['./routes/*.js'], // Swagger 주석이 포함된 파일의 경로
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);

@@ -12,6 +12,7 @@ import feedbackRoutes from './routes/feedbackRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import { swaggerDocs } from './configs/swagger.js';
 import swaggerUi from 'swagger-ui-express';
+import customJsonParser from './middlewares/jsonParser.js';
 
 dotenv.config();
 
@@ -26,7 +27,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(cookieParser());
-app.use(express.json());
+app.use(customJsonParser);
 
 app.use(
   helmet.contentSecurityPolicy({
