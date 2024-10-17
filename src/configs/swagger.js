@@ -24,7 +24,7 @@ const swaggerOptions = {
       },
     },
   },
-  apis: ['./src/routes/*.js'], // 주의: 파일 경로가 정확한지 확인
+  apis: ['../routes/*.js'],
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
