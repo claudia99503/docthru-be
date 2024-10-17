@@ -5,27 +5,14 @@ import {
 } from '../src/services/notificationService.js';
 import { updateUserGrade } from '../src/services/userServices.js';
 
-async function processChallenges() {
-  const now = new Date();
+const TRANSACTION_TIMEOUT = 60000; // 60초
 
-  const challengesToClose = await prisma.challenge.findMany({
-    where: {
-      deadline: { lt: now },
-      progress: false,
-    },
-    include: {
-      participations: true,
-      works: { include: { likes: true } },
-    },
-  });
-
-  console.log(`Processing ${challengesToClose.length} challenges to close.`);
-
-  for (const challenge of challengesToClose) {
-    try {
-      await prisma.$transaction(async (prisma) => {
+async function processSingleChallenge(challenge, now) {
+  try {
+    await prisma.$transaction(
+      async (tx) => {
         // 챌린지 progress를 true로 업데이트
-        await prisma.challenge.update({
+        await tx.challenge.update({
           where: { id: challenge.id },
           data: { progress: true },
         });
@@ -35,7 +22,7 @@ async function processChallenges() {
         await notifyMultipleUsers(
           participantIds,
           notifyDeadline,
-          null, // actorId는 시스템 액션이므로 null
+          null,
           challenge.id,
           challenge.title,
           now
@@ -54,7 +41,7 @@ async function processChallenges() {
         // 베스트 작품 작성자들의 bestCount 증가
         await Promise.all(
           bestWorks.map((work) =>
-            prisma.user.update({
+            tx.user.update({
               where: { id: work.userId },
               data: { bestCount: { increment: 1 } },
             })
@@ -67,20 +54,51 @@ async function processChallenges() {
             updateUserGrade(participation.userId)
           )
         );
-      });
+      },
+      {
+        timeout: TRANSACTION_TIMEOUT,
+      }
+    );
 
-      console.log(`${challenge.id} 번 챌린지 성공`);
-    } catch (error) {
-      console.error(`${challenge.id} 실패 :`, error);
-    }
+    console.log(`챌린지 ID ${challenge.id} 처리 완료`);
+  } catch (error) {
+    console.error(`챌린지 ID ${challenge.id} 처리 실패:`, error);
+    throw error;
   }
 }
 
-processChallenges()
-  .catch((error) => {
-    console.error('Error in processChallenges:', error);
-  })
-  .finally(async () => {
+async function processChallenges() {
+  const now = new Date();
+
+  try {
+    const challengesToClose = await prisma.challenge.findMany({
+      where: {
+        deadline: { lt: now },
+        progress: false,
+      },
+      include: {
+        participations: true,
+        works: { include: { likes: true } },
+      },
+    });
+
+    console.log(`마감할 챌린지 ${challengesToClose.length}개 처리 시작`);
+
+    const BATCH_SIZE = 5;
+    for (let i = 0; i < challengesToClose.length; i += BATCH_SIZE) {
+      const batch = challengesToClose.slice(i, i + BATCH_SIZE);
+      await Promise.all(
+        batch.map((challenge) => processSingleChallenge(challenge, now))
+      );
+    }
+
+    console.log('모든 챌린지 처리 완료');
+  } catch (error) {
+    console.error('챌린지 처리 중 오류 발생:', error);
+  } finally {
     await prisma.$disconnect();
-    console.log('Prisma disconnected.');
-  });
+    console.log('Prisma 연결 종료');
+  }
+}
+
+processChallenges();
