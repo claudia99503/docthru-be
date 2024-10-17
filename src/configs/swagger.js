@@ -5,13 +5,13 @@ const swaggerOptions = {
   swaggerDefinition: {
     openapi: '3.0.0',
     info: {
-      title: 'API 문서',
+      title: 'Docthru-Be',
       version: '1.0.0',
-      description: 'API 설명',
+      description: '독스루 백엔드 API 명세입니다',
     },
     servers: [
       {
-        url: 'http://localhost:3000', // 또는 배포 URL
+        url: 'https://docthru-be.vercel.app',
       },
     ],
     components: {
