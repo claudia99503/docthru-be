@@ -2,39 +2,18 @@ import prisma from '../lib/prisma.js';
 
 export const ApplicationService = {
   // 신규 챌린지 신청 (일반 사용자)
-  createApplication: async (
-    userId,
-    challengeId,
-    { title, field, docType, description, docUrl, deadline, maxParticipants }
-  ) => {
+  createApplication: async (userId, applicationData) => {
     const data = {
-      title,
-      field,
-      docType,
-      description,
-      docUrl,
-      deadline: new Date(deadline),
+      ...applicationData,
       participants: 0,
-      maxParticipants,
     };
     const challenge = await prisma.challenge.create({ data });
-
-    const challengeId = challenge.id;
 
     return prisma.application.create({
       data: {
         userId,
-        challengeId: parseInt(challenge.id),
-        challenge: {
-          connect: { id: parseInt(challengeId) },
-        },
-        title,
-        field,
-        docType,
-        description,
-        docUrl,
-        deadline,
-        maxParticipants,
+        challengeId: challenge.id,
+        status: 'WAITING',
       },
     });
   },
