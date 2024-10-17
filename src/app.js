@@ -38,7 +38,7 @@ app.use(customJsonParser);
 
 // 쿠키 보안 설정
 app.use((req, res, next) => {
-  res.cookie('cookieName', 'cookieValue', {
+  res.cookie('refreshToken', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
