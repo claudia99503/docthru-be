@@ -293,6 +293,19 @@ export const getAppliedChallenges = async (
 };
 
 export const getCurrentUser = async (userId) => {
+  if (!userId) {
+    // 게스트 사용자 정보 반환
+    return {
+      id: null,
+      nickname: 'Guest',
+      email: null,
+      role: 'GUEST',
+      grade: null,
+      createdAt: null,
+      isAuthenticated: false,
+    };
+  }
+
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
@@ -312,6 +325,7 @@ export const getCurrentUser = async (userId) => {
   return {
     ...user,
     createdAt: user.createdAt,
+    isAuthenticated: true,
   };
 };
 
