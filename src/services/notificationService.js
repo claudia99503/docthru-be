@@ -185,7 +185,7 @@ export const notifyContentChange = asyncErrorHandler(
     entityType,
     challengeName,
     action,
-    challengeId,
+    challengeId = null,
     workId = null,
     feedbackId = null,
     date = new Date()
@@ -199,7 +199,7 @@ export const notifyContentChange = asyncErrorHandler(
     return createTypedNotification(
       userId,
       actorId,
-      'CONTENT_CHANGE',
+      'CHANGE',
       content,
       challengeId,
       workId,
