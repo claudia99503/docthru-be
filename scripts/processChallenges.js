@@ -22,54 +22,64 @@ async function processChallenges() {
 
     console.log(`마감할 챌린지 ${challengesToClose.length}개 처리 시작`);
 
+    const challengeUpdates = [];
+    const userUpdates = [];
+    const notifications = [];
+    const gradeUpdates = [];
+
     for (const challenge of challengesToClose) {
-      try {
-        await prisma.$transaction(async (tx) => {
-          // 챌린지 progress를 true로 업데이트
-          await tx.challenge.update({
-            where: { id: challenge.id },
-            data: { progress: true },
-          });
+      challengeUpdates.push({ id: challenge.id, progress: true });
 
-          // 참가자들에게 마감 알림 전송
-          const participantIds = challenge.participations.map((p) => p.userId);
-          await notifyMultipleUsers(
-            participantIds,
-            notifyDeadline,
-            null,
-            challenge.id,
-            challenge.title,
-            now
-          );
+      const participantIds = challenge.participations.map((p) => p.userId);
+      notifications.push({
+        participantIds,
+        challengeId: challenge.id,
+        title: challenge.title,
+        now,
+      });
 
-          // 가장 많은 좋아요 수 찾기
-          const maxLikes = Math.max(
-            ...challenge.works.map((work) => work.likes.length)
-          );
+      const maxLikes = Math.max(
+        ...challenge.works.map((work) => work.likes.length)
+      );
+      const bestWorks = challenge.works.filter(
+        (work) => work.likes.length === maxLikes
+      );
 
-          // 가장 많은 좋아요를 받은 모든 작품 찾기
-          const bestWorks = challenge.works.filter(
-            (work) => work.likes.length === maxLikes
-          );
-
-          // 베스트 작품 작성자들의 bestCount 증가
-          for (const work of bestWorks) {
-            await tx.user.update({
-              where: { id: work.userId },
-              data: { bestCount: { increment: 1 } },
-            });
-          }
-
-          // 참가자들의 등급 업데이트
-          for (const participation of challenge.participations) {
-            await updateUserGrade(participation.userId);
-          }
-        });
-
-        console.log(`챌린지 ID ${challenge.id} 처리 완료`);
-      } catch (error) {
-        console.error(`챌린지 ID ${challenge.id} 처리 실패:`, error);
+      for (const work of bestWorks) {
+        userUpdates.push({ id: work.userId, increment: 1 });
       }
+
+      gradeUpdates.push(...participantIds);
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // 챌린지 progress 업데이트
+      await tx.challenge.updateMany({
+        where: { id: { in: challengeUpdates.map((c) => c.id) } },
+        data: { progress: true },
+      });
+
+      for (const update of userUpdates) {
+        await tx.user.update({
+          where: { id: update.id },
+          data: { bestCount: { increment: update.increment } },
+        });
+      }
+    });
+
+    for (const notif of notifications) {
+      await notifyMultipleUsers(
+        notif.participantIds,
+        notifyDeadline,
+        null,
+        notif.challengeId,
+        notif.title,
+        notif.now
+      );
+    }
+
+    for (const userId of new Set(gradeUpdates)) {
+      await updateUserGrade(userId);
     }
 
     console.log('모든 챌린지 처리 완료');
