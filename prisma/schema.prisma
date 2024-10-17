@@ -114,8 +114,8 @@ model Work {
   lastModifiedAt DateTime       @updatedAt
   isSubmitted    Boolean        @default(false)
   submittedAt    DateTime?
-  feedbacks      Feedback[]
-  likes          Like[]
+  feedbacks      Feedback[]     @relation("WorkFeedbacks")
+  likes          Like[]         @relation("WorkLikes")
   likeCount      Int            @default(0)
   notifications  Notification[]
 }
@@ -124,7 +124,7 @@ model Feedback {
   id            Int            @id @default(autoincrement())
   user          User           @relation(fields: [userId], references: [id])
   userId        Int
-  work          Work           @relation(fields: [workId], references: [id])
+  work          Work           @relation("WorkFeedbacks", fields: [workId], references: [id], onDelete: Cascade)
   workId        Int
   content       String         @db.Text
   createdAt     DateTime       @default(now())
@@ -135,7 +135,7 @@ model Like {
   id        Int      @id @default(autoincrement())
   user      User     @relation(fields: [userId], references: [id])
   userId    Int
-  work      Work     @relation(fields: [workId], references: [id])
+  work      Work     @relation("WorkLikes", fields: [workId], references: [id], onDelete: Cascade)
   workId    Int
   createdAt DateTime @default(now())
 
