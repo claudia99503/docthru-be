@@ -5,7 +5,7 @@ import {
 } from '../errors/customException.js';
 import * as notificationService from './notificationService.js';
 
-export const getWorksWithLikes = async ({
+export const getWorksListById = async ({
   challengeId,
   userId,
   page,
@@ -65,7 +65,7 @@ export const getWorksWithLikes = async ({
   };
 };
 
-export const getWorkDetail = async ({ userId, workId }) => {
+export const getWorkById = async ({ userId, workId }) => {
   const works = await prisma.work.findUnique({
     where: {
       id: Number(workId),
@@ -111,7 +111,7 @@ export const getWorkDetail = async ({ userId, workId }) => {
   };
 };
 
-export const createWork = async ({ challengeId, content, userId }) => {
+export const postWorkById = async ({ challengeId, content, userId }) => {
   if (!content) {
     throw new BadRequestException('내용 입력은 필수입니다.');
   }
@@ -132,20 +132,12 @@ export const createWork = async ({ challengeId, content, userId }) => {
     },
   });
 
-  const challengeInfo = await prisma.application.findUnique({
-    where: { id: Number(challengeId) },
-  });
-
-  await notificationService.notifyNewWork(
-    Number(challengeInfo.userId),
-    Number(challengeId),
-    Number(works.id)
-  );
+  await notifyCreateAboutWork(userId, challengeId, works);
 
   return works;
 };
 
-export const updatedWork = async ({ workId, content, userId }) => {
+export const updateWorkById = async ({ workId, content, userId }) => {
   if (!content) {
     throw new BadRequestException('내용 입력은 필수입니다.');
   }
@@ -169,7 +161,7 @@ export const updatedWork = async ({ workId, content, userId }) => {
   return works;
 };
 
-export const deleteWork = async ({ workId, userId }) => {
+export const deleteWorkById = async ({ workId, userId }) => {
   const workInfo = await notifyAdminAboutWork(userId, workId, '삭제');
 
   const participateInfo = await prisma.participation.findFirst({
@@ -200,7 +192,7 @@ export const deleteWork = async ({ workId, userId }) => {
   });
 };
 
-export const likeWork = async ({ workId, userId }) => {
+export const likeWorkById = async ({ workId, userId }) => {
   const challengeDeadlineBoolean = await challengeDeadline(workId);
 
   if (!!!challengeDeadlineBoolean.progress) {
@@ -221,7 +213,7 @@ export const likeWork = async ({ workId, userId }) => {
   }
 };
 
-export const likeCancelWork = async ({ workId, userId }) => {
+export const likeCancelWorkById = async ({ workId, userId }) => {
   const challengeDeadlineBoolean = await challengeDeadline(workId);
 
   if (!!!challengeDeadlineBoolean.progress) {
@@ -253,7 +245,7 @@ export const likeCancelWork = async ({ workId, userId }) => {
 };
 
 //커서 기반
-export const getFeedbacks = async ({ workId, cursorId, limit }) => {
+export const getFeedbacksWorkById = async ({ workId, cursorId, limit }) => {
   const feedbacks = await prisma.feedback.findMany({
     where: { workId: Number(workId) },
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
@@ -357,24 +349,46 @@ const bestWorksList = async ({ challengeId, userId }) => {
   }
 };
 
-const notifyAdminAboutWork = async (userId, workId, type) => {
+const notifyCreateAboutWork = async (userId, challengeId, works) => {
+  const applicationInfo = await prisma.application.findUnique({
+    where: { id: Number(challengeId) },
+  });
+  const challengeInfo = await prisma.challenge.findUnique({
+    where: { id: Number(challengeId) },
+  });
+
+  await notificationService.notifyNewWork(
+    Number(applicationInfo.userId),
+    Number(userId),
+    Number(challengeId),
+    challengeInfo.title,
+    Number(works.id),
+    new Date()
+  );
+};
+
+const notifyAdminAboutWork = async (userId, workId, action) => {
   const [userInfo, workInfo] = await prisma.$transaction([
     prisma.user.findUnique({
       where: { id: Number(userId) },
     }),
     prisma.work.findUnique({
       where: { id: Number(workId) },
-      include: {
-        user: true,
-      },
+      include: { challenge: true },
     }),
   ]);
 
   if (userInfo && userInfo.role === 'ADMIN') {
-    await notificationService.notifyAdminWorkAction(
+    await notificationService.notifyContentChange(
       Number(workInfo.userId),
+      Number(userId),
+      'WORK',
+      workInfo.challenge.title,
+      action === '삭제' ? '삭제' : '수정',
+      null,
       Number(workId),
-      type === '삭제' ? '삭제' : '수정'
+      null,
+      new Date()
     );
   }
 
