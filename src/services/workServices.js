@@ -26,7 +26,7 @@ export const getWorksListById = async ({
     orderBy: sortOrder,
     skip: offset,
     take: Number(limit),
-    include: { likes: true },
+    include: { likes: true, user: true },
   });
 
   const worksList = works.map((work) => {
@@ -40,6 +40,8 @@ export const getWorksListById = async ({
   const data = worksList.map((workList) => ({
     id: workList.id,
     userId: workList.userId,
+    nickname: workList.user.nickname,
+    grade: workList.user.grade,
     challengeId: workList.challengeId,
     content: workList.content,
     lastModifiedAt: workList.lastModifiedAt,
@@ -312,7 +314,7 @@ const bestWorksList = async ({ challengeId, userId, sortOrder }) => {
         likeCount: Number(maxLikes),
       },
       orderBy: sortOrder,
-      include: { likes: true },
+      include: { likes: true, user: true },
     });
 
     const bestWorkList = bestWorks.map((work) => {
@@ -326,6 +328,8 @@ const bestWorksList = async ({ challengeId, userId, sortOrder }) => {
     const data = bestWorkList.map((bestWork) => ({
       id: bestWork.id,
       userId: bestWork.userId,
+      nickname: bestWork.user.nickname,
+      grade: bestWork.user.grade,
       challengeId: bestWork.challengeId,
       content: bestWork.content,
       lastModifiedAt: bestWork.lastModifiedAt,
