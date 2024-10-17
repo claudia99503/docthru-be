@@ -356,9 +356,16 @@ export const updateUserGrade = async (userId) => {
       return;
     }
 
+    console.log(`User ${userId} current grade: ${user.grade}`);
+    console.log(`User ${userId} bestCount: ${user.bestCount}`);
+
     const challengeParticipationCount = user.participations.filter(
       (participation) => participation.challenge.progress
     ).length;
+
+    console.log(
+      `User ${userId} challenge participation count: ${challengeParticipationCount}`
+    );
 
     const bestCount = user.bestCount;
 
@@ -372,17 +379,19 @@ export const updateUserGrade = async (userId) => {
       newGrade = 'EXPERT';
     }
 
-    console.log(
-      ` ${userId}번 유저 : 참가수 = ${challengeParticipationCount}, 최다추천작 선정수 = ${bestCount}, 신규등급 = ${newGrade}`
-    );
+    console.log(`User ${userId} new grade: ${newGrade}`);
 
-    await prisma.user.update({
-      where: { id: userId },
-      data: { grade: newGrade },
-    });
-
-    console.log(`${userId}번 유저 ${newGrade}로 등급상승 완료`);
+    if (user.grade !== newGrade) {
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: { grade: newGrade },
+      });
+      console.log(`Grade updated for user ${userId} to ${updatedUser.grade}`);
+    } else {
+      console.log(`Grade not changed for user ${userId}`);
+    }
   } catch (error) {
-    console.error(`${userId}번 유저 등급상승중 오류 :`, error);
+    console.error(`Error updating grade for user ${userId}:`, error);
+    throw error;
   }
 };

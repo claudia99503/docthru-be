@@ -80,18 +80,36 @@ async function processChallenges() {
     const uniqueUserIds = Array.from(new Set(gradeUpdates));
     let successCount = 0;
     let failCount = 0;
+    let noChangeCount = 0;
 
     for (const userId of uniqueUserIds) {
       try {
+        const initialGrade = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { grade: true },
+        });
+
         await updateUserGrade(userId);
-        successCount++;
+
+        const updatedGrade = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { grade: true },
+        });
+
+        if (initialGrade.grade !== updatedGrade.grade) {
+          successCount++;
+        } else {
+          noChangeCount++;
+        }
       } catch (error) {
+        console.error(`Failed to update grade for user ${userId}:`, error);
         failCount++;
       }
     }
 
+    console.log(`${uniqueUserIds.length}명의 유저 등급 검사 완료`);
     console.log(
-      `${uniqueUserIds.length}명의 유저 등급 상승자 (처리완료: ${successCount} / 처리실패: ${failCount})`
+      `등급 상승: ${successCount}, 변경 없음: ${noChangeCount}, 처리 실패: ${failCount}`
     );
     console.log('모든 챌린지 처리 완료');
   } catch (error) {
