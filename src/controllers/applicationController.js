@@ -3,11 +3,13 @@ import * as ApplicationService from '../services/applicationService.js';
 // 신규 챌린지 신청 (일반 사용자용)
 export const createApplication = async (req, res, next) => {
   try {
+    const { challengeId } = req.params; // 이미 존재하는 challengeId를 받아오기
     const userId = req.user.userId;
     const applicationData = req.body;
 
     const newApplication = await ApplicationService.createApplication(
       userId,
+      challengeId,
       applicationData
     );
 

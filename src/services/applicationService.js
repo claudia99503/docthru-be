@@ -2,18 +2,33 @@ import prisma from '../lib/prisma.js';
 
 export const ApplicationService = {
   // 신규 챌린지 신청 (일반 사용자)
-  createApplication: async (userId, applicationData) => {
-    const data = {
-      ...applicationData,
-      participants: 0,
-    };
-    const challenge = await prisma.challenge.create({ data });
+  createApplication: async (
+    userId,
+    challengeId,
+    { title, field, docType, description, docUrl, deadline, maxParticipants }
+  ) => {
+    // 새로운 챌린지를 생성
+    const challenge = await prisma.challenge.create({
+      data: {
+        title,
+        field,
+        docType,
+        description,
+        docUrl,
+        deadline: new Date(deadline),
+        participants: 0,
+        maxParticipants,
+      },
+    });
 
+    // 바로 생성된 challenge의 id를 사용하여 application을 생성
     return prisma.application.create({
       data: {
         userId,
-        challengeId: challenge.id,
-        status: 'WAITING',
+        challengeId: challenge.id, // 중복 선언 제거
+        challenge: {
+          connect: { id: challenge.id },
+        },
       },
     });
   },
