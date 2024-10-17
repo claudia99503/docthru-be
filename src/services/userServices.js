@@ -338,36 +338,51 @@ export const getUserById = async (id) => {
 };
 
 export const updateUserGrade = async (userId) => {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: {
-      participations: {
-        include: {
-          challenge: true,
+  console.log(`Updating grade for user ${userId}`);
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        participations: {
+          include: {
+            challenge: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  // 마감된(progress가 true인) 챌린지 참여 횟수 계산
-  const challengeParticipationCount = user.participations.filter(
-    (participation) => participation.challenge.progress
-  ).length;
+    if (!user) {
+      console.error(`User ${userId} not found`);
+      return;
+    }
 
-  const bestCount = user.bestCount;
+    const challengeParticipationCount = user.participations.filter(
+      (participation) => participation.challenge.progress
+    ).length;
 
-  let newGrade = 'NORMAL';
+    const bestCount = user.bestCount;
 
-  if (
-    (challengeParticipationCount >= 5 && bestCount >= 5) ||
-    challengeParticipationCount >= 10 ||
-    bestCount >= 10
-  ) {
-    newGrade = 'EXPERT';
+    let newGrade = 'NORMAL';
+
+    if (
+      (challengeParticipationCount >= 5 && bestCount >= 5) ||
+      challengeParticipationCount >= 10 ||
+      bestCount >= 10
+    ) {
+      newGrade = 'EXPERT';
+    }
+
+    console.log(
+      ` ${userId}번 유저 : 참가수 = ${challengeParticipationCount}, 최다추천작 선정수 = ${bestCount}, 신규등급 = ${newGrade}`
+    );
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { grade: newGrade },
+    });
+
+    console.log(`${userId}번 유저 ${newGrade}로 등급상승 완료`);
+  } catch (error) {
+    console.error(`${userId}번 유저 등급상승중 오류 :`, error);
   }
-
-  await prisma.user.update({
-    where: { id: userId },
-    data: { grade: newGrade },
-  });
 };

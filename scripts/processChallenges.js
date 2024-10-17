@@ -53,7 +53,6 @@ async function processChallenges() {
     }
 
     await prisma.$transaction(async (tx) => {
-      // 챌린지 progress 업데이트
       await tx.challenge.updateMany({
         where: { id: { in: challengeUpdates.map((c) => c.id) } },
         data: { progress: true },
@@ -78,10 +77,22 @@ async function processChallenges() {
       );
     }
 
-    for (const userId of new Set(gradeUpdates)) {
-      await updateUserGrade(userId);
+    const uniqueUserIds = Array.from(new Set(gradeUpdates));
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const userId of uniqueUserIds) {
+      try {
+        await updateUserGrade(userId);
+        successCount++;
+      } catch (error) {
+        failCount++;
+      }
     }
 
+    console.log(
+      `${uniqueUserIds.length}명의 유저 등급 상승자 (처리완료: ${successCount} / 처리실패: ${failCount})`
+    );
     console.log('모든 챌린지 처리 완료');
   } catch (error) {
     console.error('챌린지 처리 중 오류 발생:', error);
