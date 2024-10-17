@@ -17,7 +17,10 @@ jobs:
           node-version: '14'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
 
       - name: Run challenge processing script
         env:
