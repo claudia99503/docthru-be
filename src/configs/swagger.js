@@ -1,3 +1,6 @@
+import swaggerJsDoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
+
 const swaggerOptions = {
   swaggerDefinition: {
     openapi: '3.0.0',
@@ -8,7 +11,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: 'https://docthru-be.vercel.app',
+        url: 'http://localhost:3000', // 또는 배포 URL
       },
     ],
     components: {
@@ -21,5 +24,9 @@ const swaggerOptions = {
       },
     },
   },
-  apis: ['./src/routes/*.js'],
+  apis: ['./src/routes/*.js'], // 주의: 파일 경로가 정확한지 확인
 };
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+
+export { swaggerDocs };
