@@ -9,11 +9,9 @@ import { logoutUser } from '../services/userServices.js';
 export const authenticateAccessToken = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
-
   if (!token) {
     return next(new BadRequestException('액세스 토큰이 필요합니다.'));
   }
-
   try {
     const user = jwt.verify(token, ACCESS_TOKEN_SECRET);
     req.user = user;
@@ -22,7 +20,6 @@ export const authenticateAccessToken = async (req, res, next) => {
     if (error instanceof jwt.TokenExpiredError) {
       return next(new UnauthorizedException('토큰이 만료되었습니다.'));
     }
-
     try {
       const decodedToken = jwt.decode(token);
       if (decodedToken && decodedToken.userId) {
@@ -31,13 +28,12 @@ export const authenticateAccessToken = async (req, res, next) => {
     } catch (logoutError) {
       console.error('로그아웃 처리 중 오류 발생:', logoutError);
     }
-
     res.clearCookie('refreshToken', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'None',
+      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+      path: '/api/users/refresh-token',
     });
-
     return next(
       new UnauthorizedException(
         '유효하지 않은 토큰입니다. 다시 로그인해주세요.'

@@ -17,8 +17,9 @@ const sendRefreshToken = (res, token) => {
   res.cookie('refreshToken', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'None',
+    sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
     maxAge: parseInt(REFRESH_TOKEN_MAX_AGE, 10),
+    path: '/api/users/refresh-token',
   });
 };
 
@@ -87,11 +88,11 @@ export const logout = async (req, res, next) => {
       );
     }
 
-    await userServices.logoutUser(userId);
     res.clearCookie('refreshToken', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'None',
+      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+      path: '/api/users/refresh-token',
     });
     res.json({ message: '로그아웃 성공' });
   } catch (error) {
