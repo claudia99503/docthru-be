@@ -47,6 +47,7 @@ app.use(
       imgSrc: ["'self'", 'data:', 'https:'],
       fontSrc: ["'self'", 'https:', 'data:'],
       objectSrc: ["'none'"],
+      frameSrc: ["'self'", 'https://vercel.live'],
       upgradeInsecureRequests: [],
     },
   })
