@@ -103,54 +103,6 @@ export async function deleteChallengeById(req, res, next) {
     next(error);
   }
 }
-export async function updateChallengeStatus(req, res, next) {
-  try {
-    const adminUserId = req.user.userId;
-    const { role } = await ChallengeService.getCurrentUser(adminUserId);
-
-    if (role !== 'ADMIN') {
-      return next(new ForbiddenException());
-    }
-
-    const { challengeId } = req.params;
-    const { newStatus, reason } = req.body;
-
-    const updatedChallenge = await ChallengeService.updateChallengeStatus(
-      challengeId,
-      newStatus,
-      reason,
-      adminUserId
-    );
-
-    return res.status(200).json(updatedChallenge);
-  } catch (error) {
-    next(error);
-  }
-}
-
-export async function deleteChallengeById(req, res, next) {
-  try {
-    const adminUserId = req.user.userId;
-    const { role } = await ChallengeService.getCurrentUser(adminUserId);
-    const { reason } = req.body;
-
-    if (role !== 'ADMIN') {
-      return next(new ForbiddenException());
-    }
-
-    const { challengeId } = req.params;
-    await ChallengeService.updateChallengeStatus(
-      challengeId,
-      'DELETED',
-      reason,
-      adminUserId
-    );
-
-    return res.sendStatus(204);
-  } catch (error) {
-    next(error);
-  }
-}
 
 export async function getChallengesUrl(req, res, next) {
   try {

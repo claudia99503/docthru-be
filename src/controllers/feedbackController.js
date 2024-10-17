@@ -1,13 +1,13 @@
 import * as feedbackService from '../services/feedbackService.js';
 
 // 피드백 작성
-export const postFeedback = async (req, res, next) => {
+export const postFeedbackById = async (req, res, next) => {
   try {
     const { workId } = req.params;
     const { content } = req.body;
     const { userId } = req.user;
 
-    const newFeedback = await feedbackService.createFeedback({
+    const newFeedback = await feedbackService.postFeedbackById({
       workId,
       content,
       userId,
@@ -20,13 +20,13 @@ export const postFeedback = async (req, res, next) => {
 };
 
 // 피드백 수정
-export const editFeedback = async (req, res, next) => {
+export const updateFeedbackById = async (req, res, next) => {
   try {
     const { feedbackId } = req.params;
     const { content } = req.body;
     const { userId } = req.user;
 
-    const updateFeedback = await feedbackService.updateFeedback({
+    const updateFeedback = await feedbackService.updateFeedbackById({
       feedbackId,
       content,
       userId,
@@ -38,12 +38,12 @@ export const editFeedback = async (req, res, next) => {
 };
 
 //피드백삭제
-export const deleteFeedback = async (req, res, next) => {
+export const deleteFeedbackById = async (req, res, next) => {
   try {
     const { feedbackId } = req.params;
     const { userId } = req.user;
 
-    await feedbackService.deleteFeedback({ feedbackId, userId });
+    await feedbackService.deleteFeedbackById({ feedbackId, userId });
 
     res.status(200).json({ message: '피드백이 삭제됐습니다.' });
   } catch (error) {
