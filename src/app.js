@@ -32,8 +32,17 @@ app.use(
   helmet.contentSecurityPolicy({
     directives: {
       defaultSrc: ["'self'"],
-      connectSrc: ["'self'", process.env.CLIENT_URL || 'http://localhost:3000'],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      connectSrc: [
+        "'self'",
+        process.env.CLIENT_URL || 'http://localhost:3000',
+        'https://vercel.live',
+      ],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "'unsafe-eval'",
+        'https://vercel.live',
+      ],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", 'data:', 'https:'],
       fontSrc: ["'self'", 'https:', 'data:'],
