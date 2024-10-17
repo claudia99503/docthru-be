@@ -132,21 +132,7 @@ export const postWorkById = async ({ challengeId, content, userId }) => {
     },
   });
 
-  const applicationInfo = await prisma.application.findUnique({
-    where: { id: Number(challengeId) },
-  });
-  const challengeInfo = await prisma.challenge.findUnique({
-    where: { id: Number(challengeId) },
-  });
-
-  await notificationService.notifyNewWork(
-    Number(applicationInfo.userId),
-    Number(userId),
-    Number(challengeId),
-    challengeInfo.title,
-    Number(works.id),
-    new Date()
-  );
+  await notifyCreateAboutWork(userId, challengeId);
 
   return works;
 };
@@ -361,6 +347,24 @@ const bestWorksList = async ({ challengeId, userId }) => {
   } else {
     return;
   }
+};
+
+const notifyCreateAboutWork = async (userId, challengeId) => {
+  const applicationInfo = await prisma.application.findUnique({
+    where: { id: Number(challengeId) },
+  });
+  const challengeInfo = await prisma.challenge.findUnique({
+    where: { id: Number(challengeId) },
+  });
+
+  await notificationService.notifyNewWork(
+    Number(applicationInfo.userId),
+    Number(userId),
+    Number(challengeId),
+    challengeInfo.title,
+    Number(works.id),
+    new Date()
+  );
 };
 
 const notifyAdminAboutWork = async (userId, workId, action) => {

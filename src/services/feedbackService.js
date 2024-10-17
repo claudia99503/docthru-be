@@ -10,23 +10,7 @@ export const postFeedbackById = async ({ workId, content, userId }) => {
     },
   });
 
-  const workInfo = await prisma.work.findUnique({
-    where: { id: Number(workId) },
-    include: {
-      challenge: true,
-    },
-  });
-
-  //작업물 작성자한테 알림
-  await notificationService.notifyNewFeedback(
-    Number(workInfo.userId),
-    Number(userId),
-    Number(workInfo.challenge.id),
-    workInfo.challenge.title,
-    Number(workId),
-    Number(feedback.id),
-    new Date()
-  );
+  await notifyCreateAboutFeedback(userId, workId);
 
   return feedback;
 };
@@ -48,6 +32,26 @@ export const deleteFeedbackById = async ({ feedbackId, userId }) => {
   await prisma.feedback.delete({
     where: { id: Number(feedbackId) },
   });
+};
+
+const notifyCreateAboutFeedback = async (userId, workId) => {
+  const workInfo = await prisma.work.findUnique({
+    where: { id: Number(workId) },
+    include: {
+      challenge: true,
+    },
+  });
+
+  //작업물 작성자한테 알림
+  await notificationService.notifyNewFeedback(
+    Number(workInfo.userId),
+    Number(userId),
+    Number(workInfo.challenge.id),
+    workInfo.challenge.title,
+    Number(workId),
+    Number(feedback.id),
+    new Date()
+  );
 };
 
 const notifyAdminAboutFeedback = async (userId, feedbackId, action) => {
