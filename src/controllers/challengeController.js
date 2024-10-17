@@ -7,12 +7,20 @@ export async function getChallenges(req, res, next) {
     const limit = parseInt(req.query.limit) || 10;
     const sortBy = req.query.orderByField || 'id';
     const sortOrder = req.query.orderByDir || 'asc';
+    const field = req.body.field || undefined;
+    const docType = req.body.docType || undefined;
+    const progress = req.body.progress
+      ? req.body.progress === 'true'
+      : undefined;
 
     const result = await ChallengeService.getChallenges({
       page,
       limit,
       sortBy,
       sortOrder,
+      field,
+      docType,
+      progress,
     });
     return res.status(200).json(result);
   } catch (error) {
@@ -24,7 +32,6 @@ export async function getChallengeById(req, res, next) {
   try {
     const { challengeId } = req.params;
     const challenge = await ChallengeService.getChallengeById(challengeId);
-
     return res.status(200).json(challenge);
   } catch (error) {
     next(error);
@@ -37,7 +44,7 @@ export async function patchChallengeById(req, res, next) {
     const { role } = await ChallengeService.getCurrentUser(adminUserId);
 
     if (role !== 'ADMIN') {
-      return next(new ForbiddenException());
+      throw new ForbiddenException('관리자 권한이 필요합니다.');
     }
 
     const { challengeId } = req.params;
@@ -46,7 +53,7 @@ export async function patchChallengeById(req, res, next) {
     const updatedChallenge = await ChallengeService.updateChallengeById(
       challengeId,
       updateData,
-      adminUserId // 딱히 전달할 필요는 없기는 한데 혹시몰라서? 실질 쓰임새는 권한검증뿐이긴 합니다
+      adminUserId
     );
 
     return res.status(200).json(updatedChallenge);
@@ -57,11 +64,11 @@ export async function patchChallengeById(req, res, next) {
 
 export async function updateChallengeStatus(req, res, next) {
   try {
-    const userId = req.user.userId;
-    const { role } = await ChallengeService.getCurrentUser(userId);
+    const adminUserId = req.user.userId;
+    const { role } = await ChallengeService.getCurrentUser(adminUserId);
 
     if (role !== 'ADMIN') {
-      return next(new ForbiddenException());
+      throw new ForbiddenException('관리자 권한이 필요합니다.');
     }
 
     const { challengeId } = req.params;
@@ -70,7 +77,8 @@ export async function updateChallengeStatus(req, res, next) {
     const updatedChallenge = await ChallengeService.updateChallengeStatus(
       challengeId,
       newStatus,
-      reason
+      reason,
+      adminUserId
     );
 
     return res.status(200).json(updatedChallenge);
@@ -81,19 +89,20 @@ export async function updateChallengeStatus(req, res, next) {
 
 export async function deleteChallengeById(req, res, next) {
   try {
-    const userId = req.user.userId;
-    const { role } = await ChallengeService.getCurrentUser(userId);
+    const adminUserId = req.user.userId;
+    const { role } = await ChallengeService.getCurrentUser(adminUserId);
     const { reason } = req.body;
 
     if (role !== 'ADMIN') {
-      return next(new ForbiddenException());
+      throw new ForbiddenException('관리자 권한이 필요합니다.');
     }
 
     const { challengeId } = req.params;
     await ChallengeService.updateChallengeStatus(
       challengeId,
       'DELETED',
-      reason
+      reason,
+      adminUserId
     );
 
     return res.sendStatus(204);
@@ -116,11 +125,11 @@ export async function postChallengeParticipate(req, res, next) {
   try {
     const { challengeId } = req.params;
     const { userId } = req.user;
-    const Participation = await ChallengeService.postChallengeParticipate(
+    const participation = await ChallengeService.postChallengeParticipate(
       challengeId,
       userId
     );
-    return res.status(201).json(Participation);
+    return res.status(201).json(participation);
   } catch (error) {
     next(error);
   }

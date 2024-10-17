@@ -349,25 +349,36 @@ export const updateUserGrade = async (userId) => {
     },
   });
 
-  // 마감된(progress가 true인) 챌린지 참여 횟수 계산
+  if (!user) return null;
+
   const challengeParticipationCount = user.participations.filter(
     (participation) => participation.challenge.progress
   ).length;
 
   const bestCount = user.bestCount;
-
   let newGrade = 'NORMAL';
 
   if (
-    (challengeParticipationCount >= 5 && bestCount >= 5) ||
+    bestCount >= 10 ||
     challengeParticipationCount >= 10 ||
-    bestCount >= 10
+    (challengeParticipationCount >= 5 && bestCount >= 5)
   ) {
     newGrade = 'EXPERT';
   }
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: { grade: newGrade },
+  if (user.grade !== newGrade) {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { grade: newGrade },
+    });
+  }
+
+  return newGrade;
+};
+
+export const findUserByRefreshToken = async (refreshToken) => {
+  const user = await prisma.user.findFirst({
+    where: { refreshToken: refreshToken },
   });
+  return user;
 };

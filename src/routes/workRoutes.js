@@ -6,6 +6,7 @@ import {
   authWorkAction,
   authCreateWorkAction,
 } from '../middlewares/authWorkMiddleware.js';
+import { authCreateFeedbackAction } from '../middlewares/authFeedbackMiddleware.js';
 
 const router = express.Router();
 
@@ -16,17 +17,17 @@ const router = express.Router();
 router.get(
   '/list/:challengeId',
   authenticateAccessToken,
-  workController.worksList
+  workController.getWorksListById
 );
 
-router.get('/:workId', authenticateAccessToken, workController.works);
+router.get('/:workId', authenticateAccessToken, workController.getWorkById);
 
 // 챌린지에 참가한 인원인지 권한 설정
 router.post(
   '/:challengeId',
   authenticateAccessToken,
   authCreateWorkAction,
-  workController.postWork
+  workController.postWorkById
 );
 
 //본인, 어드민 계정만 수정되게끔
@@ -34,7 +35,7 @@ router.patch(
   '/:workId',
   authenticateAccessToken,
   authWorkAction,
-  workController.editWork
+  workController.updateWorkById
 );
 
 //본인, 어드민 계정만 수정되게끔
@@ -42,29 +43,34 @@ router.delete(
   '/:workId',
   authenticateAccessToken,
   authWorkAction,
-  workController.deleteWork
+  workController.deleteWorkById
 );
 
 //좋아요
-router.post('/:workId/likes', authenticateAccessToken, workController.likeWork);
+router.post(
+  '/:workId/likes',
+  authenticateAccessToken,
+  workController.likeWorkById
+);
 
 router.delete(
   '/:workId/likes',
   authenticateAccessToken,
-  workController.likeCancelWork
+  workController.likeCancelWorkById
 );
 
 //피드백
 router.get(
   '/:workId/feedbacks',
   authenticateAccessToken,
-  workController.feedbacksWork
+  workController.getFeedbacksWorkById
 );
 
 router.post(
   '/:workId/feedbacks',
   authenticateAccessToken,
-  feedbackController.postFeedback
+  authCreateFeedbackAction,
+  feedbackController.postFeedbackById
 );
 
 export default router;

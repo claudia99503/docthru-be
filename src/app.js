@@ -10,6 +10,8 @@ import challengeRoutes from './routes/challengeRoutes.js';
 import applicationRoutes from './routes/applicationRoutes.js';
 import feedbackRoutes from './routes/feedbackRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import { swaggerDocs } from './configs/swagger.js';
+import swaggerUi from 'swagger-ui-express';
 
 dotenv.config();
 
@@ -40,6 +42,8 @@ app.use(
     },
   })
 );
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 app.use('/api', notificationRoutes);
 app.use('/api/challenges', challengeRoutes);

@@ -10,7 +10,7 @@ router.patch(
   '/:feedbackId',
   authenticateAccessToken,
   authFeedbackAction,
-  feedbackController.editFeedback
+  feedbackController.updateFeedbackById
 );
 
 //본인, 어드민 계정만 수정되게끔
@@ -18,7 +18,7 @@ router.delete(
   '/:feedbackId',
   authenticateAccessToken,
   authFeedbackAction,
-  feedbackController.deleteFeedback
+  feedbackController.deleteFeedbackById
 );
 
 export default router;
