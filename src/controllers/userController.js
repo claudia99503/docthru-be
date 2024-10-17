@@ -174,8 +174,7 @@ export const getAppliedChallenges = async (req, res, next) => {
 
 export const getCurrentUser = async (req, res, next) => {
   try {
-    const userId = req.user ? req.user.userId : null;
-    const user = await userServices.getCurrentUser(userId);
+    const user = await userServices.getCurrentUser(req.user.userId);
     res.json(user);
   } catch (error) {
     next(error);

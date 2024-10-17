@@ -7,10 +7,10 @@ const router = Router();
 router.post('/register', userController.register);
 router.post('/login', userController.login);
 router.post('/token/refresh', userController.refreshToken);
-router.get('/me', userController.getCurrentUser);
 
 router.use(authenticateAccessToken);
 
+router.get('/me', userController.getCurrentUser);
 router.post('/logout', userController.logout);
 router.get('/:id', userController.getUserById);
 
