@@ -4,113 +4,129 @@ const prisma = new PrismaClient();
 const users = [
   {
     role: 'USER',
-    grade: 'NORMAL',
     nickname: '테스트1',
     email: 'test1@example.com',
     password: '12341234',
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     role: 'ADMIN',
-    grade: 'EXPERT',
     nickname: '테스트2',
     email: 'test2@example.com',
     password: '12341234',
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     role: 'USER',
-    grade: 'EXPERT',
     nickname: '유저3',
     email: 'user3@example.com',
     password: 'password3',
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     role: 'USER',
-    grade: 'NORMAL',
     nickname: '유저4',
     email: 'user4@example.com',
     password: 'password4',
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     role: 'ADMIN',
-    grade: 'NORMAL',
     nickname: '관리자5',
     email: 'admin5@example.com',
     password: 'password5',
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     role: 'USER',
-    grade: 'EXPERT',
     nickname: '유저6',
     email: 'user6@example.com',
     password: '12345678',
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     role: 'USER',
-    grade: 'NORMAL',
     nickname: '테스트7',
     email: 'test7@example.com',
     password: '87654321',
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     role: 'ADMIN',
-    grade: 'EXPERT',
     nickname: '관리자8',
     email: 'admin8@example.com',
     password: 'adminpass8',
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     role: 'USER',
-    grade: 'NORMAL',
     nickname: '유저9',
     email: 'user9@example.com',
     password: 'userpass9',
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     role: 'USER',
-    grade: 'NORMAL',
     nickname: '테스트10',
     email: 'test10@example.com',
     password: 'testpass10',
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     role: 'ADMIN',
-    grade: 'EXPERT',
     nickname: '슈퍼유저11',
     email: 'superuser11@example.com',
     password: 'superpass11',
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     role: 'USER',
-    grade: 'EXPERT',
     nickname: '전문가12',
     email: 'expert12@example.com',
     password: 'expertpass12',
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     role: 'USER',
-    grade: 'NORMAL',
     nickname: '유저13',
     email: 'user13@example.com',
     password: 'password13',
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     role: 'ADMIN',
-    grade: 'NORMAL',
     nickname: '관리자14',
     email: 'admin14@example.com',
     password: 'adminpass14',
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     role: 'USER',
-    grade: 'EXPERT',
     nickname: '전문가15',
     email: 'expert15@example.com',
     password: 'expertpass15',
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
 ];
 
 const challenges = [
   {
+    userId: 1,
     title: 'NEXTJS 문서 번역 챌린지',
     field: 'NEXTJS',
     docType: 'OFFICIAL',
@@ -121,6 +137,7 @@ const challenges = [
     maxParticipants: 5,
   },
   {
+    userId: 2,
     title: 'API 가이드 번역 챌린지',
     field: 'API',
     docType: 'BLOG',
@@ -132,6 +149,7 @@ const challenges = [
     maxParticipants: 10,
   },
   {
+    userId: 3,
     title: 'CAREER 관련 문서 번역 챌린지',
     field: 'CAREER',
     docType: 'OFFICIAL',
@@ -142,6 +160,7 @@ const challenges = [
     maxParticipants: 8,
   },
   {
+    userId: 4,
     title: 'MODERNJS 블로그 번역 챌린지',
     field: 'MODERNJS',
     docType: 'BLOG',
@@ -152,6 +171,7 @@ const challenges = [
     maxParticipants: 7,
   },
   {
+    userId: 5,
     title: 'WEB 기술 공식 문서 번역 챌린지',
     field: 'WEB',
     docType: 'OFFICIAL',
@@ -162,6 +182,7 @@ const challenges = [
     maxParticipants: 6,
   },
   {
+    userId: 6,
     title: 'NEXTJS 블로그 번역 챌린지',
     field: 'NEXTJS',
     docType: 'BLOG',
@@ -172,6 +193,7 @@ const challenges = [
     maxParticipants: 5,
   },
   {
+    userId: 7,
     title: 'API 공식 문서 번역 챌린지',
     field: 'API',
     docType: 'OFFICIAL',
@@ -182,6 +204,7 @@ const challenges = [
     maxParticipants: 9,
   },
   {
+    userId: 8,
     title: 'CAREER 블로그 번역 챌린지',
     field: 'CAREER',
     docType: 'BLOG',
@@ -192,6 +215,7 @@ const challenges = [
     maxParticipants: 4,
   },
   {
+    userId: 9,
     title: 'MODERNJS 공식 문서 번역 챌린지',
     field: 'MODERNJS',
     docType: 'OFFICIAL',
@@ -202,6 +226,7 @@ const challenges = [
     maxParticipants: 6,
   },
   {
+    userId: 10,
     title: 'WEB 블로그 번역 챌린지',
     field: 'WEB',
     docType: 'BLOG',
@@ -210,59 +235,6 @@ const challenges = [
     deadline: '1970-01-01T00:00:00.000Z',
     participants: 0,
     maxParticipants: 8,
-  },
-];
-
-const applications = [
-  {
-    userId: 1,
-    challengeId: 1,
-    status: 'WAITING',
-  },
-  {
-    userId: 2,
-    challengeId: 2,
-    status: 'ACCEPTED',
-  },
-  {
-    userId: 3,
-    challengeId: 3,
-    status: 'REJECTED',
-  },
-  {
-    userId: 4,
-    challengeId: 4,
-    status: 'DELETED',
-  },
-  {
-    userId: 5,
-    challengeId: 5,
-    status: 'WAITING',
-  },
-  {
-    userId: 6,
-    challengeId: 6,
-    status: 'ACCEPTED',
-  },
-  {
-    userId: 7,
-    challengeId: 7,
-    status: 'REJECTED',
-  },
-  {
-    userId: 8,
-    challengeId: 8,
-    status: 'DELETED',
-  },
-  {
-    userId: 9,
-    challengeId: 9,
-    status: 'WAITING',
-  },
-  {
-    userId: 10,
-    challengeId: 10,
-    status: 'ACCEPTED',
   },
 ];
 
@@ -502,33 +474,82 @@ const feedbacks = [
 ];
 
 async function main() {
-  await prisma.user.deleteMany();
-  await prisma.feedback.deleteMany();
-  await prisma.work.deleteMany();
-  await prisma.challenge.deleteMany();
-  await prisma.participation.deleteMany();
-  await prisma.like.deleteMany();
-  await prisma.application.deleteMany();
-  await prisma.user.createMany({
-    data: users,
-  });
-  await prisma.challenge.createMany({
-    data: challenges,
-  });
-  await prisma.application.createMany({
-    data: applications,
-  });
-  await prisma.participation.createMany({
-    data: participants,
-  });
-  await prisma.work.createMany({
-    data: works,
-  });
-  await prisma.like.createMany({
-    data: likes,
-  });
-  await prisma.feedback.createMany({
-    data: feedbacks,
+  await prisma.$transaction(async (tx) => {
+    await tx.feedback.deleteMany();
+    await tx.like.deleteMany();
+    await tx.work.deleteMany();
+    await tx.participation.deleteMany();
+    await tx.challenge.deleteMany();
+    await tx.user.deleteMany();
+
+    await tx.user.createMany({
+      data: users,
+    });
+
+    const createdUsers = await tx.user.findMany({
+      select: { id: true },
+    });
+
+    const challengesWithUserIds = challenges.map((challenge) => ({
+      ...challenge,
+      userId: createdUsers[Math.floor(Math.random() * createdUsers.length)].id,
+    }));
+
+    await tx.challenge.createMany({
+      data: challengesWithUserIds,
+    });
+
+    const createdChallenges = await tx.challenge.findMany({
+      select: { id: true },
+    });
+
+    const participationsWithIds = participants.map((participation) => ({
+      ...participation,
+      userId: createdUsers[Math.floor(Math.random() * createdUsers.length)].id,
+      challengeId:
+        createdChallenges[Math.floor(Math.random() * createdChallenges.length)]
+          .id,
+    }));
+
+    await tx.participation.createMany({
+      data: participationsWithIds,
+    });
+
+    const worksWithIds = works.map((work) => ({
+      ...work,
+      userId: createdUsers[Math.floor(Math.random() * createdUsers.length)].id,
+      challengeId:
+        createdChallenges[Math.floor(Math.random() * createdChallenges.length)]
+          .id,
+    }));
+
+    await tx.work.createMany({
+      data: worksWithIds,
+    });
+
+    const createdWorks = await tx.work.findMany({
+      select: { id: true },
+    });
+
+    const likesWithIds = likes.map((like) => ({
+      ...like,
+      userId: createdUsers[Math.floor(Math.random() * createdUsers.length)].id,
+      workId: createdWorks[Math.floor(Math.random() * createdWorks.length)].id,
+    }));
+
+    await tx.like.createMany({
+      data: likesWithIds,
+    });
+
+    const feedbacksWithIds = feedbacks.map((feedback) => ({
+      ...feedback,
+      userId: createdUsers[Math.floor(Math.random() * createdUsers.length)].id,
+      workId: createdWorks[Math.floor(Math.random() * createdWorks.length)].id,
+    }));
+
+    await tx.feedback.createMany({
+      data: feedbacksWithIds,
+    });
   });
 }
 
@@ -537,7 +558,7 @@ main()
     await prisma.$disconnect();
   })
   .catch(async (e) => {
-    console.log(e);
+    console.error(e);
     await prisma.$disconnect();
     process.exit(1);
   });
