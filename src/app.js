@@ -23,8 +23,20 @@ const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 
+const allowedOrigins = [
+  CLIENT_URL,
+  'http://localhost:3000',
+  'https://vercel.live',
+];
+
 const corsOptions = {
-  origin: [CLIENT_URL, 'https://vercel.live'],
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
