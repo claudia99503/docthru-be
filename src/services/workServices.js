@@ -1,7 +1,8 @@
 import prisma from '../lib/prisma.js';
 import {
   BadRequestException,
-  ForbiddenException,
+  UnauthorizedException,
+  NotFoundException,
 } from '../errors/customException.js';
 import * as notificationService from './notificationService.js';
 
@@ -15,7 +16,7 @@ export const getWorksListById = async ({
 
   let sortOrder = [
     { likeCount: 'desc' },
-    { lastModifiedAt: 'desc' },
+    { createdAt: 'desc' },
     { id: 'desc' },
   ];
 
@@ -44,7 +45,7 @@ export const getWorksListById = async ({
     grade: workList.user.grade,
     challengeId: workList.challengeId,
     content: workList.content,
-    lastModifiedAt: workList.lastModifiedAt,
+    createdAt: workList.createdAt,
     likeCount: workList.likeCount,
     isLiked: workList.isLiked,
   }));
@@ -101,7 +102,7 @@ export const getWorkById = async ({ userId, workId }) => {
     userId: works.id,
     nickname: works.user.nickname,
     content: works.content,
-    lastModifiedAt: works.lastModifiedAt,
+    createdAt: works.createdAt,
     likeCount: works.likeCount,
     isLike,
     challenge: {
@@ -130,7 +131,7 @@ export const postWorkById = async ({ challengeId, content, userId }) => {
       userId: true,
       challengeId: true,
       content: true,
-      lastModifiedAt: true,
+      createdAt: true,
     },
   });
 
@@ -154,7 +155,7 @@ export const updateWorkById = async ({ workId, content, userId }) => {
       userId: true,
       challengeId: true,
       content: true,
-      lastModifiedAt: true,
+      createdAt: true,
     },
   });
 
@@ -332,7 +333,7 @@ const bestWorksList = async ({ challengeId, userId, sortOrder }) => {
       grade: bestWork.user.grade,
       challengeId: bestWork.challengeId,
       content: bestWork.content,
-      lastModifiedAt: bestWork.lastModifiedAt,
+      createdAt: bestWork.createdAt,
       likeCount: bestWork.likeCount,
       isLiked: bestWork.isLiked,
     }));
@@ -344,15 +345,12 @@ const bestWorksList = async ({ challengeId, userId, sortOrder }) => {
 };
 
 const notifyCreateAboutWork = async (userId, challengeId, works) => {
-  const applicationInfo = await prisma.application.findUnique({
-    where: { id: Number(challengeId) },
-  });
   const challengeInfo = await prisma.challenge.findUnique({
     where: { id: Number(challengeId) },
   });
 
   await notificationService.notifyNewWork(
-    Number(applicationInfo.userId),
+    Number(challengeInfo.userId),
     Number(userId),
     Number(challengeId),
     challengeInfo.title,
@@ -387,4 +385,81 @@ const notifyAdminAboutWork = async (userId, workId, action) => {
   }
 
   return workInfo;
+};
+
+export const checkWorkAuthorization = async (userId, workId) => {
+  const [userInfo, workInfo] = await prisma.$transaction([
+    prisma.user.findUnique({
+      where: { id: Number(userId) },
+    }),
+    prisma.work.findUnique({
+      where: { id: Number(workId) },
+      include: {
+        challenge: {
+          include: {
+            participations: true,
+          },
+        },
+      },
+    }),
+  ]);
+
+  if (!workInfo) {
+    throw new NotFoundException('등록된 작업물이 없습니다.');
+  }
+
+  if (workInfo.challenge.progress) {
+    if (userInfo.role === 'ADMIN') {
+      return;
+    } else {
+      throw new UnauthorizedException('챌린지가 마감됐습니다.');
+    }
+  }
+
+  if (userInfo.id === workInfo.userId || userInfo.role === 'ADMIN') {
+    return;
+  }
+
+  throw new UnauthorizedException('접근 권한이 없습니다.');
+};
+
+export const checkCreateWorkAuthorization = async (userId, challengeId) => {
+  const [userInfo, challengeInfo] = await prisma.$transaction([
+    prisma.user.findUnique({
+      where: { id: Number(userId) },
+    }),
+    prisma.challenge.findUnique({
+      where: { id: Number(challengeId) },
+      include: {
+        participations: true,
+        works: true,
+      },
+    }),
+  ]);
+
+  if (!challengeInfo) {
+    throw new NotFoundException('등록된 챌린지가 없습니다.');
+  }
+
+  if (challengeInfo.progress) {
+    throw new UnauthorizedException('챌린지가 마감됐습니다.');
+  }
+
+  const isParticipating = challengeInfo.participations.some(
+    (participation) => participation.userId === userInfo.id
+  );
+
+  if (!isParticipating) {
+    throw new UnauthorizedException('신청한 회원만 쓸 수 있습니다.');
+  }
+
+  const hasSubmittedWork = challengeInfo.works.some(
+    (work) => work.userId === userInfo.id
+  );
+
+  if (hasSubmittedWork) {
+    throw new BadRequestException('이미 작업물을 등록했습니다.');
+  }
+
+  return;
 };

@@ -7,6 +7,8 @@ export const postFeedbackById = async (req, res, next) => {
     const { content } = req.body;
     const { userId } = req.user;
 
+    await feedbackService.validateCreateFeedbackAccess(workId);
+
     const newFeedback = await feedbackService.postFeedbackById({
       workId,
       content,
@@ -26,6 +28,8 @@ export const updateFeedbackById = async (req, res, next) => {
     const { content } = req.body;
     const { userId } = req.user;
 
+    await feedbackService.validateFeedbackAccess(userId, feedbackId);
+
     const updateFeedback = await feedbackService.updateFeedbackById({
       feedbackId,
       content,
@@ -42,6 +46,8 @@ export const deleteFeedbackById = async (req, res, next) => {
   try {
     const { feedbackId } = req.params;
     const { userId } = req.user;
+
+    await feedbackService.validateFeedbackAccess(userId, feedbackId);
 
     await feedbackService.deleteFeedbackById({ feedbackId, userId });
 

@@ -39,6 +39,8 @@ export const postWorkById = async (req, res, next) => {
     const { content } = req.body;
     const { userId } = req.user;
 
+    await workService.checkCreateWorkAuthorization(userId, challengeId);
+
     const newWork = await workService.postWorkById({
       challengeId,
       content,
@@ -57,6 +59,8 @@ export const updateWorkById = async (req, res, next) => {
     const { content } = req.body;
     const { userId } = req.user;
 
+    await workService.checkWorkAuthorization(userId, workId);
+
     const updatedWork = await workService.updateWorkById({
       workId,
       content,
@@ -73,6 +77,8 @@ export const deleteWorkById = async (req, res, next) => {
   try {
     const { workId } = req.params;
     const { userId } = req.user;
+
+    await workService.checkWorkAuthorization(userId, workId);
 
     await workService.deleteWorkById({ workId, userId });
     res.status(200).json({ message: '작업물이 삭제됐습니다.' });

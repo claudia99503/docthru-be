@@ -1,7 +1,6 @@
 import express from 'express';
 import * as feedbackController from '../controllers/feedbackController.js';
 import { authenticateAccessToken } from '../middlewares/authMiddleware.js';
-import { authFeedbackAction } from '../middlewares/authFeedbackMiddleware.js';
 
 const router = express.Router();
 
@@ -55,7 +54,6 @@ const router = express.Router();
 router.patch(
   '/:feedbackId',
   authenticateAccessToken,
-  authFeedbackAction,
   feedbackController.updateFeedbackById
 );
 
@@ -89,7 +87,6 @@ router.patch(
 router.delete(
   '/:feedbackId',
   authenticateAccessToken,
-  authFeedbackAction,
   feedbackController.deleteFeedbackById
 );
 
