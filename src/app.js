@@ -21,10 +21,16 @@ dotenv.config();
 const app = express();
 
 const isProduction = process.env.NODE_ENV === 'production';
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
+
+const allowedOrigins = [
+  CLIENT_URL,
+  'http://localhost:3000',
+  'https://vercel.live',
+];
 
 const corsOptions = {
   origin: function (origin, callback) {
-    const allowedOrigins = [process.env.CLIENT_URL, 'http://localhost:3000'];
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -42,7 +48,7 @@ app.use(customJsonParser);
 
 export const sendRefreshToken = (res, token) => {
   const cookieOptions = {
-    httpOnly: false,
+    httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? 'None' : 'Lax',
     maxAge: parseInt(REFRESH_TOKEN_MAX_AGE, 10),
@@ -59,12 +65,7 @@ export const sendRefreshToken = (res, token) => {
 const contentSecurityPolicy = {
   directives: {
     defaultSrc: ["'self'"],
-    connectSrc: [
-      "'self'",
-      process.env.CLIENT_URL,
-      'http://localhost:3000',
-      'https://vercel.live',
-    ],
+    connectSrc: ["'self'", CLIENT_URL, 'https://vercel.live'],
     scriptSrc: [
       "'self'",
       "'unsafe-inline'",

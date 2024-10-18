@@ -7,7 +7,7 @@ import {
 // 유틸리티 함수
 const formatDate = (date) => date.toISOString().split('T')[0];
 
-// 알림 템플릿
+// 알림 템플릿 (기존과 동일한 형태입니다~)
 const notificationTemplates = {
   CHALLENGE_STATUS: (challengeName, status, date) =>
     `'${challengeName}'이 ${status}되었어요 (${formatDate(date)})`,
@@ -37,7 +37,7 @@ const notificationTemplates = {
   },
 };
 
-// 에러 핸들링 래퍼 함수
+// 에러 핸들링 래퍼 함수 (기존과 동일)
 const asyncErrorHandler =
   (fn) =>
   async (...args) => {
@@ -49,8 +49,18 @@ const asyncErrorHandler =
     }
   };
 
-// 알림 생성 함수
-const createTypedNotification = async (
+// 트랜잭션을 사용한 벌크 삽입
+const createNotificationsInTransaction = async (notifications) => {
+  return prisma.$transaction(async (prisma) => {
+    return prisma.notification.createMany({
+      data: notifications,
+      skipDuplicates: true,
+    });
+  });
+};
+
+// 알림 생성 함수 (수정됨)
+const createTypedNotification = (
   userId,
   actorId,
   type,
@@ -64,9 +74,16 @@ const createTypedNotification = async (
     return null;
   }
 
-  return prisma.notification.create({
-    data: { userId, type, content, challengeId, workId, feedbackId },
-  });
+  return {
+    userId,
+    type,
+    content,
+    challengeId,
+    workId,
+    feedbackId,
+    createdAt: new Date(),
+    isRead: false,
+  };
 };
 
 export const getNotifications = asyncErrorHandler(
@@ -92,128 +109,125 @@ export const markNotificationAsRead = asyncErrorHandler(async (id) => {
   return notification;
 });
 
-// 챌린지 상태 변경 알림
-export const notifyChallengeStatusChange = asyncErrorHandler(
-  async (
-    userId,
-    actorId,
-    challengeId,
+// 여러 사용자에게 알림을 보내는 유틸리티 함수 (수정됨)
+export const notifyMultipleUsers = asyncErrorHandler(
+  async (userIds, notificationFunction, ...args) => {
+    const notifications = userIds
+      .map((userId) => notificationFunction(userId, ...args))
+      .filter((notification) => notification !== null);
+
+    if (notifications.length > 0) {
+      await createNotificationsInTransaction(notifications);
+    }
+
+    return notifications;
+  }
+);
+
+// 기존의 알림 함수들 (약간 수정됨)
+export const notifyChallengeStatusChange = (
+  userId,
+  actorId,
+  challengeId,
+  challengeName,
+  newStatus,
+  date = new Date()
+) => {
+  const content = notificationTemplates.CHALLENGE_STATUS(
     challengeName,
     newStatus,
-    date = new Date()
-  ) => {
-    const content = notificationTemplates.CHALLENGE_STATUS(
-      challengeName,
-      newStatus,
-      date
-    );
-    return createTypedNotification(
-      userId,
-      actorId,
-      'CHALLENGE_STATUS',
-      content,
-      challengeId
-    );
-  }
-);
-
-// 새 작업물 추가 알림
-export const notifyNewWork = asyncErrorHandler(
-  async (
+    date
+  );
+  return createTypedNotification(
     userId,
     actorId,
+    'CHALLENGE_STATUS',
+    content,
+    challengeId
+  );
+};
+
+export const notifyNewWork = (
+  userId,
+  actorId,
+  challengeId,
+  challengeName,
+  workId,
+  date = new Date()
+) => {
+  const content = notificationTemplates.NEW_WORK(challengeName, date);
+  return createTypedNotification(
+    userId,
+    actorId,
+    'NEW_WORK',
+    content,
     challengeId,
-    challengeName,
-    workId,
-    date = new Date()
-  ) => {
-    const content = notificationTemplates.NEW_WORK(challengeName, date);
-    return createTypedNotification(
-      userId,
-      actorId,
-      'NEW_WORK',
-      content,
-      challengeId,
-      workId
-    );
-  }
-);
+    workId
+  );
+};
 
-// 새 피드백 추가 알림
-export const notifyNewFeedback = asyncErrorHandler(
-  async (
+export const notifyNewFeedback = (
+  userId,
+  actorId,
+  challengeId,
+  challengeName,
+  workId,
+  feedbackId,
+  date = new Date()
+) => {
+  const content = notificationTemplates.NEW_FEEDBACK(challengeName, date);
+  return createTypedNotification(
     userId,
     actorId,
+    'NEW_FEEDBACK',
+    content,
     challengeId,
-    challengeName,
     workId,
-    feedbackId,
-    date = new Date()
-  ) => {
-    const content = notificationTemplates.NEW_FEEDBACK(challengeName, date);
-    return createTypedNotification(
-      userId,
-      actorId,
-      'NEW_FEEDBACK',
-      content,
-      challengeId,
-      workId,
-      feedbackId
-    );
-  }
-);
+    feedbackId
+  );
+};
 
-// 챌린지 마감 알림
-export const notifyDeadline = asyncErrorHandler(
-  async (userId, actorId, challengeId, challengeName, date = new Date()) => {
-    const content = notificationTemplates.DEADLINE(challengeName, date);
-    return createTypedNotification(
-      userId,
-      actorId,
-      'DEADLINE',
-      content,
-      challengeId
-    );
-  }
-);
-
-// 콘텐츠 변경 알림 (챌린지, 작업물, 피드백)
-export const notifyContentChange = asyncErrorHandler(
-  async (
+export const notifyDeadline = (
+  userId,
+  actorId,
+  challengeId,
+  challengeName,
+  date = new Date()
+) => {
+  const content = notificationTemplates.DEADLINE(challengeName, date);
+  return createTypedNotification(
     userId,
     actorId,
+    'DEADLINE',
+    content,
+    challengeId
+  );
+};
+
+export const notifyContentChange = (
+  userId,
+  actorId,
+  entityType,
+  challengeName,
+  action,
+  challengeId = null,
+  workId = null,
+  feedbackId = null,
+  date = new Date()
+) => {
+  const content = notificationTemplates.CONTENT_CHANGE(
     entityType,
     challengeName,
     action,
-    challengeId = null,
-    workId = null,
-    feedbackId = null,
-    date = new Date()
-  ) => {
-    const content = notificationTemplates.CONTENT_CHANGE(
-      entityType,
-      challengeName,
-      action,
-      date
-    );
-    return createTypedNotification(
-      userId,
-      actorId,
-      'CHANGE',
-      content,
-      challengeId,
-      workId,
-      feedbackId
-    );
-  }
-);
-
-// 여러 사용자에게 알림을 보내는 유틸리티 함수
-export const notifyMultipleUsers = asyncErrorHandler(
-  async (userIds, notificationFunction, ...args) => {
-    const notifications = await Promise.all(
-      userIds.map((userId) => notificationFunction(userId, ...args))
-    );
-    return notifications.filter((notification) => notification !== null);
-  }
-);
+    date
+  );
+  return createTypedNotification(
+    userId,
+    actorId,
+    'CHANGE',
+    content,
+    challengeId,
+    workId,
+    feedbackId
+  );
+};
