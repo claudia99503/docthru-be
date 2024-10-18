@@ -102,7 +102,7 @@ router.get('/', getChallenges);
  *       - in: query
  *         name: sortBy
  *         required: false
- *         description: "정렬 기준 필드 (기본값: id)"
+ *         description: "정렬 기준 필드 (status,updatedAt, deadline 기본값 : updatedAt)"
  *         schema:
  *           type: string
  *       - in: query
@@ -139,24 +139,43 @@ router.get('/application', authenticateAccessToken, getApplication);
  *     description: 어플리케이션을 만듭니다.
  *     parameters:
  *       - in: body
- *         name: updateData
- *         description: 수정할 데이터
+ *         name: createData
+ *         description: 챌린지 만들기
  *         schema:
  *           type: object
  *           properties:
  *             title:
  *               type: string
+ *               description: "챌린지 제목"
+ *             field:
+ *               type: array
+ *               items:
+ *                 type: string
+ *               description: "분야 (NEXTJS, API, CAREER, 또는 desc, MODERNJS, WEB)"
+ *             docType:
+ *               type: string
+ *               description: "문서 타입 (OFFICIAL, BLOG)"
  *             description:
  *               type: string
- *               tags:
- *                 type: array
- *                 items:
- *                   type: string
- *                 description: 배열 (쉼표로 구분된 문자열)
+ *               description: "챌린지 설명"
+ *             docUrl:
+ *               type: string
+ *               description: "문서 URL"
+ *             deadLine:
+ *               type: string
+ *               format: date
+ *               description: "마감일"
+ *             maxParticipants:
+ *               type: integer
+ *               description: "최대 참여 인원"
  *           required:
  *             - title
+ *             - docUrl
+ *             - field
+ *             - docType
+ *             - deadLine
+ *             - maxParticipants
  *             - description
- *             - progress
  *     responses:
  *       200:
  *         description: 만들어진 어플리케이션 정보
@@ -218,14 +237,30 @@ router.get('/:challengeId', authenticateAccessToken, getChallengeById);
  *           properties:
  *             title:
  *               type: string
+ *             docUrl:
+ *               type: string
+ *             field:
+ *               type: array
+ *               items:
+ *                 type: string
+ *               description: "분야 (NEXTJS, API, CAREER, 또는 desc, MODERNJS, WEB)"
+ *             docType:
+ *               type: string
+ *               description: "문서 타입 (OFFICIAL, BLOG)"
+ *             deadLine:
+ *               type: string
+ *               format: date
+ *             maxParticipants:
+ *               type: integer
  *             description:
  *               type: string
- *             progress:
- *               type: boolean
  *           required:
  *             - title
+ *             - docUrl
+ *             - field
+ *             - deadLine
+ *             - maxParticipants
  *             - description
- *             - progress
  *     responses:
  *       200:
  *         description: 수정된 챌린지 정보
