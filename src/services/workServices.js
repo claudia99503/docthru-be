@@ -388,29 +388,29 @@ const notifyAdminAboutWork = async (userId, workId, action) => {
 };
 
 export const checkWorkAuthorization = async (userId, workId) => {
-  const workInfo = await prisma.work.findUnique({
-    where: { id: Number(workId) },
-  });
+  const [userInfo, workInfo] = await prisma.$transaction([
+    prisma.user.findUnique({
+      where: { id: Number(userId) },
+    }),
+    prisma.work.findUnique({
+      where: { id: Number(workId) },
+      include: {
+        challenge: {
+          include: {
+            participations: true,
+          },
+        },
+      },
+    }),
+  ]);
 
   if (!workInfo) {
     throw new NotFoundException('등록된 작업물이 없습니다.');
   }
 
-  const userInfo = await prisma.user.findUnique({
-    where: { id: Number(userId) },
-  });
-
-  if (!userInfo) {
-    throw new UnauthorizedException('사용자 정보가 없습니다.');
-  }
-
-  const challengeInfo = await prisma.challenge.findUnique({
-    where: { id: Number(workInfo.challengeId) },
-  });
-
-  if (challengeInfo.progress) {
+  if (workInfo.challenge.progress) {
     if (userInfo.role === 'ADMIN') {
-      return true; // Admin can access even if challenge is closed
+      return;
     } else {
       throw new UnauthorizedException('챌린지가 마감됐습니다.');
     }
@@ -424,24 +424,21 @@ export const checkWorkAuthorization = async (userId, workId) => {
 };
 
 export const checkCreateWorkAuthorization = async (userId, challengeId) => {
-  const challengeInfo = await prisma.challenge.findUnique({
-    where: { id: Number(challengeId) },
-    include: {
-      participations: true,
-      works: true,
-    },
-  });
+  const [userInfo, challengeInfo] = await prisma.$transaction([
+    prisma.user.findUnique({
+      where: { id: Number(userId) },
+    }),
+    prisma.challenge.findUnique({
+      where: { id: Number(challengeId) },
+      include: {
+        participations: true,
+        works: true,
+      },
+    }),
+  ]);
 
   if (!challengeInfo) {
     throw new NotFoundException('등록된 챌린지가 없습니다.');
-  }
-
-  const userInfo = await prisma.user.findUnique({
-    where: { id: Number(userId) },
-  });
-
-  if (!userInfo) {
-    throw new UnauthorizedException('사용자 정보가 없습니다.');
   }
 
   if (challengeInfo.progress) {
@@ -464,5 +461,5 @@ export const checkCreateWorkAuthorization = async (userId, challengeId) => {
     throw new BadRequestException('이미 작업물을 등록했습니다.');
   }
 
-  return; // User can create work
+  return;
 };

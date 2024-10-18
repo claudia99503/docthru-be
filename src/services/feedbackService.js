@@ -121,14 +121,14 @@ export const validateFeedbackAccess = async (userId, feedbackId) => {
 
   if (challengeInfo.progress) {
     if (userInfo.role === 'ADMIN') {
-      return; // 권한 허용
+      return;
     } else {
       throw new UnauthorizedException('챌린지가 마감됐습니다.');
     }
   }
 
   if (userInfo.id === feedbackInfo.userId || userInfo.role === 'ADMIN') {
-    return; // 권한 허용
+    return;
   }
 
   throw new UnauthorizedException('접근 권한이 없습니다.');
