@@ -77,7 +77,92 @@ const router = express.Router();
 
 router.get('/', getChallenges);
 
+/**
+ * @swagger
+ * /api/challenges/application:
+ *   get:
+ *     tags: [Challenge]
+ *     summary: 챌린지 어플리케이션 목록 조회
+ *     description: 페이지네이션, 정렬 및 필터링된 챌린지 목록을 반환합니다.(어드민 계정만 가능)
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         description: "페이지 번호 (기본값: 1)"
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         description: "페이지 당 항목 수 (기본값: 10)"
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: sortBy
+ *         required: false
+ *         description: "정렬 기준 필드 (기본값: id)"
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: sortOrder
+ *         required: false
+ *         description: "정렬 방향 (asc 또는 desc, 기본값: asc)"
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: keyword
+ *         required: false
+ *         description: "키워드"
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: 챌린지 목록
+ *       400:
+ *         description: "잘못된 요청 (예: 마감된 챌린지)"
+ *       500:
+ *         description: 서버 오류
+ */
+
 router.get('/application', authenticateAccessToken, getApplication);
+
+/**
+ * @swagger
+ * /api/challenges/application:
+ *   post:
+ *     summary: 챌린지 어플리케이션 수정
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Challenge]
+ *     description: 어플리케이션을 수정합니다.
+ *     parameters:
+ *       - in: body
+ *         name: updateData
+ *         description: 수정할 데이터
+ *         schema:
+ *           type: object
+ *           properties:
+ *             title:
+ *               type: string
+ *             description:
+ *               type: string
+ *             progress:
+ *               type: boolean
+ *           required:
+ *             - title
+ *             - description
+ *             - progress
+ *     responses:
+ *       200:
+ *         description: 수정된 어플리케이션 정보
+ *       403:
+ *         description: 관리자 권한 부족
+ *       404:
+ *         description: 어플리케이션을 찾을 수 없음
+ *       500:
+ *         description: 서버 오류
+ */
+
 router.post('/application', authenticateAccessToken, createChallenge);
 /**
  * @swagger

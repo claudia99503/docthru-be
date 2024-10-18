@@ -68,6 +68,8 @@ router.post('/register', userController.register);
  *   post:
  *     tags: [User]
  *     summary: 사용자 로그인
+ *     security:
+ *       - cookieAuth: []  # 쿠키 인증 추가
  *     description: 사용자가 로그인합니다.
  *     requestBody:
  *       required: true
@@ -114,6 +116,8 @@ router.post('/login', userController.login);
  *   post:
  *     tags: [User]
  *     summary: 리프레시 토큰 갱신
+ *     security:
+ *       - cookieAuth: []  # 쿠키 인증 추가
  *     description: 리프레시 토큰을 사용하여 액세스 토큰을 갱신합니다.
  *     responses:
  *       200:
@@ -138,6 +142,8 @@ router.post('/token/refresh', userController.refreshToken);
  *   post:
  *     tags: [User]
  *     summary: 사용자 로그아웃
+ *     security:
+ *       - cookieAuth: []  # 쿠키 인증 추가
  *     description: 사용자를 로그아웃합니다.
  *     responses:
  *       200:
