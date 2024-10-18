@@ -6,6 +6,8 @@ import {
   deleteChallengeById,
   getChallengesUrl,
   postChallengeParticipate,
+  getApplication,
+  createChallenge,
 } from '../controllers/challengeController.js';
 import { authenticateAccessToken } from '../middlewares/authMiddleware.js';
 
@@ -64,6 +66,8 @@ const router = express.Router();
  */
 router.get('/', getChallenges);
 
+router.get('/application', authenticateAccessToken, getApplication);
+router.post('/application', authenticateAccessToken, createChallenge);
 /**
  * @swagger
  * /challenges/{challengeId}:
