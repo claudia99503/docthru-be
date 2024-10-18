@@ -39,6 +39,10 @@ const router = Router();
  *     responses:
  *       201:
  *         description: 회원가입 성공
+ *         headers:
+ *           Set-Cookie:
+ *             description: 인증을 위한 refreshToken 쿠키가 설정됩니다.
+ *             type: string
  *         content:
  *           application/json:
  *             schema:
@@ -55,6 +59,7 @@ const router = Router();
  *       409:
  *         description: 이미 존재하는 닉네임 또는 이메일
  */
+
 router.post('/register', userController.register);
 
 /**
@@ -82,6 +87,10 @@ router.post('/register', userController.register);
  *     responses:
  *       200:
  *         description: 로그인 성공
+ *         headers:
+ *           Set-Cookie:
+ *             description: 쿠키가 설정됩니다.
+ *             type: string
  *         content:
  *           application/json:
  *             schema:
@@ -96,6 +105,7 @@ router.post('/register', userController.register);
  *       400:
  *         description: 잘못된 요청
  */
+
 router.post('/login', userController.login);
 
 /**
@@ -142,6 +152,7 @@ router.post('/token/refresh', userController.refreshToken);
  *       400:
  *         description: 리프레시 토큰이 없습니다.
  */
+
 router.post('/logout', userController.logout);
 
 /**
