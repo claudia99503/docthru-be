@@ -83,6 +83,8 @@ router.get('/', getChallenges);
  *   get:
  *     tags: [Challenge]
  *     summary: 챌린지 어플리케이션 목록 조회
+ *     security:
+ *       - bearerAuth: []
  *     description: 페이지네이션, 정렬 및 필터링된 챌린지 목록을 반환합니다.(어드민 계정만 가능)
  *     parameters:
  *       - in: query
@@ -130,11 +132,11 @@ router.get('/application', authenticateAccessToken, getApplication);
  * @swagger
  * /api/challenges/application:
  *   post:
- *     summary: 챌린지 어플리케이션 수정
+ *     summary: 챌린지 어플리케이션 만들기
  *     security:
  *       - bearerAuth: []
  *     tags: [Challenge]
- *     description: 어플리케이션을 수정합니다.
+ *     description: 어플리케이션을 만듭니다.
  *     parameters:
  *       - in: body
  *         name: updateData
@@ -154,16 +156,15 @@ router.get('/application', authenticateAccessToken, getApplication);
  *             - progress
  *     responses:
  *       200:
- *         description: 수정된 어플리케이션 정보
+ *         description: 만들어진 어플리케이션 정보
  *       403:
  *         description: 관리자 권한 부족
- *       404:
- *         description: 어플리케이션을 찾을 수 없음
  *       500:
  *         description: 서버 오류
  */
 
 router.post('/application', authenticateAccessToken, createChallenge);
+
 /**
  * @swagger
  * /api/challenges/{challengeId}:
