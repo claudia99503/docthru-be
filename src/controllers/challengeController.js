@@ -35,6 +35,12 @@ export async function getApplication(req, res, next) {
     const sortBy = req.query.sortBy || 'updatedAt';
     const sortOrder = req.query.sortOrder || 'asc';
     const keyword = req.query.keyword;
+    const userId = req.user.userId;
+    const { role } = await ChallengeService.getCurrentUser(userId);
+
+    if (role !== 'ADMIN') {
+      throw new ForbiddenException('관리자 권한이 필요합니다.');
+    }
 
     const sortOptions = {};
     if (

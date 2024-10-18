@@ -66,7 +66,7 @@ const router = express.Router();
  */
 router.get('/', getChallenges);
 
-router.get('/application', getApplication);
+router.get('/application', authenticateAccessToken, getApplication);
 router.post('/application', authenticateAccessToken, createChallenge);
 /**
  * @swagger

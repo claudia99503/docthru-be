@@ -26,9 +26,9 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE4LCJpY
   "maxParticipants" : 10
 }
 ### 챌린지 전체 조회
-GET http://localhost:3001/api/challenges/application?keyword=블로그
+GET http://localhost:3001/api/challenges/application?sortBy=status&sortOrder=WAITING
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE4LCJpYXQiOjE3MjkyMjY0NDIsImV4cCI6MTcyOTIyNzM0Mn0.s6VFZHUgzfGCmqlh71G5o8XycKS-C4ThTXCeFR2HSFs
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE4LCJpYXQiOjE3MjkyMzIxNzgsImV4cCI6MTcyOTIzMzA3OH0.FMvCppIuc4ngWjwCPFxRTGI6hZH_RaS8Oc_POdeGlWI
 
 
 ### 챌린저 삭제
