@@ -23,11 +23,7 @@ export const ChallengeService = {
 
     // 필터 조건 설정
     const filterConditions = {
-      applications: {
-        some: {
-          status: 'ACCEPTED',
-        },
-      },
+      status: 'ACCEPTED',
     };
 
     if (field && field.length > 0) {
@@ -73,14 +69,10 @@ export const ChallengeService = {
     const challenge = await prisma.challenge.findUnique({
       where: { id: parseInt(challengeId, 10) },
       include: {
-        applications: {
-          include: {
-            user: {
-              select: {
-                nickname: true,
-                grade: true,
-              },
-            },
+        User: {
+          select: {
+            nickname: true,
+            grade: true,
           },
         },
       },
@@ -89,8 +81,19 @@ export const ChallengeService = {
     if (!challenge) {
       throw new NotFoundException('챌린지가 없습니다.');
     }
+    // User 정보를 Writer로 가공하여 반환
+    const { User, ...rest } = challenge;
+    const processedChallenge = {
+      ...rest,
+      writer: User
+        ? {
+            nickname: User.nickname,
+            grade: User.grade,
+          }
+        : null,
+    };
 
-    return challenge;
+    return processedChallenge;
   },
 
   getCurrentUser: async (userId) => {
@@ -100,13 +103,9 @@ export const ChallengeService = {
     });
   },
 
-  updateChallengeById: async (challengeId, updateData, adminUserId) => {
+  updateChallengeById: async (challengeId, updateData) => {
     const challenge = await prisma.challenge.findUnique({
       where: { id: parseInt(challengeId, 10) },
-      include: {
-        owner: true,
-        participants: true,
-      },
     });
     if (!challenge) {
       throw new NotFoundException('챌린지가 없습니다.');
@@ -116,89 +115,6 @@ export const ChallengeService = {
       where: { id: parseInt(challengeId, 10) },
       data: updateData,
     });
-
-    const changeDate = new Date();
-
-    // 챌린지 소유자에게 수정 알림 생성
-    await notifyContentChange(
-      challenge.owner.id,
-      adminUserId,
-      'CHALLENGE',
-      updatedChallenge.title,
-      '수정',
-      changeDate,
-      challengeId
-    );
-
-    // 챌린지 참가자들에게도 알림 생성
-    const participantIds = challenge.participants.map((p) => p.userId);
-    await notifyMultipleUsers(
-      participantIds,
-      notifyContentChange,
-      adminUserId,
-      'CHALLENGE',
-      updatedChallenge.title,
-      '수정',
-      changeDate,
-      challengeId
-    );
-
-    return updatedChallenge;
-  },
-
-  updateChallengeStatus: async (
-    challengeId,
-    newStatus,
-    reason = '',
-    adminUserId
-  ) => {
-    const challenge = await prisma.challenge.findUnique({
-      where: { id: parseInt(challengeId, 10) },
-      include: { applications: true },
-    });
-
-    if (!challenge) {
-      throw new NotFoundException('챌린지를 찾을 수 없습니다.');
-    }
-
-    const updatedChallenge = await prisma.challenge.update({
-      where: { id: parseInt(challengeId, 10) },
-      data: { status: newStatus },
-    });
-
-    const changeDate = new Date();
-
-    // 모든 신청자에게 알림 전송
-    const applicantIds = challenge.applications.map((a) => a.userId);
-    await notifyMultipleUsers(
-      applicantIds,
-      notifyChallengeStatusChange,
-      adminUserId,
-      challengeId,
-      challenge.title,
-      newStatus,
-      changeDate
-    );
-
-    // 상태가 삭제됨일 경우 관련 애플리케이션도 업데이트
-    if (newStatus === 'DELETED') {
-      await prisma.application.updateMany({
-        where: { challengeId: parseInt(challengeId, 10) },
-        data: { status: 'DELETED', message: reason },
-      });
-
-      // 챌린지 삭제 알림 생성
-      await notifyMultipleUsers(
-        applicantIds,
-        notifyContentChange,
-        adminUserId,
-        'CHALLENGE',
-        challenge.title,
-        '삭제',
-        changeDate,
-        challengeId
-      );
-    }
 
     return updatedChallenge;
   },

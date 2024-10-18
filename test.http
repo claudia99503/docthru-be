@@ -5,25 +5,31 @@ Content-Type: application/json
 {
   "field" : ["NEXTJS","CAREER"],
   "docType" : "BLOG",
-  "progress" : "true"
+  "progress" : "false"
 }
 
 ### 상세 조회
 GET http://localhost:3001/api/challenges/1
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE2LCJpYXQiOjE3Mjg5NzcxMDMsImV4cCI6MTcyODk3ODAwM30.jcf9oyhTrg3UbE_Dtzmi3yn8jKSE3_qfbvIwVdpI0NU
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE4LCJpYXQiOjE3MjkyMjQwNjAsImV4cCI6MTcyOTIyNDk2MH0.nkYvuLSEjIQ-ikqvfIVpBtmy4uAi2btOyy0QZjfwKaM
 
 
 
 ### 챌린저 내용 변경
 PATCH http://localhost:3001/api/challenges/1
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE2LCJpYXQiOjE3MjkwNDYxNDgsImV4cCI6MTcyOTA0NzA0OH0.T6spjbtYDAHlxEAKH1FYxfk3e2Ha-utfIg1gA1GbsFE
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE4LCJpYXQiOjE3MjkyMjQ5ODQsImV4cCI6MTcyOTIyNTg4NH0.XXvvJIKoJIsxIP9n4fkDjPexTeq0FQWfDbNpkut7neU
 
 {
   "title" : "제목 변경",
-  "description" : "내용 변경"
+  "status" : "DELETED",
+  "maxParticipants" : 10
 }
+### 챌린지 전체 조회
+GET http://localhost:3001/api/challenges/application?keyword=블로그
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE4LCJpYXQiOjE3MjkyMjY0NDIsImV4cCI6MTcyOTIyNzM0Mn0.s6VFZHUgzfGCmqlh71G5o8XycKS-C4ThTXCeFR2HSFs
+
 
 ### 챌린저 삭제
 DELETE  https://docthru-be.vercel.app/api/challenges/2
@@ -40,7 +46,7 @@ POST http://localhost:3001/api/users/register
 Content-Type: application/json
 
 {
-  "email" : "test@test.c",
+  "email" : "test@test.com",
   "password" : "12341234",
   "nickname" : "test",
   "role" : "ADMIN",
@@ -64,12 +70,12 @@ Content-Type: application/json
 ### 챌린지 참여하기
 POST http://localhost:3001/api/challenges/9/participations
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE2LCJpYXQiOjE3MjkwNTQyODUsImV4cCI6MTcyOTA1NTE4NX0.TMz_ZfdcZnNIH8LyzNuHvmY2OJ-JxrfVOiAOFGkHqhc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE4LCJpYXQiOjE3MjkyMjg4NDIsImV4cCI6MTcyOTIyOTc0Mn0.3KgCvQCljLV11FsOxuvjXqw1q9DcdA2F1Jvhqvie4jA
 
 ### 챌린지 생성
-POST http://localhost:3001/api/applications/create
+POST http://localhost:3001/api/challenges/application
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE2LCJpYXQiOjE3Mjg5NzU2NjYsImV4cCI6MTcyODk3NjU2Nn0.kF4w4te-fqfGwVjmWoj6wFxYKmjHZB4xqnaNLbOPpEU
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE4LCJpYXQiOjE3MjkyMjk3MTksImV4cCI6MTcyOTIzMDYxOX0.SV1H2tca8ouIB7qoYjl60VwJ9FxI8uTy1hrriVl45n0
 
 {
   "title" : "343242314",
@@ -77,7 +83,11 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE2LCJpY
   "docType" : "BLOG",
   "description" : "4321412412",
   "docUrl" : "http://www.naver.com",
-  "deadline" : "2024-01-01",
+  "deadline" : "2024-01-01T00:00:00.000Z",
   "maxParticipants" : 5
-  
 }
+
+### 챌린지 삭제
+DELETE http://localhost:3001/api/challenges/12
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE4LCJpYXQiOjE3MjkyMzA2NDUsImV4cCI6MTcyOTIzMTU0NX0.br2V5wUU-w0v_fBVEEsTvn8bn68vduE0IpZBC-vpawg
