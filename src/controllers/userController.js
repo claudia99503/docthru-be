@@ -140,7 +140,7 @@ export const getCurrentUser = async (req, res, next) => {
     const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
-      throw new NotFoundException('액세스 토큰이 없습니다.');
+      throw new UnauthorizedException('액세스 토큰이 없습니다.');
     }
 
     let decodedToken;
@@ -148,7 +148,7 @@ export const getCurrentUser = async (req, res, next) => {
       decodedToken = jwt.verify(token, ACCESS_TOKEN_SECRET);
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
-        throw new NotFoundException('토큰이 만료되었습니다.');
+        throw new UnauthorizedException('토큰이 만료되었습니다.');
       } else if (error instanceof jwt.JsonWebTokenError) {
         throw new UnauthorizedException('유효하지 않은 토큰입니다.');
       } else {
