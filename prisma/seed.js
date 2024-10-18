@@ -531,11 +531,18 @@ async function main() {
       select: { id: true },
     });
 
-    const likesWithIds = likes.map((like) => ({
-      ...like,
-      userId: createdUsers[Math.floor(Math.random() * createdUsers.length)].id,
-      workId: createdWorks[Math.floor(Math.random() * createdWorks.length)].id,
-    }));
+    const uniqueLikes = new Set();
+    while (uniqueLikes.size < 10) {
+      const userId =
+        createdUsers[Math.floor(Math.random() * createdUsers.length)].id;
+      const workId =
+        createdWorks[Math.floor(Math.random() * createdWorks.length)].id;
+      uniqueLikes.add(JSON.stringify({ userId, workId }));
+    }
+
+    const likesWithIds = Array.from(uniqueLikes).map((like) =>
+      JSON.parse(like)
+    );
 
     await tx.like.createMany({
       data: likesWithIds,

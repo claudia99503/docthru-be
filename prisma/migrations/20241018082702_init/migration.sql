@@ -14,7 +14,7 @@ CREATE TYPE "DocType" AS ENUM ('OFFICIAL', 'BLOG');
 CREATE TYPE "ApplicationStatus" AS ENUM ('WAITING', 'ACCEPTED', 'REJECTED', 'DELETED');
 
 -- CreateEnum
-CREATE TYPE "NotificationType" AS ENUM ('CHANGE', 'STATUS', 'NEW_WORK', 'NEW_FEEDBACK', 'DEADLINE', 'ADMIN_ACTION');
+CREATE TYPE "NotificationType" AS ENUM ('CHANGE', 'STATUS', 'NEW_WORK', 'NEW_FEEDBACK', 'DEADLINE', 'ADMIN_ACTION', 'NEW_REPLY');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -71,7 +71,6 @@ CREATE TABLE "Work" (
     "challengeId" INTEGER NOT NULL,
     "content" TEXT,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "isSubmitted" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "likeCount" INTEGER NOT NULL DEFAULT 0,
 
@@ -88,6 +87,18 @@ CREATE TABLE "Feedback" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Feedback_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Reply" (
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "feedbackId" INTEGER NOT NULL,
+    "content" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Reply_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -147,6 +158,12 @@ ALTER TABLE "Feedback" ADD CONSTRAINT "Feedback_userId_fkey" FOREIGN KEY ("userI
 
 -- AddForeignKey
 ALTER TABLE "Feedback" ADD CONSTRAINT "Feedback_workId_fkey" FOREIGN KEY ("workId") REFERENCES "Work"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Reply" ADD CONSTRAINT "Reply_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Reply" ADD CONSTRAINT "Reply_feedbackId_fkey" FOREIGN KEY ("feedbackId") REFERENCES "Feedback"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Like" ADD CONSTRAINT "Like_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
