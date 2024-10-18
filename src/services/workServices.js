@@ -1,7 +1,8 @@
 import prisma from '../lib/prisma.js';
 import {
   BadRequestException,
-  ForbiddenException,
+  UnauthorizedException,
+  NotFoundException,
 } from '../errors/customException.js';
 import * as notificationService from './notificationService.js';
 
@@ -387,4 +388,84 @@ const notifyAdminAboutWork = async (userId, workId, action) => {
   }
 
   return workInfo;
+};
+
+export const checkWorkAuthorization = async (userId, workId) => {
+  const workInfo = await prisma.work.findUnique({
+    where: { id: Number(workId) },
+  });
+
+  if (!workInfo) {
+    throw new NotFoundException('등록된 작업물이 없습니다.');
+  }
+
+  const userInfo = await prisma.user.findUnique({
+    where: { id: Number(userId) },
+  });
+
+  if (!userInfo) {
+    throw new UnauthorizedException('사용자 정보가 없습니다.');
+  }
+
+  const challengeInfo = await prisma.challenge.findUnique({
+    where: { id: Number(workInfo.challengeId) },
+  });
+
+  if (challengeInfo.progress) {
+    if (userInfo.role === 'ADMIN') {
+      return true; // Admin can access even if challenge is closed
+    } else {
+      throw new UnauthorizedException('챌린지가 마감됐습니다.');
+    }
+  }
+
+  if (userInfo.id === workInfo.userId || userInfo.role === 'ADMIN') {
+    return;
+  }
+
+  throw new UnauthorizedException('접근 권한이 없습니다.');
+};
+
+export const checkCreateWorkAuthorization = async (userId, challengeId) => {
+  const challengeInfo = await prisma.challenge.findUnique({
+    where: { id: Number(challengeId) },
+    include: {
+      participations: true,
+      works: true,
+    },
+  });
+
+  if (!challengeInfo) {
+    throw new NotFoundException('등록된 챌린지가 없습니다.');
+  }
+
+  const userInfo = await prisma.user.findUnique({
+    where: { id: Number(userId) },
+  });
+
+  if (!userInfo) {
+    throw new UnauthorizedException('사용자 정보가 없습니다.');
+  }
+
+  if (challengeInfo.progress) {
+    throw new UnauthorizedException('챌린지가 마감됐습니다.');
+  }
+
+  const isParticipating = challengeInfo.participations.some(
+    (participation) => participation.userId === userInfo.id
+  );
+
+  if (!isParticipating) {
+    throw new UnauthorizedException('신청한 회원만 쓸 수 있습니다.');
+  }
+
+  const hasSubmittedWork = challengeInfo.works.some(
+    (work) => work.userId === userInfo.id
+  );
+
+  if (hasSubmittedWork) {
+    throw new BadRequestException('이미 작업물을 등록했습니다.');
+  }
+
+  return; // User can create work
 };

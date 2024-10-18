@@ -1,5 +1,9 @@
 import prisma from '../lib/prisma.js';
 import * as notificationService from './notificationService.js';
+import {
+  UnauthorizedException,
+  NotFoundException,
+} from '../errors/customException.js';
 
 export const postFeedbackById = async ({ workId, content, userId }) => {
   const feedback = await prisma.feedback.create({
@@ -82,4 +86,75 @@ const notifyAdminAboutFeedback = async (userId, feedbackId, action) => {
       Number(feedbackId)
     );
   }
+};
+
+export const validateFeedbackAccess = async (userId, feedbackId) => {
+  const [userInfo, feedbackInfo] = await prisma.$transaction([
+    prisma.user.findUnique({
+      where: { id: Number(userId) },
+    }),
+    prisma.feedback.findFirst({
+      where: { id: Number(feedbackId) },
+      include: {
+        work: {
+          include: {
+            challenge: {
+              include: {
+                participations: true,
+              },
+            },
+          },
+        },
+      },
+    }),
+  ]);
+
+  if (!feedbackInfo) {
+    throw new NotFoundException('등록된 피드백이 없습니다.');
+  }
+
+  const challengeInfo = await feedbackInfo.work.challenge;
+
+  if (!challengeInfo) {
+    throw new NotFoundException('등록된 챌린지가 없습니다.');
+  }
+
+  if (challengeInfo.progress) {
+    if (userInfo.role === 'ADMIN') {
+      return; // 권한 허용
+    } else {
+      throw new UnauthorizedException('챌린지가 마감됐습니다.');
+    }
+  }
+
+  if (userInfo.id === feedbackInfo.userId || userInfo.role === 'ADMIN') {
+    return; // 권한 허용
+  }
+
+  throw new UnauthorizedException('접근 권한이 없습니다.');
+};
+
+export const validateCreateFeedbackAccess = async (workId) => {
+  const workWithChallenge = await prisma.work.findUnique({
+    where: { id: Number(workId) },
+    include: {
+      challenge: {
+        include: {
+          participations: true,
+        },
+      },
+    },
+  });
+
+  if (!workWithChallenge) {
+    throw new NotFoundException('등록된 작업물이 없습니다.');
+  }
+
+  const challengeInfo = workWithChallenge.challenge;
+
+  if (challengeInfo.progress) {
+    throw new UnauthorizedException('챌린지가 마감됐습니다.');
+  }
+
+  return;
 };

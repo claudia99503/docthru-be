@@ -2,11 +2,6 @@ import express from 'express';
 import * as workController from '../controllers/workController.js';
 import * as feedbackController from '../controllers/feedbackController.js';
 import { authenticateAccessToken } from '../middlewares/authMiddleware.js';
-import {
-  authWorkAction,
-  authCreateWorkAction,
-} from '../middlewares/authWorkMiddleware.js';
-import { authCreateFeedbackAction } from '../middlewares/authFeedbackMiddleware.js';
 
 const router = express.Router();
 
@@ -26,7 +21,6 @@ router.get('/:workId', authenticateAccessToken, workController.getWorkById);
 router.post(
   '/:challengeId',
   authenticateAccessToken,
-  authCreateWorkAction,
   workController.postWorkById
 );
 
@@ -34,7 +28,6 @@ router.post(
 router.patch(
   '/:workId',
   authenticateAccessToken,
-  authWorkAction,
   workController.updateWorkById
 );
 
@@ -42,7 +35,6 @@ router.patch(
 router.delete(
   '/:workId',
   authenticateAccessToken,
-  authWorkAction,
   workController.deleteWorkById
 );
 
@@ -69,7 +61,6 @@ router.get(
 router.post(
   '/:workId/feedbacks',
   authenticateAccessToken,
-  authCreateFeedbackAction,
   feedbackController.postFeedbackById
 );
 
