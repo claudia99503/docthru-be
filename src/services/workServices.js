@@ -345,15 +345,12 @@ const bestWorksList = async ({ challengeId, userId, sortOrder }) => {
 };
 
 const notifyCreateAboutWork = async (userId, challengeId, works) => {
-  const applicationInfo = await prisma.application.findUnique({
-    where: { id: Number(challengeId) },
-  });
   const challengeInfo = await prisma.challenge.findUnique({
     where: { id: Number(challengeId) },
   });
 
   await notificationService.notifyNewWork(
-    Number(applicationInfo.userId),
+    Number(challengeInfo.userId),
     Number(userId),
     Number(challengeId),
     challengeInfo.title,
