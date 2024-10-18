@@ -13,14 +13,22 @@ import {
 } from '../configs/config.js';
 import jwt from 'jsonwebtoken';
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 const sendRefreshToken = (res, token) => {
-  res.cookie('refreshToken', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+  const cookieOptions = {
+    httpOnly: false,
+    secure: isProduction,
+    sameSite: isProduction ? 'None' : 'Lax',
     maxAge: parseInt(REFRESH_TOKEN_MAX_AGE, 10),
-    path: '/api/users/refresh-token',
-  });
+    path: '/',
+  };
+
+  if (isProduction) {
+    cookieOptions.domain = '.vercel.app';
+  }
+
+  res.cookie('refreshToken', token, cookieOptions);
 };
 
 export const register = async (req, res, next) => {
@@ -89,10 +97,11 @@ export const logout = async (req, res, next) => {
     }
 
     res.clearCookie('refreshToken', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
-      path: '/api/users/refresh-token',
+      httpOnly: false,
+      secure: isProduction,
+      sameSite: isProduction ? 'None' : 'Lax',
+      path: '/',
+      domain: isProduction ? '.vercel.app' : undefined,
     });
     res.json({ message: '로그아웃 성공' });
   } catch (error) {

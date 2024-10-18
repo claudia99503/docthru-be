@@ -20,8 +20,10 @@ dotenv.config();
 
 const app = express();
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 const corsOptions = {
-  origin: (origin, callback) => {
+  origin: function (origin, callback) {
     const allowedOrigins = [process.env.CLIENT_URL, 'http://localhost:3000'];
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
@@ -39,38 +41,51 @@ app.use(cookieParser());
 app.use(customJsonParser);
 
 export const sendRefreshToken = (res, token) => {
-  res.cookie('refreshToken', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+  const cookieOptions = {
+    httpOnly: false,
+    secure: isProduction,
+    sameSite: isProduction ? 'None' : 'Lax',
     maxAge: parseInt(REFRESH_TOKEN_MAX_AGE, 10),
-    path: '/api/users/token/refresh',
-  });
+    path: '/',
+  };
+
+  if (isProduction) {
+    cookieOptions.domain = '.vercel.app';
+  }
+
+  res.cookie('refreshToken', token, cookieOptions);
 };
 
+const contentSecurityPolicy = {
+  directives: {
+    defaultSrc: ["'self'"],
+    connectSrc: [
+      "'self'",
+      process.env.CLIENT_URL,
+      'http://localhost:3000',
+      'https://vercel.live',
+    ],
+    scriptSrc: [
+      "'self'",
+      "'unsafe-inline'",
+      "'unsafe-eval'",
+      'https://vercel.live',
+    ],
+    styleSrc: ["'self'", "'unsafe-inline'"],
+    imgSrc: ["'self'", 'data:', 'https:'],
+    fontSrc: ["'self'", 'https:', 'data:'],
+    objectSrc: ["'none'"],
+    frameSrc: ["'self'", 'https://vercel.live'],
+  },
+};
+
+if (isProduction) {
+  contentSecurityPolicy.directives.upgradeInsecureRequests = [];
+}
+
 app.use(
-  helmet.contentSecurityPolicy({
-    directives: {
-      defaultSrc: ["'self'"],
-      connectSrc: [
-        "'self'",
-        process.env.CLIENT_URL,
-        'http://localhost:3000',
-        'https://vercel.live',
-      ],
-      scriptSrc: [
-        "'self'",
-        "'unsafe-inline'",
-        "'unsafe-eval'",
-        'https://vercel.live',
-      ],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", 'data:', 'https:'],
-      fontSrc: ["'self'", 'https:', 'data:'],
-      objectSrc: ["'none'"],
-      frameSrc: ["'self'", 'https://vercel.live'],
-      upgradeInsecureRequests: [],
-    },
+  helmet({
+    contentSecurityPolicy: contentSecurityPolicy,
   })
 );
 

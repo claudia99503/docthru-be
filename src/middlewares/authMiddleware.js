@@ -29,10 +29,10 @@ export const authenticateAccessToken = async (req, res, next) => {
       console.error('로그아웃 처리 중 오류 발생:', logoutError);
     }
     res.clearCookie('refreshToken', {
-      httpOnly: true,
+      httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
-      path: '/api/users/refresh-token',
+      path: '/',
     });
     return next(
       new UnauthorizedException(

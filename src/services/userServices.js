@@ -79,7 +79,14 @@ export const loginUser = async (email, password) => {
 
   try {
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    if (!user) {
+      throw new BadRequestException(
+        '이메일 또는 비밀번호가 일치하지 않습니다.'
+      );
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
       throw new BadRequestException(
         '이메일 또는 비밀번호가 일치하지 않습니다.'
       );
@@ -100,9 +107,11 @@ export const loginUser = async (email, password) => {
 
     return { accessToken, refreshToken, userId: user.id };
   } catch (error) {
-    if (error.code === 'P2000') {
-      throw new BadRequestException('유효하지 않은 요청입니다');
+    if (error instanceof BadRequestException) {
+      throw error;
     }
+    console.error('Login error:', error);
+    throw new Error('로그인 처리 중 오류가 발생했습니다.');
   }
 };
 
