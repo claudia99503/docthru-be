@@ -29,10 +29,11 @@ export const authenticateAccessToken = async (req, res, next) => {
       console.error('로그아웃 처리 중 오류 발생:', logoutError);
     }
     res.clearCookie('refreshToken', {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'None' : 'Lax',
       path: '/',
+      domain: isProduction ? '.vercel.app' : undefined,
     });
     return next(
       new UnauthorizedException(
