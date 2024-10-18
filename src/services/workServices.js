@@ -124,7 +124,6 @@ export const postWorkById = async ({ challengeId, content, userId }) => {
       content: content,
       userId: Number(userId),
       challengeId: Number(challengeId),
-      isSubmitted: true,
     },
     select: {
       id: true,
