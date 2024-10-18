@@ -16,7 +16,7 @@ export const getWorksListById = async ({
 
   let sortOrder = [
     { likeCount: 'desc' },
-    { lastModifiedAt: 'desc' },
+    { createdAt: 'desc' },
     { id: 'desc' },
   ];
 
@@ -45,7 +45,7 @@ export const getWorksListById = async ({
     grade: workList.user.grade,
     challengeId: workList.challengeId,
     content: workList.content,
-    lastModifiedAt: workList.lastModifiedAt,
+    createdAt: workList.createdAt,
     likeCount: workList.likeCount,
     isLiked: workList.isLiked,
   }));
@@ -102,7 +102,7 @@ export const getWorkById = async ({ userId, workId }) => {
     userId: works.id,
     nickname: works.user.nickname,
     content: works.content,
-    lastModifiedAt: works.lastModifiedAt,
+    createdAt: works.createdAt,
     likeCount: works.likeCount,
     isLike,
     challenge: {
@@ -131,7 +131,7 @@ export const postWorkById = async ({ challengeId, content, userId }) => {
       userId: true,
       challengeId: true,
       content: true,
-      lastModifiedAt: true,
+      createdAt: true,
     },
   });
 
@@ -155,7 +155,7 @@ export const updateWorkById = async ({ workId, content, userId }) => {
       userId: true,
       challengeId: true,
       content: true,
-      lastModifiedAt: true,
+      createdAt: true,
     },
   });
 
@@ -333,7 +333,7 @@ const bestWorksList = async ({ challengeId, userId, sortOrder }) => {
       grade: bestWork.user.grade,
       challengeId: bestWork.challengeId,
       content: bestWork.content,
-      lastModifiedAt: bestWork.lastModifiedAt,
+      createdAt: bestWork.createdAt,
       likeCount: bestWork.likeCount,
       isLiked: bestWork.isLiked,
     }));
