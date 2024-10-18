@@ -148,8 +148,11 @@ router.get('/application', authenticateAccessToken, getApplication);
  *               type: string
  *             description:
  *               type: string
- *             progress:
- *               type: boolean
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: 배열 (쉼표로 구분된 문자열)
  *           required:
  *             - title
  *             - description
