@@ -13,7 +13,7 @@ const router = Router();
 
 /**
  * @swagger
- * /register:
+ * /api/users/register:
  *   post:
  *     tags: [User]
  *     summary: 사용자 회원가입
@@ -39,6 +39,10 @@ const router = Router();
  *     responses:
  *       201:
  *         description: 회원가입 성공
+ *         headers:
+ *           Set-Cookie:
+ *             description: 인증을 위한 refreshToken 쿠키가 설정됩니다.
+ *             type: string
  *         content:
  *           application/json:
  *             schema:
@@ -55,14 +59,17 @@ const router = Router();
  *       409:
  *         description: 이미 존재하는 닉네임 또는 이메일
  */
+
 router.post('/register', userController.register);
 
 /**
  * @swagger
- * /login:
+ * /api/users/login:
  *   post:
  *     tags: [User]
  *     summary: 사용자 로그인
+ *     security:
+ *       - cookieAuth: []  # 쿠키 인증 추가
  *     description: 사용자가 로그인합니다.
  *     requestBody:
  *       required: true
@@ -82,6 +89,10 @@ router.post('/register', userController.register);
  *     responses:
  *       200:
  *         description: 로그인 성공
+ *         headers:
+ *           Set-Cookie:
+ *             description: 쿠키가 설정됩니다.
+ *             type: string
  *         content:
  *           application/json:
  *             schema:
@@ -96,14 +107,17 @@ router.post('/register', userController.register);
  *       400:
  *         description: 잘못된 요청
  */
+
 router.post('/login', userController.login);
 
 /**
  * @swagger
- * /token/refresh:
+ * /api/users/token/refresh:
  *   post:
  *     tags: [User]
  *     summary: 리프레시 토큰 갱신
+ *     security:
+ *       - cookieAuth: []  # 쿠키 인증 추가
  *     description: 리프레시 토큰을 사용하여 액세스 토큰을 갱신합니다.
  *     responses:
  *       200:
@@ -124,10 +138,12 @@ router.post('/token/refresh', userController.refreshToken);
 
 /**
  * @swagger
- * /logout:
+ * /api/users/logout:
  *   post:
  *     tags: [User]
  *     summary: 사용자 로그아웃
+ *     security:
+ *       - cookieAuth: []  # 쿠키 인증 추가
  *     description: 사용자를 로그아웃합니다.
  *     responses:
  *       200:
@@ -142,14 +158,17 @@ router.post('/token/refresh', userController.refreshToken);
  *       400:
  *         description: 리프레시 토큰이 없습니다.
  */
+
 router.post('/logout', userController.logout);
 
 /**
  * @swagger
- * /me:
+ * /api/users/me:
  *   get:
  *     tags: [User]
  *     summary: 현재 사용자 정보 조회
+ *     security:
+ *       - bearerAuth: []
  *     description: 현재 로그인한 사용자의 정보를 조회합니다.
  *     responses:
  *       200:
@@ -181,7 +200,7 @@ router.use(authenticateAccessToken);
 
 /**
  * @swagger
- * /{id}:
+ * /api/users/{id}:
  *   get:
  *     tags: [User]
  *     summary: 특정 사용자 정보 조회
@@ -221,10 +240,12 @@ router.get('/:id', userController.getUserById);
 
 /**
  * @swagger
- * /me/challenges/ongoing:
+ * /api/users/me/challenges/ongoing:
  *   get:
  *     tags: [User]
  *     summary: 진행 중인 챌린지 조회
+ *     security:
+ *       - bearerAuth: []
  *     description: 현재 사용자가 참여 중인 진행 중인 챌린지를 조회합니다.
  *     responses:
  *       200:
@@ -254,10 +275,12 @@ router.get('/me/challenges/ongoing', userController.getOngoingChallenges);
 
 /**
  * @swagger
- * /me/challenges/completed:
+ * /api/users/me/challenges/completed:
  *   get:
  *     tags: [User]
  *     summary: 완료된 챌린지 조회
+ *     security:
+ *       - bearerAuth: []
  *     description: 현재 사용자가 참여한 완료된 챌린지를 조회합니다.
  *     responses:
  *       200:
@@ -287,10 +310,12 @@ router.get('/me/challenges/completed', userController.getCompletedChallenges);
 
 /**
  * @swagger
- * /me/challenges/applications:
+ * /api/users/me/challenges/applications:
  *   get:
  *     tags: [User]
  *     summary: 신청한 챌린지 조회
+ *     security:
+ *       - bearerAuth: []
  *     description: 현재 사용자가 신청한 챌린지 목록을 조회합니다.
  *     parameters:
  *       - in: query
