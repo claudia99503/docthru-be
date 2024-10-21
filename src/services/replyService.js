@@ -3,6 +3,8 @@ import * as notificationService from './notificationService.js';
 import {
   UnauthorizedException,
   NotFoundException,
+  UnprocessableEntityException,
+  ForbiddenException,
 } from '../errors/customException.js';
 
 export const validateCreateReplyAccess = async ({ userId, feedbackId }) => {
@@ -28,7 +30,7 @@ export const validateCreateReplyAccess = async ({ userId, feedbackId }) => {
   }
 
   if (challengeInfo.progress) {
-    throw new UnauthorizedException('챌린지가 마감됐습니다.');
+    throw new UnprocessableEntityException('챌린지가 마감됐습니다.');
   }
 };
 
@@ -71,7 +73,7 @@ export const validateReplyAccess = async (userId, replyId) => {
     if (userInfo.role === 'ADMIN') {
       return;
     } else {
-      throw new UnauthorizedException('챌린지가 마감됐습니다.');
+      throw new UnprocessableEntityException('챌린지가 마감됐습니다.');
     }
   }
 
@@ -79,7 +81,7 @@ export const validateReplyAccess = async (userId, replyId) => {
     return;
   }
 
-  throw new UnauthorizedException('접근 권한이 없습니다.');
+  throw new ForbiddenException('접근 권한이 없습니다.');
 };
 
 export const postReplyByFeedbackId = async ({

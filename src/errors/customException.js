@@ -31,13 +31,26 @@ export class BadRequestException extends CommonException {
 
 // 인증이 필요한데 인증되지 않았을 때
 export class UnauthorizedException extends CommonException {
-  constructor(message = '인증되지 않은 사용자입니다') {
+  constructor(message = '인증되지 않은 사용자입니다', subCode = 0) {
+    const code = `${ExceptionCode.AUTHENTICATION_ERROR}.${subCode}`;
     super({
       status: HttpStatus.UNAUTHORIZED,
-      code: ExceptionCode.AUTHENTICATION_ERROR,
+      code,
       message,
       identifier: ExceptionIdentifier.AUTHENTICATION_ERROR,
     });
+  }
+
+  static tokenExpired(message = '토큰이 만료되었습니다') {
+    return new UnauthorizedException(message, 1);
+  }
+
+  static invalidToken(message = '유효하지 않은 토큰입니다') {
+    return new UnauthorizedException(message, 2);
+  }
+
+  static missingToken(message = '토큰이 제공되지 않았습니다') {
+    return new UnauthorizedException(message, 3);
   }
 }
 

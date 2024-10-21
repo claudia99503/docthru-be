@@ -126,20 +126,25 @@ export const verifyRefreshToken = async (refreshToken) => {
   try {
     const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId, refreshToken: refreshToken },
+      where: { id: decoded.userId },
     });
 
-    if (!user) {
-      throw new UnauthorizedException('유효하지 않은 리프레시 토큰입니다.');
+    if (!user || user.refreshToken !== refreshToken) {
+      throw new UnauthorizedException.invalidToken(
+        '유효하지 않은 리프레시 토큰입니다.'
+      );
     }
-
     return user;
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
-      throw new UnauthorizedException('리프레시 토큰이 만료되었습니다.');
+      throw new UnauthorizedException.tokenExpired(
+        '리프레시 토큰이 만료되었습니다.'
+      );
     }
     if (error instanceof jwt.JsonWebTokenError) {
-      throw new UnauthorizedException('유효하지 않은 리프레시 토큰입니다.');
+      throw new UnauthorizedException.invalidToken(
+        '유효하지 않은 리프레시 토큰입니다.'
+      );
     }
     throw error;
   }
@@ -176,13 +181,13 @@ export const getOngoingChallenges = async (userId, page, limit) => {
   const { parsedPage, parsedLimit, skip } = getPaginationData(page, limit);
 
   const [ongoingChallenges, totalCount] = await Promise.all([
-    prisma.participations.findMany({
+    prisma.Participation.findMany({
       where: { userId, challenge: { progress: true } },
       include: { challenge: true },
       skip,
       take: parsedLimit,
     }),
-    prisma.participations.count({
+    prisma.Participation.count({
       where: { userId, challenge: { progress: true } },
     }),
   ]);
@@ -202,13 +207,13 @@ export const getCompletedChallenges = async (userId, page, limit) => {
   const { parsedPage, parsedLimit, skip } = getPaginationData(page, limit);
 
   const [completedChallenges, totalCount] = await Promise.all([
-    prisma.participations.findMany({
+    prisma.Participation.findMany({
       where: { userId, challenge: { progress: false } },
       include: { challenge: true },
       skip,
       take: parsedLimit,
     }),
-    prisma.participations.count({
+    prisma.Participation.count({
       where: { userId, challenge: { progress: false } },
     }),
   ]);
