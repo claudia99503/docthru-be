@@ -405,14 +405,14 @@ export const checkWorkAuthorization = async (userId, workId) => {
 
   if (workInfo.challenge.progress) {
     if (userInfo.role === 'ADMIN') {
-      return true;
+      return;
     } else {
       throw new UnprocessableEntityException('챌린지가 마감됐습니다.');
     }
   }
 
   if (userInfo.id === workInfo.userId || userInfo.role === 'ADMIN') {
-    return true;
+    return;
   }
 
   throw new ForbiddenException('접근 권한이 없습니다.');
