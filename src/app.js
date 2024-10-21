@@ -28,6 +28,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   'https://vercel.live',
+  'https://docthru-be.vercel.app/',
 ];
 
 const corsOptions = {
