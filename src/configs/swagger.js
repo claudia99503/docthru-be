@@ -15,7 +15,7 @@ const swaggerOptions = {
         description: '로컬 서버',
       },
       {
-        url: `process.env.BASE_URL`,
+        url: process.env.BASE_URL,
         description: '배포 환경 HTTPS 서버',
       },
     ],
