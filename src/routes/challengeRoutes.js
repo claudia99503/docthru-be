@@ -381,7 +381,7 @@ router.post(
  *     security:
  *       - bearerAuth: []
  *     tags: [Challenge]
- *     description: 사용자가 자신이 신청한 챌린지를 취소합니다 (완전삭제).
+ *     description: 사용자가 자신이 신청한 챌린지를 취소합니다 (하드 삭제).
  *     parameters:
  *       - in: path
  *         name: challengeId
@@ -390,15 +390,15 @@ router.post(
  *         schema:
  *           type: integer
  *     responses:
- *       200:
+ *       '200':
  *         description: 챌린지 취소 성공
- *       400:
- *         description: 잘못된 요청 (예: 이미 승인된 챌린지)
- *       403:
+ *       '400':
+ *         description: 잘못된 요청 (예 - 이미 승인된 챌린지)
+ *       '403':
  *         description: 권한 없음 (본인의 챌린지가 아님)
- *       404:
+ *       '404':
  *         description: 챌린지를 찾을 수 없음
- *       500:
+ *       '500':
  *         description: 서버 오류
  */
 router.delete('/:challengeId/cancel', authenticateAccessToken, cancelChallenge);
