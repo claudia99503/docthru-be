@@ -107,7 +107,7 @@ export const likeCancelWorkById = async (req, res, next) => {
     const { userId } = req.user;
 
     await workService.likeCancelWorkById({ workId, userId });
-    return es.status(200).json({ message: '좋아요가 취소됐습니다.' });
+    return res.status(200).json({ message: '좋아요가 취소됐습니다.' });
   } catch (error) {
     next(error);
   }
