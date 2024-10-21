@@ -19,19 +19,6 @@ import {
   validateUserInput,
 } from '../utils/authValidation.js';
 
-const applicationStatusConverter = (status) => {
-  switch (status) {
-    case 'WAITING':
-      return '대기 중';
-    case 'ACCEPTED':
-      return '승인됨';
-    case 'REJECTED':
-      return '거절됨';
-    default:
-      return '알 수 없음';
-  }
-};
-
 // 토큰 생성 유틸리티 함수
 const generateToken = (userId, secret, expiresIn) =>
   jwt.sign({ userId }, secret, { expiresIn });
@@ -283,7 +270,7 @@ export const getAppliedChallenges = async (
   return {
     challenges: appliedChallenges.map((challenge) => ({
       ...challenge,
-      status: applicationStatusConverter(challenge.status),
+      status: challenge.status,
       createdAt: challenge.createdAt.toISOString(),
       deadline: challenge.deadline.toISOString(),
     })),
