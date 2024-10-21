@@ -25,7 +25,7 @@ export const updateFeedbackById = async ({ feedbackId, content, userId }) => {
     data: { content },
   });
 
-  await notifyAdminAboutFeedback(userId, feedbackId, '수정 ');
+  await notifyAdminAboutFeedback(userId, feedbackId, '수정');
 
   return feedback;
 };
@@ -43,10 +43,15 @@ const notifyCreateAboutFeedback = async (userId, workId, feedback) => {
     where: { id: Number(workId) },
     include: {
       challenge: true,
+      user: true,
     },
   });
 
-  //작업물 작성자한테 알림
+  if (!workInfo) {
+    throw new NotFoundException('작업물을 찾을 수 없습니다.');
+  }
+
+  // 작업물 작성자에게만 알림
   await notificationService.notifyNewFeedback(
     Number(workInfo.userId),
     Number(userId),
@@ -65,24 +70,48 @@ const notifyAdminAboutFeedback = async (userId, feedbackId, action) => {
     }),
     prisma.feedback.findUnique({
       where: { id: Number(feedbackId) },
-      include: { user: true, work: true },
+      include: {
+        user: true,
+        work: {
+          include: {
+            challenge: true,
+            user: true,
+          },
+        },
+      },
     }),
   ]);
 
-  const challengeInfo = await prisma.challenge.findUnique({
-    where: { id: Number(feedbackInfo.work.challengeId) },
-  });
+  if (!feedbackInfo) {
+    throw new NotFoundException('피드백을 찾을 수 없습니다.');
+  }
 
-  // 피드백 작성자한테 알림
+  const challengeInfo = feedbackInfo.work.challenge;
+
+  // 피드백 작성자에게 알림 (어드민이 수정/삭제한 경우)
   if (userInfo && userInfo.role === 'ADMIN') {
     await notificationService.notifyContentChange(
       Number(feedbackInfo.user.id),
       Number(userId),
       'FEEDBACK',
       challengeInfo.title,
-      action === '삭제' ? '삭제' : '수정',
-      null,
-      null,
+      action,
+      Number(challengeInfo.id),
+      Number(feedbackInfo.work.id),
+      Number(feedbackId)
+    );
+  }
+
+  // 작업물 작성자에게 알림 (피드백 작성자가 아닌 경우)
+  if (feedbackInfo.user.id !== feedbackInfo.work.userId) {
+    await notificationService.notifyContentChange(
+      Number(feedbackInfo.work.userId),
+      Number(userId),
+      'FEEDBACK',
+      challengeInfo.title,
+      action,
+      Number(challengeInfo.id),
+      Number(feedbackInfo.work.id),
       Number(feedbackId)
     );
   }
@@ -113,7 +142,7 @@ export const validateFeedbackAccess = async (userId, feedbackId) => {
     throw new NotFoundException('등록된 피드백이 없습니다.');
   }
 
-  const challengeInfo = await feedbackInfo.work.challenge;
+  const challengeInfo = feedbackInfo.work.challenge;
 
   if (!challengeInfo) {
     throw new NotFoundException('등록된 챌린지가 없습니다.');

@@ -69,7 +69,7 @@ export const ChallengeService = {
     const challenge = await prisma.challenge.findUnique({
       where: { id: parseInt(challengeId, 10) },
       include: {
-        User: {
+        user: {
           select: {
             nickname: true,
             grade: true,
