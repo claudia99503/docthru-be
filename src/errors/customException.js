@@ -100,3 +100,14 @@ export class RateLimitExceededException extends CommonException {
     });
   }
 }
+
+export class InternalServerErrorException extends CommonException {
+  constructor(message = '서버 내부 에러입니다') {
+    super({
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      code: ExceptionCode.BUSINESS_LOGIC_ERROR,
+      message,
+      identifier: ExceptionIdentifier.SYSTEM_ERROR,
+    });
+  }
+}

@@ -3,6 +3,7 @@ import {
   BadRequestException,
   UnauthorizedException,
   NotFoundException,
+  InternalServerErrorException,
 } from '../errors/customException.js';
 import {
   REFRESH_TOKEN_SECRET,
