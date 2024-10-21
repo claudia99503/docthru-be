@@ -52,7 +52,7 @@ router.get(
 /**
  * @swagger
  * /api/notifications/users/{id}/notifications:
- *   get:
+ *   put:
  *     tags: [Notification]
  *     summary: 알림 읽기
  *     security:

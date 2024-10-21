@@ -15,7 +15,7 @@ export const postFeedbackById = async (req, res, next) => {
       userId,
     });
 
-    res.status(201).json(newFeedback);
+    return res.status(201).json(newFeedback);
   } catch (error) {
     next(error);
   }
@@ -35,7 +35,7 @@ export const updateFeedbackById = async (req, res, next) => {
       content,
       userId,
     });
-    res.status(201).json(updateFeedback);
+    return res.status(201).json(updateFeedback);
   } catch (error) {
     next(error);
   }
@@ -51,7 +51,7 @@ export const deleteFeedbackById = async (req, res, next) => {
 
     await feedbackService.deleteFeedbackById({ feedbackId, userId });
 
-    res.status(200).json({ message: '피드백이 삭제됐습니다.' });
+    return res.status(200).json({ message: '피드백이 삭제됐습니다.' });
   } catch (error) {
     next(error);
   }

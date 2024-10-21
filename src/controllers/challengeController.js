@@ -97,7 +97,7 @@ export const createChallenge = async (req, res, next) => {
         userId,
       },
     });
-    res
+    return res
       .status(201)
       .json({ message: '신청이 성공적으로 완료되었습니다.', newChallenge });
   } catch (error) {
