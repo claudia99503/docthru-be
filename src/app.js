@@ -8,6 +8,8 @@ import { swaggerDocs } from './configs/swagger.js';
 import swaggerUi from 'swagger-ui-express';
 import customJsonParser from './middlewares/jsonParser.js';
 import { REFRESH_TOKEN_MAX_AGE } from './configs/config.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 import userRoutes from './routes/userRoutes.js';
 import workRoutes from './routes/workRoutes.js';
@@ -18,6 +20,9 @@ import notificationRoutes from './routes/notificationRoutes.js';
 
 dotenv.config();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 
 const isProduction = process.env.NODE_ENV === 'production';
@@ -27,6 +32,7 @@ const allowedOrigins = [
   CLIENT_URL,
   'http://localhost:3000',
   'https://vercel.live',
+  'https://docthru-be.vercel.app', // Vercel 앱 URL 추가
 ];
 
 const corsOptions = {
@@ -65,14 +71,20 @@ export const sendRefreshToken = (res, token) => {
 const contentSecurityPolicy = {
   directives: {
     defaultSrc: ["'self'"],
-    connectSrc: ["'self'", CLIENT_URL, 'https://vercel.live'],
+    connectSrc: [
+      "'self'",
+      CLIENT_URL,
+      'https://vercel.live',
+      'https://docthru-be.vercel.app',
+    ],
     scriptSrc: [
       "'self'",
       "'unsafe-inline'",
       "'unsafe-eval'",
       'https://vercel.live',
+      'https://docthru-be.vercel.app',
     ],
-    styleSrc: ["'self'", "'unsafe-inline'"],
+    styleSrc: ["'self'", "'unsafe-inline'", 'https://docthru-be.vercel.app'],
     imgSrc: ["'self'", 'data:', 'https:'],
     fontSrc: ["'self'", 'https:', 'data:'],
     objectSrc: ["'none'"],
@@ -90,8 +102,38 @@ app.use(
   })
 );
 
+// Swagger UI 정적 파일 서빙
+app.use(
+  '/api-docs',
+  express.static(path.join(__dirname, 'public/api-docs'), {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css');
+      } else if (filePath.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript');
+      }
+    },
+  })
+);
+
+// Swagger JSON 파일 서빙
+app.get('/api-docs/swagger.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerDocs);
+});
+
 // Swagger 설정
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocs, {
+    swaggerOptions: {
+      url: '/api-docs/swagger.json',
+    },
+    customCssUrl: '/api-docs/swagger-ui.css',
+    customJs: '/api-docs/swagger-ui-bundle.js',
+  })
+);
 
 // API 라우트 설정
 app.use('/api/users', userRoutes);
