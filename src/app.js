@@ -93,6 +93,7 @@ app.use(
 
 // Swagger 설정
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+app.get('/api-docs', swaggerUi.setup(swaggerDocs));
 
 // API 라우트 설정
 app.use('/api/users', userRoutes);
