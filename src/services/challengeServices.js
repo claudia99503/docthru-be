@@ -2,11 +2,11 @@ import prisma from '../lib/prisma.js';
 import {
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '../errors/customException.js';
 import {
   notifyChallengeStatusChange,
   notifyContentChange,
-  notifyMultipleUsers,
 } from './notificationService.js';
 
 export const ChallengeService = {
@@ -21,7 +21,6 @@ export const ChallengeService = {
   }) => {
     const skip = (page - 1) * limit;
 
-    // 필터 조건 설정
     const filterConditions = {
       status: 'ACCEPTED',
     };
@@ -38,7 +37,6 @@ export const ChallengeService = {
       filterConditions.progress = progress;
     }
 
-    // 챌린지 목록 조회입니다~
     const list = await prisma.challenge.findMany({
       skip,
       take: limit,
@@ -46,15 +44,12 @@ export const ChallengeService = {
       where: filterConditions,
     });
 
-    // 전체 챌린지 수 조회입니다!
     const totalCount = await prisma.challenge.count({
       where: filterConditions,
     });
 
-    // 총 페이지 수 계산입니다!
     const totalPages = Math.ceil(totalCount / limit);
 
-    // 리턴값입니다~
     return {
       list,
       meta: {
@@ -81,14 +76,13 @@ export const ChallengeService = {
     if (!challenge) {
       throw new NotFoundException('챌린지가 없습니다.');
     }
-    // User 정보를 Writer로 가공하여 반환
-    const { User, ...rest } = challenge;
+    const { user, ...rest } = challenge;
     const processedChallenge = {
       ...rest,
-      writer: User
+      writer: user
         ? {
-            nickname: User.nickname,
-            grade: User.grade,
+            nickname: user.nickname,
+            grade: user.grade,
           }
         : null,
     };
@@ -137,16 +131,16 @@ export const ChallengeService = {
         ', '
       )}`;
 
-      await notifyContentChange(
-        challenge.userId,
+      notifyContentChange(
+        [challenge.userId],
         adminUserId,
         'CHALLENGE',
         challenge.title,
         '수정',
-        new Date(),
         challengeId,
         null,
         null,
+        new Date(),
         changeMessage
       );
     }
@@ -174,8 +168,8 @@ export const ChallengeService = {
       data: { status: newStatus },
     });
 
-    await notifyChallengeStatusChange(
-      challenge.userId,
+    notifyChallengeStatusChange(
+      [challenge.userId],
       adminUserId,
       challengeId,
       challenge.title,
@@ -185,16 +179,16 @@ export const ChallengeService = {
 
     if (reason) {
       const reasonContent = `상태 변경 사유: ${reason}`;
-      await notifyContentChange(
-        challenge.userId,
+      notifyContentChange(
+        [challenge.userId],
         adminUserId,
         'CHALLENGE',
         challenge.title,
         newStatus,
-        new Date(),
         challengeId,
         null,
         null,
+        new Date(),
         reasonContent
       );
     }
@@ -255,15 +249,16 @@ export const ChallengeService = {
       data: { participants: { increment: 1 } },
     });
 
-    // 챌린지 참여 알림 생성
-    await notifyContentChange(
+    notifyContentChange(
+      [userId],
       userId,
-      userId, // 본인의 액션이므로 actorId도 userId로
       'CHALLENGE',
       challenge.title,
       '참여',
-      new Date(),
-      challengeId
+      challengeId,
+      null,
+      null,
+      new Date()
     );
 
     return Participation;
@@ -293,16 +288,20 @@ export const ChallengeService = {
       where: { id: parseInt(challengeId, 10) },
     });
 
-    await notifyContentChange(
-      challenge.userId,
+    notifyContentChange(
+      [challenge.userId],
       userId,
       'CHALLENGE',
       challenge.title,
       '취소',
-      new Date(),
-      challengeId
+      challengeId,
+      null,
+      null,
+      new Date()
     );
 
     return { message: '챌린지가 성공적으로 취소되었습니다.' };
   },
 };
+
+export default ChallengeService;
