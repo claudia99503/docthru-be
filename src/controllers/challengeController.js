@@ -197,24 +197,6 @@ export async function updateChallengeStatus(req, res, next) {
   }
 }
 
-export async function deleteChallengeById(req, res, next) {
-  try {
-    const adminUserId = req.user.userId;
-    const { role } = await ChallengeService.getCurrentUser(adminUserId);
-    const { challengeId } = req.params;
-
-    if (role !== 'ADMIN') {
-      throw new ForbiddenException('관리자 권한이 필요합니다.');
-    }
-
-    await ChallengeService.deleteChallengeById(challengeId, adminUserId);
-
-    return res.sendStatus(204);
-  } catch (error) {
-    next(error);
-  }
-}
-
 export async function getChallengesUrl(req, res, next) {
   try {
     const { challengeId } = req.params;

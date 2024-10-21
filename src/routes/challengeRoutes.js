@@ -3,7 +3,6 @@ import {
   getChallenges,
   getChallengeById,
   patchChallengeById,
-  deleteChallengeById,
   getChallengesUrl,
   postChallengeParticipate,
   getApplication,
@@ -275,47 +274,6 @@ router.get('/:challengeId', authenticateAccessToken, getChallengeById);
  */
 
 router.patch('/:challengeId', authenticateAccessToken, patchChallengeById);
-
-/**
- * @swagger
- * /api/challenges/{challengeId}:
- *   delete:
- *     summary: 챌린지 삭제
- *     security:
- *       - bearerAuth: []
- *     tags: [Challenge]
- *     description: 관리자가 챌린지를 삭제합니다.
- *     parameters:
- *       - in: path
- *         name: challengeId
- *         required: true
- *         description: 챌린지 ID
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               reason:
- *                 type: string
- *                 description: 삭제 사유
- *             required:
- *               - reason
- *     responses:
- *       204:
- *         description: 챌린지 삭제 성공
- *       403:
- *         description: 관리자 권한 부족
- *       404:
- *         description: 챌린지를 찾을 수 없음
- *       500:
- *         description: 서버 오류
- */
-
-router.delete('/:challengeId', authenticateAccessToken, deleteChallengeById);
 
 /**
  * @swagger

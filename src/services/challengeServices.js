@@ -202,49 +202,6 @@ export const ChallengeService = {
     return updatedChallenge;
   },
 
-  deleteChallengeById: async (challengeId, adminUserId, reason) => {
-    const challenge = await prisma.challenge.findUnique({
-      where: { id: parseInt(challengeId, 10) },
-      include: { user: true },
-    });
-
-    if (!challenge) {
-      throw new NotFoundException('챌린지가 없습니다.');
-    }
-
-    const deletedChallenge = await prisma.challenge.update({
-      where: { id: parseInt(challengeId, 10) },
-      data: { status: 'DELETED' },
-    });
-
-    await notifyChallengeStatusChange(
-      challenge.userId,
-      adminUserId,
-      challengeId,
-      challenge.title,
-      'DELETED',
-      new Date()
-    );
-
-    if (reason) {
-      const reasonContent = `삭제 사유: ${reason}`;
-      await notifyContentChange(
-        challenge.userId,
-        adminUserId,
-        'CHALLENGE',
-        challenge.title,
-        '삭제',
-        new Date(),
-        challengeId,
-        null,
-        null,
-        reasonContent
-      );
-    }
-
-    return deletedChallenge;
-  },
-
   getChallengesUrl: async (challengeId) => {
     const challenges = await prisma.challenge.findUnique({
       where: { id: parseInt(challengeId, 10) },
