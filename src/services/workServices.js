@@ -7,7 +7,6 @@ import {
   UnprocessableEntityException,
 } from '../errors/customException.js';
 import * as notificationService from './notificationService.js';
-import * as feedbackService from '../services/feedbackService.js';
 
 export const getWorksListById = async ({
   challengeId,
