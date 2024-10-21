@@ -1,9 +1,6 @@
 import prisma from '../src/lib/prisma.js';
-import {
-  notifyDeadline,
-  notifyMultipleUsers,
-} from '../src/services/notificationService.js';
-import { updateUserGrade } from '../src/services/userServices.js';
+import { createNotificationBatch } from '../src/services/notificationService.js';
+import { updateUserGradeBatch } from '../src/services/userServices.js';
 
 async function processChallenges() {
   const now = new Date();
@@ -36,16 +33,24 @@ async function processChallenges() {
 
     challengesToClose.forEach((challenge) => {
       const participantIds = challenge.participations.map((p) => p.userId);
-      notifications.push({
-        participantIds,
-        challengeId: challenge.id,
-        title: challenge.title,
-        now,
+      participantIds.forEach((userId) => {
+        notifications.push({
+          userId,
+          type: 'DEADLINE',
+          content: `'${challenge.title}'이 마감되었어요 (${
+            now.toISOString().split('T')[0]
+          })`,
+          challengeId: challenge.id,
+          createdAt: now,
+          isRead: false,
+        });
+        gradeUpdates.add(userId);
       });
 
-      gradeUpdates.add(...participantIds);
-
-      const maxLikes = Math.max(...challenge.works.map((w) => w._count.likes));
+      const maxLikes = Math.max(
+        ...challenge.works.map((w) => w._count.likes),
+        0
+      );
       challenge.works.forEach((work) => {
         if (work._count.likes === maxLikes) {
           userUpdates.set(work.userId, (userUpdates.get(work.userId) || 0) + 1);
@@ -59,60 +64,25 @@ async function processChallenges() {
         data: { progress: true },
       });
 
-      await Promise.all(
-        Array.from(userUpdates).map(([userId, increment]) =>
-          tx.user.update({
-            where: { id: userId },
-            data: { bestCount: { increment } },
-          })
-        )
-      );
+      if (userUpdates.size > 0) {
+        await Promise.all(
+          Array.from(userUpdates).map(([userId, increment]) =>
+            tx.user.update({
+              where: { id: userId },
+              data: { bestCount: { increment } },
+            })
+          )
+        );
+      }
+
+      await createNotificationBatch(notifications);
     });
 
-    await Promise.all(
-      notifications.map((notif) =>
-        notifyMultipleUsers(
-          notif.participantIds,
-          notifyDeadline,
-          null,
-          notif.challengeId,
-          notif.title,
-          notif.now
-        )
-      )
-    );
+    if (gradeUpdates.size > 0) {
+      await updateUserGradeBatch(Array.from(gradeUpdates));
+      console.log(`${gradeUpdates.size}명의 유저 등급 검사 완료`);
+    }
 
-    const gradeUpdateResults = await Promise.allSettled(
-      Array.from(gradeUpdates).map(async (userId) => {
-        const initialGrade = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { grade: true },
-        });
-        const newGrade = await updateUserGrade(userId);
-        return { userId, initialGrade: initialGrade.grade, newGrade };
-      })
-    );
-
-    const gradeStats = gradeUpdateResults.reduce(
-      (acc, result) => {
-        if (result.status === 'fulfilled') {
-          if (result.value.initialGrade !== result.value.newGrade) {
-            acc.successCount++;
-          } else {
-            acc.noChangeCount++;
-          }
-        } else {
-          acc.failCount++;
-        }
-        return acc;
-      },
-      { successCount: 0, noChangeCount: 0, failCount: 0 }
-    );
-
-    console.log(`${gradeUpdates.size}명의 유저 등급 검사 완료`);
-    console.log(
-      `등급 상승: ${gradeStats.successCount}, 변경 없음: ${gradeStats.noChangeCount}, 처리 실패: ${gradeStats.failCount}`
-    );
     console.log('모든 챌린지 처리 완료');
   } catch (error) {
     console.error('챌린지 처리 중 오류 발생:', error);
@@ -121,4 +91,4 @@ async function processChallenges() {
   }
 }
 
-processChallenges();
+processChallenges().catch(console.error);

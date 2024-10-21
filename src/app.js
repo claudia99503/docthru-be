@@ -15,10 +15,15 @@ import challengeRoutes from './routes/challengeRoutes.js';
 import feedbackRoutes from './routes/feedbackRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import replyRoutes from './routes/replyRoutes.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
 
 const app = express();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const isProduction = process.env.NODE_ENV === 'production';
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
@@ -92,7 +97,22 @@ app.use(
 );
 
 // Swagger 설정
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+// app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+app.use('/api/swagger.json', (req, res) => {
+  res.json(swaggerDocs);
+});
+
+// Swagger UI를 `/api-docs` 경로로 제공
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocs, {
+    swaggerOptions: {
+      url: '/api/swagger.json', // 명세 경로를 명확하게 지정
+    },
+  })
+);
 
 // API 라우트 설정
 app.use('/api/users', userRoutes);

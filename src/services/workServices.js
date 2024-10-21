@@ -3,6 +3,8 @@ import {
   BadRequestException,
   UnauthorizedException,
   NotFoundException,
+  ForbiddenException,
+  UnprocessableEntityException,
 } from '../errors/customException.js';
 import * as notificationService from './notificationService.js';
 import * as feedbackService from '../services/feedbackService.js';
@@ -51,7 +53,6 @@ export const getWorksListById = async ({
     isLiked: workList.isLiked,
   }));
 
-  //마감하면 베스트 게시물 조회
   const bestWorks = await bestWorksList({ challengeId, userId, sortOrder });
 
   const totalCount = await prisma.work.count({
@@ -339,16 +340,19 @@ const bestWorksList = async ({ challengeId, userId, sortOrder }) => {
 const notifyCreateAboutWork = async (userId, challengeId, works) => {
   const challengeInfo = await prisma.challenge.findUnique({
     where: { id: Number(challengeId) },
+    select: { userId: true, title: true },
   });
 
-  await notificationService.notifyNewWork(
-    Number(challengeInfo.userId),
-    Number(userId),
-    Number(challengeId),
-    challengeInfo.title,
-    Number(works.id),
-    new Date()
-  );
+  if (challengeInfo) {
+    notificationService.notifyNewWork(
+      [Number(challengeInfo.userId)],
+      Number(userId),
+      Number(challengeId),
+      challengeInfo.title,
+      Number(works.id),
+      new Date()
+    );
+  }
 };
 
 const notifyAdminAboutWork = async (userId, workId, action) => {
@@ -363,13 +367,13 @@ const notifyAdminAboutWork = async (userId, workId, action) => {
   ]);
 
   if (userInfo && userInfo.role === 'ADMIN') {
-    await notificationService.notifyContentChange(
-      Number(workInfo.userId),
+    notificationService.notifyContentChange(
+      [Number(workInfo.userId)],
       Number(userId),
       'WORK',
       workInfo.challenge.title,
       action === '삭제' ? '삭제' : '수정',
-      null,
+      workInfo.challenge.id,
       Number(workId),
       null,
       new Date()
@@ -404,7 +408,7 @@ export const checkWorkAuthorization = async (userId, workId) => {
     if (userInfo.role === 'ADMIN') {
       return true;
     } else {
-      throw new UnauthorizedException('챌린지가 마감됐습니다.');
+      throw new UnprocessableEntityException('챌린지가 마감됐습니다.');
     }
   }
 
@@ -412,7 +416,7 @@ export const checkWorkAuthorization = async (userId, workId) => {
     return true;
   }
 
-  throw new UnauthorizedException('접근 권한이 없습니다.');
+  throw new ForbiddenException('접근 권한이 없습니다.');
 };
 
 export const checkCreateWorkAuthorization = async (userId, challengeId) => {
@@ -434,7 +438,7 @@ export const checkCreateWorkAuthorization = async (userId, challengeId) => {
   }
 
   if (challengeInfo.progress) {
-    throw new UnauthorizedException('챌린지가 마감됐습니다.');
+    throw new UnprocessableEntityException('챌린지가 마감됐습니다.');
   }
 
   const isParticipating = challengeInfo.participations.some(
@@ -442,7 +446,7 @@ export const checkCreateWorkAuthorization = async (userId, challengeId) => {
   );
 
   if (!isParticipating) {
-    throw new UnauthorizedException('신청한 회원만 쓸 수 있습니다.');
+    throw new ForbiddenException('신청한 회원만 쓸 수 있습니다.');
   }
 
   const hasSubmittedWork = challengeInfo.works.some(

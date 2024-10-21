@@ -126,20 +126,25 @@ export const verifyRefreshToken = async (refreshToken) => {
   try {
     const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId, refreshToken: refreshToken },
+      where: { id: decoded.userId },
     });
 
-    if (!user) {
-      throw new UnauthorizedException('유효하지 않은 리프레시 토큰입니다.');
+    if (!user || user.refreshToken !== refreshToken) {
+      throw new UnauthorizedException.invalidToken(
+        '유효하지 않은 리프레시 토큰입니다.'
+      );
     }
-
     return user;
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
-      throw new UnauthorizedException('리프레시 토큰이 만료되었습니다.');
+      throw new UnauthorizedException.tokenExpired(
+        '리프레시 토큰이 만료되었습니다.'
+      );
     }
     if (error instanceof jwt.JsonWebTokenError) {
-      throw new UnauthorizedException('유효하지 않은 리프레시 토큰입니다.');
+      throw new UnauthorizedException.invalidToken(
+        '유효하지 않은 리프레시 토큰입니다.'
+      );
     }
     throw error;
   }
@@ -176,13 +181,13 @@ export const getOngoingChallenges = async (userId, page, limit) => {
   const { parsedPage, parsedLimit, skip } = getPaginationData(page, limit);
 
   const [ongoingChallenges, totalCount] = await Promise.all([
-    prisma.participations.findMany({
+    prisma.Participation.findMany({
       where: { userId, challenge: { progress: true } },
       include: { challenge: true },
       skip,
       take: parsedLimit,
     }),
-    prisma.participations.count({
+    prisma.Participation.count({
       where: { userId, challenge: { progress: true } },
     }),
   ]);
@@ -202,13 +207,13 @@ export const getCompletedChallenges = async (userId, page, limit) => {
   const { parsedPage, parsedLimit, skip } = getPaginationData(page, limit);
 
   const [completedChallenges, totalCount] = await Promise.all([
-    prisma.participations.findMany({
+    prisma.Participation.findMany({
       where: { userId, challenge: { progress: false } },
       include: { challenge: true },
       skip,
       take: parsedLimit,
     }),
-    prisma.participations.count({
+    prisma.Participation.count({
       where: { userId, challenge: { progress: false } },
     }),
   ]);
@@ -247,33 +252,40 @@ export const getAppliedChallenges = async (
     ];
   }
 
-  const orderBy = [];
-  if (sortBy === 'createdAt') {
-    orderBy.push({ createdAt: sortOrder });
-  } else if (sortBy === 'deadline') {
-    orderBy.push({ deadline: sortOrder });
+  const orderBy = {};
+  if (sortBy === 'createdAt' || sortBy === 'deadline') {
+    orderBy[sortBy] = sortOrder;
   }
   if (sortBy !== 'createdAt') {
-    orderBy.push({ createdAt: 'desc' });
+    orderBy.createdAt = 'desc';
   }
 
-  const [appliedChallenges, totalCount] = await Promise.all([
+  const [appliedChallenges, totalCount] = await prisma.$transaction([
     prisma.challenge.findMany({
       where: whereClause,
       orderBy,
       skip,
       take: parsedLimit,
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        status: true,
+        createdAt: true,
+        deadline: true,
+      },
     }),
     prisma.challenge.count({ where: whereClause }),
   ]);
 
   return {
-    challenges: appliedChallenges.map((challenge) => ({
-      ...challenge,
-      status: challenge.status,
-      createdAt: challenge.createdAt.toISOString(),
-      deadline: challenge.deadline.toISOString(),
-    })),
+    challenges: appliedChallenges.map(
+      ({ createdAt, deadline, ...challenge }) => ({
+        ...challenge,
+        createdAt: createdAt.toISOString(),
+        deadline: deadline.toISOString(),
+      })
+    ),
     meta: {
       currentPage: parsedPage,
       totalCount,
@@ -327,43 +339,60 @@ export const getUserById = async (id) => {
   };
 };
 
-export const updateUserGrade = async (userId) => {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: {
+export const updateUserGradeBatch = async (userIds) => {
+  const users = await prisma.user.findMany({
+    where: { id: { in: userIds } },
+    select: {
+      id: true,
+      grade: true,
+      bestCount: true,
       participations: {
-        include: {
-          challenge: true,
+        select: {
+          challenge: {
+            select: {
+              progress: true,
+            },
+          },
         },
       },
     },
   });
 
-  if (!user) return null;
+  const updatedUsers = users.map((user) => {
+    const challengeParticipationCount = user.participations.filter(
+      (participation) => participation.challenge.progress
+    ).length;
 
-  const challengeParticipationCount = user.participations.filter(
-    (participation) => participation.challenge.progress
-  ).length;
+    const bestCount = user.bestCount;
+    let newGrade = 'NORMAL';
 
-  const bestCount = user.bestCount;
-  let newGrade = 'NORMAL';
+    if (
+      bestCount >= 10 ||
+      challengeParticipationCount >= 10 ||
+      (challengeParticipationCount >= 5 && bestCount >= 5)
+    ) {
+      newGrade = 'EXPERT';
+    }
 
-  if (
-    bestCount >= 10 ||
-    challengeParticipationCount >= 10 ||
-    (challengeParticipationCount >= 5 && bestCount >= 5)
-  ) {
-    newGrade = 'EXPERT';
-  }
+    return {
+      id: user.id,
+      currentGrade: user.grade,
+      newGrade: newGrade,
+    };
+  });
 
-  if (user.grade !== newGrade) {
-    await prisma.user.update({
-      where: { id: userId },
-      data: { grade: newGrade },
+  const usersToUpdate = updatedUsers.filter(
+    (user) => user.currentGrade !== user.newGrade
+  );
+
+  if (usersToUpdate.length > 0) {
+    await prisma.user.updateMany({
+      where: { id: { in: usersToUpdate.map((user) => user.id) } },
+      data: { grade: 'EXPERT' },
     });
   }
 
-  return newGrade;
+  return updatedUsers;
 };
 
 export const findUserByRefreshToken = async (refreshToken) => {

@@ -4,7 +4,8 @@ import {
   BadRequestException,
 } from '../errors/customException.js';
 
-// 유틸리티 함수
+const BATCH_SIZE = 100;
+
 const formatDate = (date) => {
   if (!(date instanceof Date)) {
     date = new Date(date);
@@ -12,7 +13,6 @@ const formatDate = (date) => {
   return date.toISOString().split('T')[0];
 };
 
-// 알림 템플릿 (기존과 동일한 형태입니다~)
 const notificationTemplates = {
   CHALLENGE_STATUS: (challengeName, status, date) =>
     `'${challengeName}'이 ${status}되었어요 (${formatDate(date)})`,
@@ -46,137 +46,80 @@ const notificationTemplates = {
   },
 };
 
-// 에러 핸들링 래퍼 함수 (기존과 동일)
-const asyncErrorHandler =
-  (fn) =>
-  async (...args) => {
-    try {
-      return await fn(...args);
-    } catch (error) {
-      if (error instanceof NotFoundException) throw error;
-      throw new BadRequestException('작업 중 오류가 발생했습니다.');
-    }
-  };
-
-// 트랜잭션을 사용한 벌크 삽입
-const createNotificationsInTransaction = async (notifications) => {
-  return prisma.$transaction(async (prisma) => {
-    return prisma.notification.createMany({
+export const createNotificationBatch = async (notifications) => {
+  try {
+    await prisma.notification.createMany({
       data: notifications,
       skipDuplicates: true,
     });
-  });
+    console.log(`${notifications.length} 개의 알림 생성 완료`);
+  } catch (error) {
+    console.error('알림 생성중 에러 :', error);
+  }
 };
 
-// 알림 생성 함수 (수정됨)
-const createTypedNotification = (
-  userId,
-  actorId,
-  type,
-  content,
-  challengeId = null,
-  workId = null,
-  feedbackId = null
-) => {
-  // 자신의 액션에 대해서는 알림을 생성하지 않음
-  if (userId === actorId) {
-    return null;
+const processNotifications = async (notifications) => {
+  for (let i = 0; i < notifications.length; i += BATCH_SIZE) {
+    const batch = notifications.slice(i, i + BATCH_SIZE);
+    await createNotificationBatch(batch);
   }
-
-  return {
-    userId,
-    type,
-    content,
-    challengeId,
-    workId,
-    feedbackId,
-    createdAt: new Date(),
-    isRead: false,
-  };
 };
 
-export const getNotifications = asyncErrorHandler(
-  async (userId, includeRead = false) => {
-    return prisma.notification.findMany({
-      where: {
-        userId,
-        ...(includeRead ? {} : { isRead: false }),
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-  }
-);
+const notifyMultipleUsers = (notifications) => {
+  setImmediate(() => processNotifications(notifications));
+};
 
-export const markNotificationAsRead = asyncErrorHandler(async (id) => {
-  const notification = await prisma.notification.update({
-    where: { id },
-    data: { isRead: true },
-  });
-  if (!notification) {
-    throw new NotFoundException('해당 알림을 찾을 수 없습니다.');
-  }
-  return notification;
-});
-
-// 여러 사용자에게 알림을 보내는 유틸리티 함수 (수정됨)
-export const notifyMultipleUsers = asyncErrorHandler(
-  async (userIds, notificationFunction, ...args) => {
-    const notifications = userIds
-      .map((userId) => notificationFunction(userId, ...args))
-      .filter((notification) => notification !== null);
-
-    if (notifications.length > 0) {
-      await createNotificationsInTransaction(notifications);
-    }
-
-    return notifications;
-  }
-);
-
-// 기존의 알림 함수들 (약간 수정됨)
 export const notifyChallengeStatusChange = (
-  userId,
+  userIds,
   actorId,
   challengeId,
   challengeName,
   newStatus,
   date = new Date()
 ) => {
-  const content = notificationTemplates.CHALLENGE_STATUS(
-    challengeName,
-    newStatus,
-    date
-  );
-  return createTypedNotification(
-    userId,
-    actorId,
-    'CHALLENGE_STATUS',
-    content,
-    challengeId
-  );
+  const notifications = userIds
+    .filter((userId) => userId !== actorId)
+    .map((userId) => ({
+      userId,
+      type: 'CHALLENGE_STATUS',
+      content: notificationTemplates.CHALLENGE_STATUS(
+        challengeName,
+        newStatus,
+        date
+      ),
+      challengeId,
+      createdAt: date,
+      isRead: false,
+    }));
+
+  notifyMultipleUsers(notifications);
 };
 
 export const notifyNewWork = (
-  userId,
+  userIds,
   actorId,
   challengeId,
   challengeName,
   workId,
   date = new Date()
 ) => {
-  const content = notificationTemplates.NEW_WORK(challengeName, date);
-  return createTypedNotification(
-    userId,
-    actorId,
-    'NEW_WORK',
-    content,
-    challengeId,
-    workId
-  );
+  const notifications = userIds
+    .filter((userId) => userId !== actorId)
+    .map((userId) => ({
+      userId,
+      type: 'NEW_WORK',
+      content: notificationTemplates.NEW_WORK(challengeName, date),
+      challengeId,
+      workId,
+      createdAt: date,
+      isRead: false,
+    }));
+
+  notifyMultipleUsers(notifications);
 };
 
 export const notifyNewReply = (
-  userId,
+  userIds,
   actorId,
   challengeId,
   challengeName,
@@ -185,20 +128,24 @@ export const notifyNewReply = (
   replyId,
   date = new Date()
 ) => {
-  const content = notificationTemplates.NEW_REPLY(challengeName, date);
-  return createTypedNotification(
-    userId,
-    actorId,
-    'NEW_REPLY',
-    content,
-    challengeId,
-    workId,
-    feedbackId
-  );
+  const notifications = userIds
+    .filter((userId) => userId !== actorId)
+    .map((userId) => ({
+      userId,
+      type: 'NEW_REPLY',
+      content: notificationTemplates.NEW_REPLY(challengeName, date),
+      challengeId,
+      workId,
+      feedbackId,
+      createdAt: date,
+      isRead: false,
+    }));
+
+  notifyMultipleUsers(notifications);
 };
 
 export const notifyNewFeedback = (
-  userId,
+  userIds,
   actorId,
   challengeId,
   challengeName,
@@ -206,37 +153,45 @@ export const notifyNewFeedback = (
   feedbackId,
   date = new Date()
 ) => {
-  const content = notificationTemplates.NEW_FEEDBACK(challengeName, date);
-  return createTypedNotification(
-    userId,
-    actorId,
-    'NEW_FEEDBACK',
-    content,
-    challengeId,
-    workId,
-    feedbackId
-  );
+  const notifications = userIds
+    .filter((userId) => userId !== actorId)
+    .map((userId) => ({
+      userId,
+      type: 'NEW_FEEDBACK',
+      content: notificationTemplates.NEW_FEEDBACK(challengeName, date),
+      challengeId,
+      workId,
+      feedbackId,
+      createdAt: date,
+      isRead: false,
+    }));
+
+  notifyMultipleUsers(notifications);
 };
 
 export const notifyDeadline = (
-  userId,
+  userIds,
   actorId,
   challengeId,
   challengeName,
   date = new Date()
 ) => {
-  const content = notificationTemplates.DEADLINE(challengeName, date);
-  return createTypedNotification(
-    userId,
-    actorId,
-    'DEADLINE',
-    content,
-    challengeId
-  );
+  const notifications = userIds
+    .filter((userId) => userId !== actorId)
+    .map((userId) => ({
+      userId,
+      type: 'DEADLINE',
+      content: notificationTemplates.DEADLINE(challengeName, date),
+      challengeId,
+      createdAt: date,
+      isRead: false,
+    }));
+
+  notifyMultipleUsers(notifications);
 };
 
 export const notifyContentChange = (
-  userId,
+  userIds,
   actorId,
   entityType,
   challengeName,
@@ -246,19 +201,57 @@ export const notifyContentChange = (
   feedbackId = null,
   date = new Date()
 ) => {
-  const content = notificationTemplates.CONTENT_CHANGE(
-    entityType,
-    challengeName,
-    action,
-    date
-  );
-  return createTypedNotification(
-    userId,
-    actorId,
-    'CHANGE',
-    content,
-    challengeId,
-    workId,
-    feedbackId
-  );
+  const notifications = userIds
+    .filter((userId) => userId !== actorId)
+    .map((userId) => ({
+      userId,
+      type: 'CHANGE',
+      content: notificationTemplates.CONTENT_CHANGE(
+        entityType,
+        challengeName,
+        action,
+        date
+      ),
+      challengeId,
+      workId,
+      feedbackId,
+      createdAt: date,
+      isRead: false,
+    }));
+
+  notifyMultipleUsers(notifications);
+};
+
+export const getNotifications = async (userId, includeRead = false) => {
+  return prisma.notification.findMany({
+    where: {
+      userId,
+      ...(includeRead ? {} : { isRead: false }),
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+};
+
+export const markNotificationAsRead = async (id) => {
+  const notification = await prisma.notification.update({
+    where: { id },
+    data: { isRead: true },
+  });
+  if (!notification) {
+    throw new NotFoundException('해당 알림을 찾을 수 없습니다.');
+  }
+  return notification;
+};
+
+export const markMultipleNotificationsAsRead = async (ids) => {
+  try {
+    await prisma.notification.updateMany({
+      where: { id: { in: ids } },
+      data: { isRead: true },
+    });
+    return { message: `${ids.length}개의 알림을 읽음 처리했습니다.` };
+  } catch (error) {
+    console.error('읽음처리중 에러:', error);
+    throw new BadRequestException('알림 읽음 처리 중 오류가 발생했습니다.');
+  }
 };

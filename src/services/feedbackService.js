@@ -3,6 +3,8 @@ import * as notificationService from './notificationService.js';
 import {
   UnauthorizedException,
   NotFoundException,
+  UnprocessableEntityException,
+  ForbiddenException,
 } from '../errors/customException.js';
 
 //커서 기반
@@ -116,9 +118,8 @@ const notifyCreateAboutFeedback = async (userId, workId, feedback) => {
     throw new NotFoundException('작업물을 찾을 수 없습니다.');
   }
 
-  // 작업물 작성자에게만 알림
-  await notificationService.notifyNewFeedback(
-    Number(workInfo.userId),
+  notificationService.notifyNewFeedback(
+    [Number(workInfo.userId)],
     Number(userId),
     Number(workInfo.challenge.id),
     workInfo.challenge.title,
@@ -153,10 +154,9 @@ const notifyAdminAboutFeedback = async (userId, feedbackId, action) => {
 
   const challengeInfo = feedbackInfo.work.challenge;
 
-  // 피드백 작성자에게 알림 (어드민이 수정/삭제한 경우)
   if (userInfo && userInfo.role === 'ADMIN') {
-    await notificationService.notifyContentChange(
-      Number(feedbackInfo.user.id),
+    notificationService.notifyContentChange(
+      [Number(feedbackInfo.user.id)],
       Number(userId),
       'FEEDBACK',
       challengeInfo.title,
@@ -167,10 +167,9 @@ const notifyAdminAboutFeedback = async (userId, feedbackId, action) => {
     );
   }
 
-  // 작업물 작성자에게 알림 (피드백 작성자가 아닌 경우)
   if (feedbackInfo.user.id !== feedbackInfo.work.userId) {
-    await notificationService.notifyContentChange(
-      Number(feedbackInfo.work.userId),
+    notificationService.notifyContentChange(
+      [Number(feedbackInfo.work.userId)],
       Number(userId),
       'FEEDBACK',
       challengeInfo.title,
@@ -217,7 +216,7 @@ export const validateFeedbackAccess = async (userId, feedbackId) => {
     if (userInfo.role === 'ADMIN') {
       return;
     } else {
-      throw new UnauthorizedException('챌린지가 마감됐습니다.');
+      throw new UnprocessableEntityException('챌린지가 마감됐습니다.');
     }
   }
 
@@ -225,7 +224,7 @@ export const validateFeedbackAccess = async (userId, feedbackId) => {
     return;
   }
 
-  throw new UnauthorizedException('접근 권한이 없습니다.');
+  throw new ForbiddenException('접근 권한이 없습니다.');
 };
 
 export const validateCreateFeedbackAccess = async (workId) => {
@@ -247,7 +246,7 @@ export const validateCreateFeedbackAccess = async (workId) => {
   const challengeInfo = workWithChallenge.challenge;
 
   if (challengeInfo.progress) {
-    throw new UnauthorizedException('챌린지가 마감됐습니다.');
+    throw new UnprocessableEntityException('챌린지가 마감됐습니다.');
   }
 
   return;
