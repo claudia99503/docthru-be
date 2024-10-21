@@ -46,7 +46,7 @@ const notificationTemplates = {
   },
 };
 
-const createNotificationBatch = async (notifications) => {
+export const createNotificationBatch = async (notifications) => {
   try {
     await prisma.notification.createMany({
       data: notifications,
