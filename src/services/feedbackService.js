@@ -1,7 +1,7 @@
 import prisma from '../lib/prisma.js';
 import * as notificationService from './notificationService.js';
 import {
-  UnauthorizedException,
+  BadRequestException,
   NotFoundException,
   UnprocessableEntityException,
   ForbiddenException,
@@ -73,6 +73,10 @@ export const getFeedbacksWorkById = async ({
 };
 
 export const postFeedbackById = async ({ workId, content, userId }) => {
+  if (!content) {
+    throw new BadRequestException('내용 입력은 필수입니다.');
+  }
+
   const feedback = await prisma.feedback.create({
     data: {
       content: content,
@@ -87,6 +91,10 @@ export const postFeedbackById = async ({ workId, content, userId }) => {
 };
 
 export const updateFeedbackById = async ({ feedbackId, content, userId }) => {
+  if (!content) {
+    throw new BadRequestException('내용 입력은 필수입니다.');
+  }
+
   const feedback = await prisma.feedback.update({
     where: { id: Number(feedbackId) },
     data: { content },
