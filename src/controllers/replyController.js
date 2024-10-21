@@ -30,12 +30,13 @@ export const updateReplyById = async (req, res, next) => {
     const { userId } = req.user;
     const { content } = req.body;
 
-    const updateReply = await replyService.updateReplyById({
+    const updatedReply = await replyService.updateReplyById({
       replyId,
       userId,
       content,
     });
-    res.status(200).json({ data: updateReply });
+
+    res.status(200).json({ data: updatedReply });
   } catch (error) {
     next(error);
   }

@@ -12,9 +12,9 @@ import { REFRESH_TOKEN_MAX_AGE } from './configs/config.js';
 import userRoutes from './routes/userRoutes.js';
 import workRoutes from './routes/workRoutes.js';
 import challengeRoutes from './routes/challengeRoutes.js';
-import applicationRoutes from './routes/applicationRoutes.js';
 import feedbackRoutes from './routes/feedbackRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import replyRoutes from './routes/replyRoutes.js';
 
 dotenv.config();
 
@@ -39,7 +39,7 @@ const corsOptions = {
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
@@ -98,7 +98,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.use('/api/users', userRoutes);
 app.use('/api/works', workRoutes);
 app.use('/api/challenges', challengeRoutes);
-app.use('/api/applications', applicationRoutes);
+app.use('/api/replies', replyRoutes);
 app.use('/api/feedbacks', feedbackRoutes);
 app.use('/api/notifications', notificationRoutes);
 

@@ -89,17 +89,60 @@ export const postReplyByFeedbackId = async ({
   content,
   userId,
 }) => {
-  const reply = await prisma.reply.create({
-    data: {
-      content: content,
-      userId: Number(userId),
-      feedbackId: Number(feedbackId),
-    },
+  console.log(
+    `Attempting to create reply for feedback ${feedbackId} by user ${userId}`
+  );
+
+  return prisma.$transaction(async (prismaTransaction) => {
+    try {
+      const reply = await prismaTransaction.reply.create({
+        data: {
+          content: content,
+          userId: Number(userId),
+          feedbackId: Number(feedbackId),
+        },
+      });
+      console.log(`Reply created: ${JSON.stringify(reply)}`);
+
+      const feedback = await getFeedbackById(feedbackId);
+      console.log(
+        `Sending notification for new reply: ${JSON.stringify(feedback)}`
+      );
+
+      // 피드백 작성자에게 알림 보내기 (자신의 피드백에 대댓글을 단 경우 제외)
+      if (feedback.userId !== userId) {
+        await notificationService.notifyNewReply(
+          feedback.userId,
+          userId,
+          feedback.work.challengeId,
+          feedback.work.challenge.title,
+          feedback.workId,
+          feedback.id,
+          reply.id
+        );
+        console.log('Notification sent to feedback author successfully');
+      }
+
+      // 챌린지 작성자에게 알림 보내기 (자신의 챌린지에 대댓글을 단 경우 제외)
+      if (feedback.work.challenge.userId !== userId) {
+        await notificationService.notifyNewReply(
+          feedback.userId,
+          userId,
+          feedback.work.challengeId,
+          feedback.work.challenge.title,
+          feedback.workId,
+          feedback.id,
+          reply.id
+        );
+        console.log('Notification sent to challenge author successfully');
+      }
+
+      return reply;
+    } catch (error) {
+      console.error('Error in postReplyByFeedbackId:', error);
+      throw error;
+    }
   });
-
-  await notifyCreateAboutReply(userId, feedbackId, reply);
-
-  return reply;
 };
 
 export const updateReplyById = async ({ replyId, content, userId }) => {
@@ -110,7 +153,25 @@ export const updateReplyById = async ({ replyId, content, userId }) => {
     data: { content },
   });
 
-  await notifyAdminAboutReply(userId, replyId, '수정');
+  // 관련 사용자들에게 알림 보내기
+  const updatedReply = await getReplyById(replyId);
+  const notificationRecipients = [
+    updatedReply.feedback.userId, // 피드백 작성자
+    updatedReply.feedback.work.challenge.userId, // 챌린지 작성자
+  ].filter((id) => id !== userId); // 자신을 제외
+
+  for (const recipientId of notificationRecipients) {
+    await notificationService.notifyContentChange(
+      recipientId,
+      userId,
+      'REPLY',
+      updatedReply.feedback.work.challenge.title,
+      '수정',
+      updatedReply.feedback.work.challengeId,
+      updatedReply.feedback.workId,
+      replyId
+    );
+  }
 
   return reply;
 };
@@ -118,76 +179,28 @@ export const updateReplyById = async ({ replyId, content, userId }) => {
 export const deleteReplyById = async ({ replyId, userId }) => {
   await validateReplyAccess(userId, replyId);
 
-  await notifyAdminAboutReply(userId, replyId, '삭제');
+  const replyToDelete = await getReplyById(replyId);
 
   await prisma.reply.delete({
     where: { id: Number(replyId) },
   });
-};
 
-const notifyCreateAboutReply = async (userId, feedbackId, reply) => {
-  const feedbackInfo = await prisma.feedback.findUnique({
-    where: { id: Number(feedbackId) },
-    include: {
-      user: true,
-      work: {
-        include: {
-          challenge: true,
-        },
-      },
-    },
-  });
+  // 관련 사용자들에게 알림 보내기
+  const notificationRecipients = [
+    replyToDelete.feedback.userId, // 피드백 작성자
+    replyToDelete.feedback.work.challenge.userId, // 챌린지 작성자
+  ].filter((id) => id !== userId); // 자신을 제외
 
-  const challengeInfo = feedbackInfo.work.challenge;
-
-  if (!challengeInfo) {
-    throw new NotFoundException('등록된 챌린지가 없습니다.');
-  }
-
-  await notificationService.notifyNewReply(
-    Number(feedbackInfo.userId),
-    Number(userId),
-    Number(challengeInfo.id),
-    challengeInfo.title,
-    Number(feedbackInfo.workId),
-    Number(reply.id),
-    new Date()
-  );
-};
-
-const notifyAdminAboutReply = async (userId, replyId, action) => {
-  const [userInfo, replyInfo] = await prisma.$transaction([
-    prisma.user.findUnique({
-      where: { id: Number(userId) },
-    }),
-    prisma.reply.findUnique({
-      where: { id: Number(replyId) },
-      include: { user: true, feedback: true },
-    }),
-  ]);
-
-  if (!replyInfo) {
-    throw new NotFoundException('등록된 대댓글이 없습니다.');
-  }
-
-  const challengeInfo = await prisma.challenge.findUnique({
-    where: { id: Number(replyInfo.feedback.work.challengeId) },
-  });
-
-  if (!challengeInfo) {
-    throw new NotFoundException('등록된 챌린지가 없습니다.');
-  }
-
-  if (userInfo && userInfo.role === 'ADMIN') {
+  for (const recipientId of notificationRecipients) {
     await notificationService.notifyContentChange(
-      Number(replyInfo.user.id),
-      Number(userId),
+      recipientId,
+      userId,
       'REPLY',
-      challengeInfo.title,
-      action === '삭제' ? '삭제' : '수정',
-      null,
-      null,
-      Number(replyId)
+      replyToDelete.feedback.work.challenge.title,
+      '삭제',
+      replyToDelete.feedback.work.challengeId,
+      replyToDelete.feedback.workId,
+      replyId
     );
   }
 };
@@ -200,4 +213,48 @@ export const getRepliesByFeedbackId = async (feedbackId) => {
   });
 
   return replies;
+};
+
+export const getFeedbackById = async (feedbackId) => {
+  const feedback = await prisma.feedback.findUnique({
+    where: { id: Number(feedbackId) },
+    include: {
+      user: true,
+      work: {
+        include: {
+          challenge: true,
+        },
+      },
+    },
+  });
+
+  if (!feedback) {
+    throw new NotFoundException('등록된 피드백이 없습니다.');
+  }
+
+  return feedback;
+};
+
+export const getReplyById = async (replyId) => {
+  const reply = await prisma.reply.findUnique({
+    where: { id: Number(replyId) },
+    include: {
+      user: true,
+      feedback: {
+        include: {
+          work: {
+            include: {
+              challenge: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!reply) {
+    throw new NotFoundException('등록된 대댓글이 없습니다.');
+  }
+
+  return reply;
 };
