@@ -3,6 +3,7 @@ import {
   BadRequestException,
   UnauthorizedException,
   NotFoundException,
+  ForbiddenException,
 } from '../errors/customException.js';
 import * as notificationService from './notificationService.js';
 
@@ -50,7 +51,6 @@ export const getWorksListById = async ({
     isLiked: workList.isLiked,
   }));
 
-  //마감하면 베스트 게시물 조회
   const bestWorks = await bestWorksList({ challengeId, userId, sortOrder });
 
   const totalCount = await prisma.work.count({
@@ -248,7 +248,6 @@ export const likeCancelWorkById = async ({ workId, userId }) => {
   }
 };
 
-//커서 기반
 export const getFeedbacksWorkById = async ({ workId, cursorId, limit }) => {
   const feedbacks = await prisma.feedback.findMany({
     where: { workId: Number(workId) },
@@ -348,16 +347,19 @@ const bestWorksList = async ({ challengeId, userId, sortOrder }) => {
 const notifyCreateAboutWork = async (userId, challengeId, works) => {
   const challengeInfo = await prisma.challenge.findUnique({
     where: { id: Number(challengeId) },
+    select: { userId: true, title: true },
   });
 
-  await notificationService.notifyNewWork(
-    Number(challengeInfo.userId),
-    Number(userId),
-    Number(challengeId),
-    challengeInfo.title,
-    Number(works.id),
-    new Date()
-  );
+  if (challengeInfo) {
+    notificationService.notifyNewWork(
+      [Number(challengeInfo.userId)],
+      Number(userId),
+      Number(challengeId),
+      challengeInfo.title,
+      Number(works.id),
+      new Date()
+    );
+  }
 };
 
 const notifyAdminAboutWork = async (userId, workId, action) => {
@@ -372,13 +374,13 @@ const notifyAdminAboutWork = async (userId, workId, action) => {
   ]);
 
   if (userInfo && userInfo.role === 'ADMIN') {
-    await notificationService.notifyContentChange(
-      Number(workInfo.userId),
+    notificationService.notifyContentChange(
+      [Number(workInfo.userId)],
       Number(userId),
       'WORK',
       workInfo.challenge.title,
       action === '삭제' ? '삭제' : '수정',
-      null,
+      workInfo.challenge.id,
       Number(workId),
       null,
       new Date()

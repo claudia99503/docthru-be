@@ -1,5 +1,3 @@
-// replyService.js
-
 import prisma from '../lib/prisma.js';
 import * as notificationService from './notificationService.js';
 import {
@@ -89,60 +87,46 @@ export const postReplyByFeedbackId = async ({
   content,
   userId,
 }) => {
-  console.log(
-    `Attempting to create reply for feedback ${feedbackId} by user ${userId}`
-  );
+  try {
+    const reply = await prisma.reply.create({
+      data: {
+        content: content,
+        userId: Number(userId),
+        feedbackId: Number(feedbackId),
+      },
+    });
 
-  return prisma.$transaction(async (prismaTransaction) => {
-    try {
-      const reply = await prismaTransaction.reply.create({
-        data: {
-          content: content,
-          userId: Number(userId),
-          feedbackId: Number(feedbackId),
-        },
-      });
-      console.log(`Reply created: ${JSON.stringify(reply)}`);
+    const feedback = await getFeedbackById(feedbackId);
 
-      const feedback = await getFeedbackById(feedbackId);
-      console.log(
-        `Sending notification for new reply: ${JSON.stringify(feedback)}`
+    if (feedback.userId !== userId) {
+      notificationService.notifyNewReply(
+        [feedback.userId],
+        userId,
+        feedback.work.challengeId,
+        feedback.work.challenge.title,
+        feedback.workId,
+        feedback.id,
+        reply.id
       );
-
-      // 피드백 작성자에게 알림 보내기 (자신의 피드백에 대댓글을 단 경우 제외)
-      if (feedback.userId !== userId) {
-        await notificationService.notifyNewReply(
-          feedback.userId,
-          userId,
-          feedback.work.challengeId,
-          feedback.work.challenge.title,
-          feedback.workId,
-          feedback.id,
-          reply.id
-        );
-        console.log('Notification sent to feedback author successfully');
-      }
-
-      // 챌린지 작성자에게 알림 보내기 (자신의 챌린지에 대댓글을 단 경우 제외)
-      if (feedback.work.challenge.userId !== userId) {
-        await notificationService.notifyNewReply(
-          feedback.userId,
-          userId,
-          feedback.work.challengeId,
-          feedback.work.challenge.title,
-          feedback.workId,
-          feedback.id,
-          reply.id
-        );
-        console.log('Notification sent to challenge author successfully');
-      }
-
-      return reply;
-    } catch (error) {
-      console.error('Error in postReplyByFeedbackId:', error);
-      throw error;
     }
-  });
+
+    if (feedback.work.challenge.userId !== userId) {
+      notificationService.notifyNewReply(
+        [feedback.work.challenge.userId],
+        userId,
+        feedback.work.challengeId,
+        feedback.work.challenge.title,
+        feedback.workId,
+        feedback.id,
+        reply.id
+      );
+    }
+
+    return reply;
+  } catch (error) {
+    console.error('Error in postReplyByFeedbackId:', error);
+    throw error;
+  }
 };
 
 export const updateReplyById = async ({ replyId, content, userId }) => {
@@ -153,25 +137,17 @@ export const updateReplyById = async ({ replyId, content, userId }) => {
     data: { content },
   });
 
-  // 관련 사용자들에게 알림 보내기
   const updatedReply = await getReplyById(replyId);
-  const notificationRecipients = [
-    updatedReply.feedback.userId, // 피드백 작성자
-    updatedReply.feedback.work.challenge.userId, // 챌린지 작성자
-  ].filter((id) => id !== userId); // 자신을 제외
-
-  for (const recipientId of notificationRecipients) {
-    await notificationService.notifyContentChange(
-      recipientId,
-      userId,
-      'REPLY',
-      updatedReply.feedback.work.challenge.title,
-      '수정',
-      updatedReply.feedback.work.challengeId,
-      updatedReply.feedback.workId,
-      replyId
-    );
-  }
+  notificationService.notifyContentChange(
+    [updatedReply.userId],
+    userId,
+    'REPLY',
+    updatedReply.feedback.work.challenge.title,
+    '수정',
+    updatedReply.feedback.work.challengeId,
+    updatedReply.feedback.workId,
+    replyId
+  );
 
   return reply;
 };
@@ -185,24 +161,16 @@ export const deleteReplyById = async ({ replyId, userId }) => {
     where: { id: Number(replyId) },
   });
 
-  // 관련 사용자들에게 알림 보내기
-  const notificationRecipients = [
-    replyToDelete.feedback.userId, // 피드백 작성자
-    replyToDelete.feedback.work.challenge.userId, // 챌린지 작성자
-  ].filter((id) => id !== userId); // 자신을 제외
-
-  for (const recipientId of notificationRecipients) {
-    await notificationService.notifyContentChange(
-      recipientId,
-      userId,
-      'REPLY',
-      replyToDelete.feedback.work.challenge.title,
-      '삭제',
-      replyToDelete.feedback.work.challengeId,
-      replyToDelete.feedback.workId,
-      replyId
-    );
-  }
+  notificationService.notifyContentChange(
+    replyToDelete.userId,
+    userId,
+    'REPLY',
+    replyToDelete.feedback.work.challenge.title,
+    '삭제',
+    replyToDelete.feedback.work.challengeId,
+    replyToDelete.feedback.workId,
+    replyId
+  );
 };
 
 export const getRepliesByFeedbackId = async (feedbackId) => {
