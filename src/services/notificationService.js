@@ -5,7 +5,12 @@ import {
 } from '../errors/customException.js';
 
 // 유틸리티 함수
-const formatDate = (date) => date.toISOString().split('T')[0];
+const formatDate = (date) => {
+  if (!(date instanceof Date)) {
+    date = new Date(date);
+  }
+  return date.toISOString().split('T')[0];
+};
 
 // 알림 템플릿 (기존과 동일한 형태입니다~)
 const notificationTemplates = {
@@ -19,6 +24,10 @@ const notificationTemplates = {
     )})`,
   DEADLINE: (challengeName, date) =>
     `'${challengeName}'이 마감되었어요 (${formatDate(date)})`,
+  NEW_REPLY: (challengeName, date) =>
+    `'${challengeName}'의 피드백에 새로운 답글이 달렸어요 (${formatDate(
+      date
+    )})`,
   CONTENT_CHANGE: (entityType, challengeName, action, date) => {
     switch (entityType) {
       case 'CHALLENGE':
@@ -163,6 +172,28 @@ export const notifyNewWork = (
     content,
     challengeId,
     workId
+  );
+};
+
+export const notifyNewReply = (
+  userId,
+  actorId,
+  challengeId,
+  challengeName,
+  workId,
+  feedbackId,
+  replyId,
+  date = new Date()
+) => {
+  const content = notificationTemplates.NEW_REPLY(challengeName, date);
+  return createTypedNotification(
+    userId,
+    actorId,
+    'NEW_REPLY',
+    content,
+    challengeId,
+    workId,
+    feedbackId
   );
 };
 
