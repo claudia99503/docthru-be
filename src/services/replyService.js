@@ -34,66 +34,54 @@ export const validateCreateReplyAccess = async ({ userId, feedbackId }) => {
   }
 };
 
-export const validateUpdateReplyAccess = async (userId, replyId) => {
-  await validateReplyAccess(userId, replyId, 'update');
-};
-
-export const validateDeleteReplyAccess = async (userId, replyId) => {
-  await validateReplyAccess(userId, replyId, 'delete');
-};
-
-const validateReplyAccess = async (userId, replyId, action) => {
-  if (action === 'create') {
-    return;
-  } else {
-    const [userInfo, replyInfo] = await prisma.$transaction([
-      prisma.user.findUnique({
-        where: { id: Number(userId) },
-      }),
-      prisma.reply.findFirst({
-        where: { id: Number(replyId) },
-        include: {
-          feedback: {
-            include: {
-              work: {
-                include: {
-                  challenge: {
-                    include: {
-                      participations: true,
-                    },
+export const validateReplyAccess = async (userId, replyId) => {
+  const [userInfo, replyInfo] = await prisma.$transaction([
+    prisma.user.findUnique({
+      where: { id: Number(userId) },
+    }),
+    prisma.reply.findFirst({
+      where: { id: Number(replyId) },
+      include: {
+        feedback: {
+          include: {
+            work: {
+              include: {
+                challenge: {
+                  include: {
+                    participations: true,
                   },
                 },
               },
             },
           },
         },
-      }),
-    ]);
+      },
+    }),
+  ]);
 
-    if (!replyInfo) {
-      throw new NotFoundException('등록된 대댓글이 없습니다.');
-    }
-
-    const challengeInfo = replyInfo.feedback.work.challenge;
-
-    if (!challengeInfo) {
-      throw new NotFoundException('등록된 챌린지가 없습니다.');
-    }
-
-    if (challengeInfo.progress) {
-      if (userInfo.role === 'ADMIN') {
-        return;
-      } else {
-        throw new UnauthorizedException('챌린지가 마감됐습니다.');
-      }
-    }
-
-    if (userInfo.id === replyInfo.userId || userInfo.role === 'ADMIN') {
-      return;
-    }
-
-    throw new UnauthorizedException('접근 권한이 없습니다.');
+  if (!replyInfo) {
+    throw new NotFoundException('등록된 대댓글이 없습니다.');
   }
+
+  const challengeInfo = replyInfo.feedback.work.challenge;
+
+  if (!challengeInfo) {
+    throw new NotFoundException('등록된 챌린지가 없습니다.');
+  }
+
+  if (challengeInfo.progress) {
+    if (userInfo.role === 'ADMIN') {
+      return;
+    } else {
+      throw new UnauthorizedException('챌린지가 마감됐습니다.');
+    }
+  }
+
+  if (userInfo.id === replyInfo.userId || userInfo.role === 'ADMIN') {
+    return;
+  }
+
+  throw new UnauthorizedException('접근 권한이 없습니다.');
 };
 
 export const postReplyByFeedbackId = async ({
@@ -115,6 +103,8 @@ export const postReplyByFeedbackId = async ({
 };
 
 export const updateReplyById = async ({ replyId, content, userId }) => {
+  await validateReplyAccess(userId, replyId);
+
   const reply = await prisma.reply.update({
     where: { id: Number(replyId) },
     data: { content },
@@ -126,6 +116,8 @@ export const updateReplyById = async ({ replyId, content, userId }) => {
 };
 
 export const deleteReplyById = async ({ replyId, userId }) => {
+  await validateReplyAccess(userId, replyId);
+
   await notifyAdminAboutReply(userId, replyId, '삭제');
 
   await prisma.reply.delete({
@@ -145,10 +137,6 @@ const notifyCreateAboutReply = async (userId, feedbackId, reply) => {
       },
     },
   });
-
-  if (!feedbackInfo) {
-    throw new NotFoundException('해당 피드백이 존재하지 않습니다.');
-  }
 
   const challengeInfo = feedbackInfo.work.challenge;
 
@@ -202,4 +190,14 @@ const notifyAdminAboutReply = async (userId, replyId, action) => {
       Number(replyId)
     );
   }
+};
+
+export const getRepliesByFeedbackId = async (feedbackId) => {
+  const replies = await prisma.reply.findMany({
+    where: { feedbackId: Number(feedbackId) },
+    include: { user: true },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  return replies;
 };

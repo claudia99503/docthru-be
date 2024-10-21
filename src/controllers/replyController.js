@@ -17,7 +17,7 @@ export const postReplyById = async (req, res, next) => {
       content,
     });
 
-    res.status(201).json({ data: newReply });
+    res.status(201).json(newReply);
   } catch (error) {
     next(error);
   }
@@ -29,8 +29,6 @@ export const updateReplyById = async (req, res, next) => {
     const { replyId } = req.params;
     const { userId } = req.user;
     const { content } = req.body;
-
-    await replyService.validateUpdateReplyAccess(userId, replyId);
 
     const updateReply = await replyService.updateReplyById({
       replyId,
@@ -49,11 +47,20 @@ export const deleteReplyById = async (req, res, next) => {
     const { replyId } = req.params;
     const { userId } = req.user;
 
-    await replyService.validateDeleteReplyAccess(userId, replyId);
-
     await replyService.deleteReplyById({ replyId, userId });
 
     res.status(200).json({ message: '댓글 삭제가 완료되었습니다.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 대댓글 목록 조회
+export const getRepliesByFeedbackId = async (req, res, next) => {
+  try {
+    const { feedbackId } = req.params;
+    const replies = await replyService.getRepliesByFeedbackId(feedbackId);
+    res.status(200).json({ data: replies });
   } catch (error) {
     next(error);
   }

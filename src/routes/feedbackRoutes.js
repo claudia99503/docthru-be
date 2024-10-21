@@ -1,6 +1,7 @@
 import express from 'express';
 import * as feedbackController from '../controllers/feedbackController.js';
 import { authenticateAccessToken } from '../middlewares/authMiddleware.js';
+import * as replyController from '../controllers/replyController.js';
 
 const router = express.Router();
 
@@ -88,6 +89,15 @@ router.delete(
   '/:feedbackId',
   authenticateAccessToken,
   feedbackController.deleteFeedbackById
+);
+
+router.get('/:feedbackId/replies', replyController.getRepliesByFeedbackId);
+
+//대댓글 작성
+router.post(
+  '/:feedbackId/replies',
+  authenticateAccessToken,
+  replyController.postReplyById
 );
 
 export default router;
