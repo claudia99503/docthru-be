@@ -103,10 +103,15 @@ app.use('/api/swagger.json', (req, res) => {
   res.json(swaggerDocs);
 });
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+// Swagger UI를 `/api-docs` 경로로 제공
 app.use(
-  '/swagger-assets',
-  express.static(path.join(__dirname, '../public/api-docs'))
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocs, {
+    swaggerOptions: {
+      url: '/api/swagger.json', // 명세 경로를 명확하게 지정
+    },
+  })
 );
 
 // API 라우트 설정
