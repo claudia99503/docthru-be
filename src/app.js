@@ -92,20 +92,7 @@ app.use(
 );
 
 // Swagger 설정
-app.use(
-  '/api-docs',
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerDocs, {
-    swaggerOptions: {
-      url: '/api-docs/swagger.json',
-    },
-    customCssUrl: '/api-docs/swagger-ui.css',
-    customJs: [
-      '/api-docs/swagger-ui-bundle.js',
-      '/api-docs/swagger-ui-standalone-preset.js',
-    ],
-  })
-);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // API 라우트 설정
 app.use('/api/users', userRoutes);

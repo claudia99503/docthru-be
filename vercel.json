@@ -9,17 +9,9 @@
           "generate": "prisma generate"
         }
       }
-    },
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
-    {
-      "src": "/api-docs/(.*)",
-      "dest": "/public/api-docs/$1"
-    },
     {
       "src": "/(.*)",
       "dest": "src/app.js"
