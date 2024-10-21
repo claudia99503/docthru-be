@@ -88,9 +88,9 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE4LCJpY
 }
 
 ### 챌린지 삭제
-DELETE http://localhost:3001/api/challenges/12
+DELETE https://docthru-be.vercel.app/api/challenges/12
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE4LCJpYXQiOjE3MjkyMzA2NDUsImV4cCI6MTcyOTIzMTU0NX0.br2V5wUU-w0v_fBVEEsTvn8bn68vduE0IpZBC-vpawg
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjI0LCJpYXQiOjE3Mjk0OTY3MTQsImV4cCI6MTcyOTQ5NzYxNH0.eLoj87lCvS2CqOSy2OBAUK-LEufVfE7LSm3BBYYcesM
 
 ### 대댓글 작성
 POST http://localhost:3001/feedbacks/1/replies
