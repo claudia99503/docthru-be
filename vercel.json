@@ -11,7 +11,7 @@
       }
     },
     {
-      "src": "src/**/*",
+      "src": "public/**/*",
       "use": "@vercel/static"
     }
   ],
