@@ -8,6 +8,8 @@ import { swaggerDocs } from './configs/swagger.js';
 import swaggerUi from 'swagger-ui-express';
 import customJsonParser from './middlewares/jsonParser.js';
 import { REFRESH_TOKEN_MAX_AGE } from './configs/config.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 import userRoutes from './routes/userRoutes.js';
 import workRoutes from './routes/workRoutes.js';
@@ -19,14 +21,18 @@ import notificationRoutes from './routes/notificationRoutes.js';
 dotenv.config();
 
 const app = express();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const isProduction = process.env.NODE_ENV === 'production';
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
+const SERVER_URL =
+  process.env.SERVER_URL || `http://localhost:${process.env.PORT || 3001}`;
 
 const allowedOrigins = [
   CLIENT_URL,
   'http://localhost:3000',
   'https://vercel.live',
+  SERVER_URL,
 ];
 
 const corsOptions = {
@@ -62,41 +68,47 @@ export const sendRefreshToken = (res, token) => {
   res.cookie('refreshToken', token, cookieOptions);
 };
 
-const contentSecurityPolicy = {
-  directives: {
-    defaultSrc: ["'self'"],
-    connectSrc: ["'self'", CLIENT_URL, 'https://vercel.live'],
-    scriptSrc: [
-      "'self'",
-      "'unsafe-inline'",
-      "'unsafe-eval'",
-      'https://vercel.live',
-    ],
-    styleSrc: ["'self'", "'unsafe-inline'"],
-    imgSrc: ["'self'", 'data:', 'https:'],
-    fontSrc: ["'self'", 'https:', 'data:'],
-    objectSrc: ["'none'"],
-    frameSrc: ["'self'", 'https://vercel.live'],
-  },
-};
-
-if (isProduction) {
-  contentSecurityPolicy.directives.upgradeInsecureRequests = [];
-}
-
 app.use(
   helmet({
-    contentSecurityPolicy: contentSecurityPolicy,
+    contentSecurityPolicy: false,
+    permissionsPolicy: false,
   })
 );
 
-// Swagger 설정
+app.use((req, res, next) => {
+  res.setHeader(
+    'Permissions-Policy',
+    'private-state-token-redemption=(), private-state-token-issuance=(), browsing-topics=()'
+  );
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; " +
+      "connect-src 'self' " +
+      CLIENT_URL +
+      ' https://vercel.live ' +
+      SERVER_URL +
+      '; ' +
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live; " +
+      "style-src 'self' 'unsafe-inline'; " +
+      "img-src 'self' data: https:; " +
+      "font-src 'self' https: data:; " +
+      "object-src 'none'; " +
+      "frame-src 'self' https://vercel.live;"
+  );
+  next();
+});
+
+app.use(
+  '/api-docs',
+  express.static(path.join(__dirname, 'public', 'api-docs'))
+);
+
 app.use(
   '/api-docs',
   swaggerUi.serve,
   swaggerUi.setup(swaggerDocs, {
     swaggerOptions: {
-      url: '/api-docs/swagger.json',
+      url: `${SERVER_URL}/api-docs/swagger.json`,
     },
     customCssUrl: '/api-docs/swagger-ui.css',
     customJs: [
@@ -106,7 +118,11 @@ app.use(
   })
 );
 
-// API 라우트 설정
+app.use(
+  '/favicon.ico',
+  express.static(path.join(__dirname, 'public', 'favicon.ico'))
+);
+
 app.use('/api/users', userRoutes);
 app.use('/api/works', workRoutes);
 app.use('/api/challenges', challengeRoutes);
@@ -114,11 +130,13 @@ app.use('/api/applications', applicationRoutes);
 app.use('/api/feedbacks', feedbackRoutes);
 app.use('/api/notifications', notificationRoutes);
 
+app.use((req, res) => {
+  res.status(404).send('존재하지 않는 라우트입니다');
+});
+
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () =>
-  console.log(`Server is running on port http://localhost:${PORT}`)
-);
+app.listen(PORT, () => console.log(`Server is running on ${SERVER_URL}`));
 
 export default app;

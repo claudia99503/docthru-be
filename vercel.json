@@ -1,28 +1,12 @@
 {
   "version": 2,
   "builds": [
-    {
-      "src": "src/app.js",
-      "use": "@vercel/node",
-      "config": {
-        "prisma": {
-          "generate": "prisma generate"
-        }
-      }
-    },
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
-    }
+    { "src": "app.js", "use": "@vercel/node" },
+    { "src": "public/**", "use": "@vercel/static" }
   ],
   "routes": [
-    {
-      "src": "/api-docs/(.*)",
-      "dest": "/public/api-docs/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "src/app.js"
-    }
+    { "src": "/api-docs/(.*)", "dest": "/public/api-docs/$1" },
+    { "src": "/favicon.ico", "dest": "/public/favicon.ico" },
+    { "src": "/(.*)", "dest": "/app.js" }
   ]
 }
