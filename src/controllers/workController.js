@@ -112,18 +112,3 @@ export const likeCancelWorkById = async (req, res, next) => {
     next(error);
   }
 };
-
-export const getFeedbacksWorkById = async (req, res, next) => {
-  try {
-    const { workId } = req.params;
-    const { cursorId = null, limit = 3 } = req.query;
-    const feedbackData = await workService.getFeedbacksWorkById({
-      workId,
-      cursorId,
-      limit,
-    });
-    return res.status(200).json(feedbackData);
-  } catch (error) {
-    next(error);
-  }
-};

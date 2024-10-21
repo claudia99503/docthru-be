@@ -321,7 +321,7 @@ router.delete(
 router.get(
   '/:workId/feedbacks',
   authenticateAccessToken,
-  workController.getFeedbacksWorkById
+  feedbackController.getFeedbacksWorkById
 );
 
 /**
