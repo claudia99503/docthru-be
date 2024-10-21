@@ -240,7 +240,7 @@ export const getCompletedChallenges = async (userId, page, limit) => {
 export const getAppliedChallenges = async (
   userId,
   status,
-  sortBy = 'appliedAt',
+  sortBy = 'createdAt',
   sortOrder = 'desc',
   searchTerm = '',
   page,
@@ -254,44 +254,38 @@ export const getAppliedChallenges = async (
   }
 
   if (searchTerm) {
-    whereClause.challenge = {
-      OR: [
-        { title: { contains: searchTerm, mode: 'insensitive' } },
-        { content: { contains: searchTerm, mode: 'insensitive' } },
-      ],
-    };
+    whereClause.OR = [
+      { title: { contains: searchTerm, mode: 'insensitive' } },
+      { description: { contains: searchTerm, mode: 'insensitive' } },
+    ];
   }
 
   const orderBy = [];
-  if (sortBy === 'appliedAt') {
-    orderBy.push({ appliedAt: sortOrder });
+  if (sortBy === 'createdAt') {
+    orderBy.push({ createdAt: sortOrder });
   } else if (sortBy === 'deadline') {
-    orderBy.push({ challenge: { deadline: sortOrder } });
+    orderBy.push({ deadline: sortOrder });
   }
-  if (sortBy !== 'appliedAt') {
-    orderBy.push({ appliedAt: 'desc' });
+  if (sortBy !== 'createdAt') {
+    orderBy.push({ createdAt: 'desc' });
   }
 
   const [appliedChallenges, totalCount] = await Promise.all([
-    prisma.application.findMany({
+    prisma.challenge.findMany({
       where: whereClause,
       orderBy,
-      include: { challenge: true },
       skip,
       take: parsedLimit,
     }),
-    prisma.application.count({ where: whereClause }),
+    prisma.challenge.count({ where: whereClause }),
   ]);
 
   return {
-    challenges: appliedChallenges.map((app) => ({
-      ...app,
-      status: applicationStatusConverter(app.status),
-      appliedAt: app.appliedAt.toISOString(),
-      challenge: {
-        ...app.challenge,
-        deadline: app.challenge.deadline.toISOString(),
-      },
+    challenges: appliedChallenges.map((challenge) => ({
+      ...challenge,
+      status: applicationStatusConverter(challenge.status),
+      createdAt: challenge.createdAt.toISOString(),
+      deadline: challenge.deadline.toISOString(),
     })),
     meta: {
       currentPage: parsedPage,
