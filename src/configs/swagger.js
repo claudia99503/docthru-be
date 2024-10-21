@@ -15,7 +15,11 @@ const swaggerOptions = {
         description: '로컬 서버',
       },
       {
-        url: process.env.BASE_URL,
+        url: `http://localhost:3001`,
+        description: '3001 서버',
+      },
+      {
+        url: process.env.BASE_URL || 'https://docthru-be.vercel.app',
         description: '배포 환경 HTTPS 서버',
       },
     ],
