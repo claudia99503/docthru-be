@@ -103,10 +103,12 @@ export const ChallengeService = {
     });
   },
 
-  updateChallengeById: async (challengeId, updateData) => {
+  updateChallengeById: async (challengeId, updateData, adminUserId) => {
     const challenge = await prisma.challenge.findUnique({
       where: { id: parseInt(challengeId, 10) },
+      include: { user: true },
     });
+
     if (!challenge) {
       throw new NotFoundException('챌린지가 없습니다.');
     }
@@ -116,7 +118,131 @@ export const ChallengeService = {
       data: updateData,
     });
 
+    const changedFields = [];
+    if (updateData.title && updateData.title !== challenge.title) {
+      changedFields.push('제목');
+    }
+    if (
+      updateData.description &&
+      updateData.description !== challenge.description
+    ) {
+      changedFields.push('설명');
+    }
+    if (updateData.deadline && updateData.deadline !== challenge.deadline) {
+      changedFields.push('마감일');
+    }
+
+    if (changedFields.length > 0) {
+      const changeMessage = `다음 항목이 변경되었습니다: ${changedFields.join(
+        ', '
+      )}`;
+
+      await notifyContentChange(
+        challenge.userId,
+        adminUserId,
+        'CHALLENGE',
+        challenge.title,
+        '수정',
+        new Date(),
+        challengeId,
+        null,
+        null,
+        changeMessage
+      );
+    }
+
     return updatedChallenge;
+  },
+
+  updateChallengeStatus: async (
+    challengeId,
+    newStatus,
+    reason,
+    adminUserId
+  ) => {
+    const challenge = await prisma.challenge.findUnique({
+      where: { id: parseInt(challengeId, 10) },
+      include: { user: true },
+    });
+
+    if (!challenge) {
+      throw new NotFoundException('챌린지가 없습니다.');
+    }
+
+    const updatedChallenge = await prisma.challenge.update({
+      where: { id: parseInt(challengeId, 10) },
+      data: { status: newStatus },
+    });
+
+    await notifyChallengeStatusChange(
+      challenge.userId,
+      adminUserId,
+      challengeId,
+      challenge.title,
+      newStatus,
+      new Date()
+    );
+
+    if (reason) {
+      const reasonContent = `상태 변경 사유: ${reason}`;
+      await notifyContentChange(
+        challenge.userId,
+        adminUserId,
+        'CHALLENGE',
+        challenge.title,
+        newStatus,
+        new Date(),
+        challengeId,
+        null,
+        null,
+        reasonContent
+      );
+    }
+
+    return updatedChallenge;
+  },
+
+  deleteChallengeById: async (challengeId, adminUserId, reason) => {
+    const challenge = await prisma.challenge.findUnique({
+      where: { id: parseInt(challengeId, 10) },
+      include: { user: true },
+    });
+
+    if (!challenge) {
+      throw new NotFoundException('챌린지가 없습니다.');
+    }
+
+    const deletedChallenge = await prisma.challenge.update({
+      where: { id: parseInt(challengeId, 10) },
+      data: { status: 'DELETED' },
+    });
+
+    await notifyChallengeStatusChange(
+      challenge.userId,
+      adminUserId,
+      challengeId,
+      challenge.title,
+      'DELETED',
+      new Date()
+    );
+
+    if (reason) {
+      const reasonContent = `삭제 사유: ${reason}`;
+      await notifyContentChange(
+        challenge.userId,
+        adminUserId,
+        'CHALLENGE',
+        challenge.title,
+        '삭제',
+        new Date(),
+        challengeId,
+        null,
+        null,
+        reasonContent
+      );
+    }
+
+    return deletedChallenge;
   },
 
   getChallengesUrl: async (challengeId) => {
@@ -184,5 +310,42 @@ export const ChallengeService = {
     );
 
     return Participation;
+  },
+
+  hardDeleteChallengeById: async (challengeId, userId) => {
+    const challenge = await prisma.challenge.findUnique({
+      where: { id: parseInt(challengeId, 10) },
+      include: { user: true },
+    });
+
+    if (!challenge) {
+      throw new NotFoundException('챌린지가 없습니다.');
+    }
+
+    if (challenge.userId !== userId) {
+      throw new ForbiddenException(
+        '본인이 신청한 챌린지만 취소할 수 있습니다.'
+      );
+    }
+
+    if (challenge.status !== 'WAITING') {
+      throw new BadRequestException('대기 상태의 챌린지만 취소할 수 있습니다.');
+    }
+
+    await prisma.challenge.delete({
+      where: { id: parseInt(challengeId, 10) },
+    });
+
+    await notifyContentChange(
+      challenge.userId,
+      userId,
+      'CHALLENGE',
+      challenge.title,
+      '취소',
+      new Date(),
+      challengeId
+    );
+
+    return { message: '챌린지가 성공적으로 취소되었습니다.' };
   },
 };

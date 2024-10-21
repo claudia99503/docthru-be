@@ -1,3 +1,4 @@
+import prisma from '../lib/prisma.js';
 import { ForbiddenException } from '../errors/customException.js';
 import { ChallengeService } from '../services/challengeServices.js';
 
@@ -128,7 +129,8 @@ export async function patchChallengeById(req, res, next) {
 
     const updatedChallenge = await ChallengeService.updateChallengeById(
       challengeId,
-      updateData
+      updateData,
+      adminUserId
     );
 
     return res.status(200).json(updatedChallenge);
@@ -181,12 +183,11 @@ export async function updateChallengeStatus(req, res, next) {
     }
 
     const { challengeId } = req.params;
-    const { newStatus, reason } = req.body;
+    const { newStatus } = req.body;
 
     const updatedChallenge = await ChallengeService.updateChallengeStatus(
       challengeId,
       newStatus,
-      reason,
       adminUserId
     );
 
@@ -198,25 +199,15 @@ export async function updateChallengeStatus(req, res, next) {
 
 export async function deleteChallengeById(req, res, next) {
   try {
-    const userId = req.user.userId;
-    const { role } = await ChallengeService.getCurrentUser(userId);
+    const adminUserId = req.user.userId;
+    const { role } = await ChallengeService.getCurrentUser(adminUserId);
     const { challengeId } = req.params;
-    const challenge = await ChallengeService.getChallengeById(challengeId);
-    if (!challenge) {
-      throw new NotFoundException('챌린지가 없습니다.');
-    }
-    if (role !== 'ADMIN' && challenge.userId !== userId) {
-      throw new ForbiddenException(
-        '관리자 권한 또는 작성자만 삭제 가능합니다.'
-      );
-    }
-    if (role !== 'ADMIN' && challenge.status !== 'WAITING') {
-      throw new ForbiddenException('이미 승인되었습니다. 관리자에게 문의');
+
+    if (role !== 'ADMIN') {
+      throw new ForbiddenException('관리자 권한이 필요합니다.');
     }
 
-    await prisma.challenge.delete({
-      where: { id: parseInt(challengeId, 10) },
-    });
+    await ChallengeService.deleteChallengeById(challengeId, adminUserId);
 
     return res.sendStatus(204);
   } catch (error) {
@@ -243,6 +234,22 @@ export async function postChallengeParticipate(req, res, next) {
       userId
     );
     return res.status(201).json(participation);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function cancelChallenge(req, res, next) {
+  try {
+    const userId = req.user.userId;
+    const { challengeId } = req.params;
+
+    const result = await ChallengeService.hardDeleteChallengeById(
+      challengeId,
+      userId
+    );
+
+    return res.status(200).json(result);
   } catch (error) {
     next(error);
   }

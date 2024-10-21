@@ -8,6 +8,7 @@ import {
   postChallengeParticipate,
   getApplication,
   createChallenge,
+  cancelChallenge,
 } from '../controllers/challengeController.js';
 import { authenticateAccessToken } from '../middlewares/authMiddleware.js';
 
@@ -371,5 +372,35 @@ router.post(
   authenticateAccessToken,
   postChallengeParticipate
 );
+
+/**
+ * @swagger
+ * /api/challenges/{challengeId}/cancel:
+ *   delete:
+ *     summary: 챌린지 신청 취소
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Challenge]
+ *     description: 사용자가 자신이 신청한 챌린지를 취소합니다 (완전삭제).
+ *     parameters:
+ *       - in: path
+ *         name: challengeId
+ *         required: true
+ *         description: 취소할 챌린지 ID
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: 챌린지 취소 성공
+ *       400:
+ *         description: 잘못된 요청 (예: 이미 승인된 챌린지)
+ *       403:
+ *         description: 권한 없음 (본인의 챌린지가 아님)
+ *       404:
+ *         description: 챌린지를 찾을 수 없음
+ *       500:
+ *         description: 서버 오류
+ */
+router.delete('/:challengeId/cancel', authenticateAccessToken, cancelChallenge);
 
 export default router;
