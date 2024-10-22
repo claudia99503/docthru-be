@@ -16,11 +16,7 @@ export const getWorksListById = async ({
 }) => {
   const offset = (page - 1) * limit;
 
-  let sortOrder = [
-    { likeCount: 'desc' },
-    { createdAt: 'desc' },
-    { id: 'desc' },
-  ];
+  let sortOrder = [{ likeCount: 'desc' }, { createdAt: 'asc' }, { id: 'asc' }];
 
   const works = await prisma.work.findMany({
     where: {
