@@ -13,7 +13,7 @@ export async function getChallenges(req, res, next) {
     const progress = req.query.progress
       ? req.query.progress === 'true'
       : undefined;
-    const keyword = req.body.keyword || undefined;
+    const keyword = req.query.keyword || undefined;
 
     const result = await ChallengeService.getChallenges({
       page,
