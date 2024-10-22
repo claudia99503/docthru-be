@@ -116,7 +116,7 @@ export const getWorkById = async ({ userId, workId }) => {
     content: works.content,
     createdAt: works.createdAt,
     likeCount: works.likeCount,
-    isAccessible: works.challenge.progress,
+    isClosed: works.challenge.progress,
     isEditable,
     isLike,
     challenge: {
