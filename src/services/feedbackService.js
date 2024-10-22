@@ -18,7 +18,7 @@ export const getFeedbacksWorkById = async ({
 
   const feedbacks = await prisma.feedback.findMany({
     where: { workId: Number(workId) },
-    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
     ...(cursorId && { cursor: { id: Number(cursorId) } }),
     take: Number(limit + 1),
     include: {
