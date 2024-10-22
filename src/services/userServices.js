@@ -193,7 +193,7 @@ export const getOngoingChallenges = async (userId, page, limit) => {
   ]);
 
   return {
-    challenges: ongoingChallenges,
+    list: ongoingChallenges,
     meta: {
       currentPage: parsedPage,
       pageSize: parsedLimit,
@@ -219,7 +219,7 @@ export const getCompletedChallenges = async (userId, page, limit) => {
   ]);
 
   return {
-    challenges: completedChallenges,
+    list: completedChallenges,
     meta: {
       currentPage: parsedPage,
       pageSize: parsedLimit,
