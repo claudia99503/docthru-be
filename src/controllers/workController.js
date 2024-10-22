@@ -13,7 +13,7 @@ export const getWorksListById = async (req, res, next) => {
       page,
       limit,
     });
-    res.status(200).json(worksWithIsLiked);
+    return res.status(200).json(worksWithIsLiked);
   } catch (error) {
     next(error);
   }
@@ -26,7 +26,7 @@ export const getWorkById = async (req, res, next) => {
     const { userId } = req.user;
 
     const workDetail = await workService.getWorkById({ workId, userId });
-    res.status(200).json(workDetail);
+    return res.status(200).json(workDetail);
   } catch (error) {
     next(error);
   }
@@ -46,7 +46,7 @@ export const postWorkById = async (req, res, next) => {
       content,
       userId,
     });
-    res.status(201).json(newWork);
+    return res.status(201).json(newWork);
   } catch (error) {
     next(error);
   }
@@ -66,7 +66,7 @@ export const updateWorkById = async (req, res, next) => {
       content,
       userId,
     });
-    res.status(201).json(updatedWork);
+    return res.status(201).json(updatedWork);
   } catch (error) {
     next(error);
   }
@@ -81,7 +81,7 @@ export const deleteWorkById = async (req, res, next) => {
     await workService.checkWorkAuthorization(userId, workId);
 
     await workService.deleteWorkById({ workId, userId });
-    res.status(200).json({ message: '작업물이 삭제됐습니다.' });
+    return res.status(200).json({ message: '작업물이 삭제됐습니다.' });
   } catch (error) {
     next(error);
   }
@@ -94,7 +94,7 @@ export const likeWorkById = async (req, res, next) => {
     const { userId } = req.user;
 
     await workService.likeWorkById({ workId, userId });
-    res.status(200).json({ message: '좋아요가 추가됐습니다.' });
+    return res.status(200).json({ message: '좋아요가 추가됐습니다.' });
   } catch (error) {
     next(error);
   }
@@ -107,22 +107,7 @@ export const likeCancelWorkById = async (req, res, next) => {
     const { userId } = req.user;
 
     await workService.likeCancelWorkById({ workId, userId });
-    res.status(200).json({ message: '좋아요가 취소됐습니다.' });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const getFeedbacksWorkById = async (req, res, next) => {
-  try {
-    const { workId } = req.params;
-    const { cursorId = null, limit = 3 } = req.query;
-    const feedbackData = await workService.getFeedbacksWorkById({
-      workId,
-      cursorId,
-      limit,
-    });
-    res.status(200).json(feedbackData);
+    return res.status(200).json({ message: '좋아요가 취소됐습니다.' });
   } catch (error) {
     next(error);
   }

@@ -70,6 +70,8 @@ export const getWorksListById = async ({
 };
 
 export const getWorkById = async ({ userId, workId }) => {
+  let isEditable;
+
   const works = await prisma.work.findUnique({
     where: {
       id: Number(workId),
@@ -91,6 +93,12 @@ export const getWorkById = async ({ userId, workId }) => {
     },
   });
 
+  const userInfo = await prisma.user.findUnique({
+    where: {
+      id: Number(userId),
+    },
+  });
+
   const likedId = await prisma.like.findFirst({
     where: {
       workId: Number(workId),
@@ -100,19 +108,26 @@ export const getWorkById = async ({ userId, workId }) => {
 
   const isLike = likedId ? true : false;
 
+  if (works.challenge.progress) {
+    isEditable = userInfo.role === 'ADMIN';
+  } else {
+    isEditable = userInfo.role === 'ADMIN' || works.userId === userId;
+  }
+
   return {
     userId: works.id,
     nickname: works.user.nickname,
     content: works.content,
     createdAt: works.createdAt,
     likeCount: works.likeCount,
+    isAccessible: works.challenge.progress,
+    isEditable,
     isLike,
     challenge: {
       id: works.challengeId,
       title: works.challenge.title,
       field: works.challenge.field,
       docType: works.challenge.docType,
-      progress: works.challenge.progress,
     },
   };
 };
@@ -247,30 +262,6 @@ export const likeCancelWorkById = async ({ workId, userId }) => {
   } else {
     throw new BadRequestException('챌린지가 마감됐습니다.');
   }
-};
-
-export const getFeedbacksWorkById = async ({ workId, cursorId, limit }) => {
-  const feedbacks = await prisma.feedback.findMany({
-    where: { workId: Number(workId) },
-    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-    ...(cursorId && { cursor: { id: Number(cursorId) } }),
-    take: Number(limit + 1),
-    include: {
-      user: {
-        select: {
-          nickname: true,
-          grade: true,
-        },
-      },
-    },
-  });
-
-  const nextCursor = feedbacks.slice(limit)[0]?.id || null;
-
-  const hasNext = feedbacks.length > limit ? true : false;
-  const list = feedbacks.slice(0, limit);
-
-  return { meta: { hasNext, nextCursor }, list };
 };
 
 const challengeDeadline = async (workId) => {

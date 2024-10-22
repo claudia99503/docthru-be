@@ -283,7 +283,7 @@ router.delete(
  * @swagger
  * /api/works/{workId}/feedbacks:
  *   get:
- *     tags: [Work]
+ *     tags: [Feedback]
  *     summary: 작업물 피드백 조회
  *     security:
  *       - bearerAuth: []
@@ -321,7 +321,7 @@ router.delete(
 router.get(
   '/:workId/feedbacks',
   authenticateAccessToken,
-  workController.getFeedbacksWorkById
+  feedbackController.getFeedbacksWorkById
 );
 
 /**

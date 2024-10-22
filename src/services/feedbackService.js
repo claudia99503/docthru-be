@@ -1,13 +1,82 @@
 import prisma from '../lib/prisma.js';
 import * as notificationService from './notificationService.js';
 import {
-  UnauthorizedException,
+  BadRequestException,
   NotFoundException,
   UnprocessableEntityException,
   ForbiddenException,
 } from '../errors/customException.js';
 
+//커서 기반
+export const getFeedbacksWorkById = async ({
+  workId,
+  cursorId,
+  limit,
+  userId,
+}) => {
+  let feedbackList;
+
+  const feedbacks = await prisma.feedback.findMany({
+    where: { workId: Number(workId) },
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    ...(cursorId && { cursor: { id: Number(cursorId) } }),
+    take: Number(limit + 1),
+    include: {
+      user: {
+        select: {
+          nickname: true,
+          grade: true,
+        },
+      },
+    },
+  });
+
+  const work = await prisma.work.findUnique({
+    where: { id: Number(workId) },
+    include: {
+      challenge: {
+        select: {
+          progress: true,
+        },
+      },
+    },
+  });
+
+  const userInfo = await prisma.user.findUnique({
+    where: { id: Number(userId) },
+  });
+
+  if (work.challenge.progress) {
+    // progress가 true일 때: ADMIN만 수정 가능
+    feedbackList = feedbacks.map((feedback) => ({
+      ...feedback,
+      isEditable: userInfo.role === 'ADMIN',
+    }));
+  } else {
+    // progress가 false일 때: ADMIN과 피드백 작성자만 수정 가능
+    feedbackList = feedbacks.map((feedback) => {
+      const isEditable =
+        userInfo.role === 'ADMIN' || feedback.userId === userId;
+      return {
+        ...feedback,
+        isEditable,
+      };
+    });
+  }
+
+  const nextCursor = feedbacks.slice(limit)[0]?.id || null;
+
+  const hasNext = feedbacks.length > limit ? true : false;
+  const list = feedbackList.slice(0, limit);
+
+  return { meta: { hasNext, nextCursor }, list };
+};
+
 export const postFeedbackById = async ({ workId, content, userId }) => {
+  if (!content) {
+    throw new BadRequestException('내용 입력은 필수입니다.');
+  }
+
   const feedback = await prisma.feedback.create({
     data: {
       content: content,
@@ -22,6 +91,10 @@ export const postFeedbackById = async ({ workId, content, userId }) => {
 };
 
 export const updateFeedbackById = async ({ feedbackId, content, userId }) => {
+  if (!content) {
+    throw new BadRequestException('내용 입력은 필수입니다.');
+  }
+
   const feedback = await prisma.feedback.update({
     where: { id: Number(feedbackId) },
     data: { content },
