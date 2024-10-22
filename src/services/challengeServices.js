@@ -18,6 +18,7 @@ export const ChallengeService = {
     field,
     docType,
     progress,
+    keyword,
   }) => {
     const skip = (page - 1) * limit;
 
@@ -35,6 +36,12 @@ export const ChallengeService = {
 
     if (progress !== undefined) {
       filterConditions.progress = progress;
+    }
+    if (keyword) {
+      filterConditions.title = {
+        contains: keyword,
+        mode: 'insensitive',
+      };
     }
 
     const list = await prisma.challenge.findMany({

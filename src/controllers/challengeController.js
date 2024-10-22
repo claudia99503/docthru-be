@@ -13,6 +13,7 @@ export async function getChallenges(req, res, next) {
     const progress = req.body.progress
       ? req.body.progress === 'true'
       : undefined;
+    const keyword = req.body.keyword || undefined;
 
     const result = await ChallengeService.getChallenges({
       page,
@@ -22,6 +23,7 @@ export async function getChallenges(req, res, next) {
       field,
       docType,
       progress,
+      keyword,
     });
     return res.status(200).json(result);
   } catch (error) {
