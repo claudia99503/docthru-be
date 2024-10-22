@@ -8,7 +8,7 @@ export async function getChallenges(req, res, next) {
     const limit = parseInt(req.query.limit) || 10;
     const sortBy = req.query.orderByField || 'id';
     const sortOrder = req.query.orderByDir || 'asc';
-    const field = req.query.field || undefined;
+    const field = req.query.field ? req.query.field.split(',') : undefined;
     const docType = req.query.docType || undefined;
     const progress = req.query.progress
       ? req.query.progress === 'true'
