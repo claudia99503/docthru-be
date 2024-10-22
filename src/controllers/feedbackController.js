@@ -1,5 +1,23 @@
 import * as feedbackService from '../services/feedbackService.js';
 
+export const getFeedbacksWorkById = async (req, res, next) => {
+  try {
+    const { userId } = req.user;
+    const { workId } = req.params;
+    const { cursorId = null, limit = 3 } = req.query;
+
+    const feedbackData = await feedbackService.getFeedbacksWorkById({
+      workId,
+      cursorId,
+      limit,
+      userId,
+    });
+    return res.status(200).json(feedbackData);
+  } catch (error) {
+    next(error);
+  }
+};
+
 // 피드백 작성
 export const postFeedbackById = async (req, res, next) => {
   try {
