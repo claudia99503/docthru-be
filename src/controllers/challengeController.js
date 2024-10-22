@@ -8,10 +8,10 @@ export async function getChallenges(req, res, next) {
     const limit = parseInt(req.query.limit) || 10;
     const sortBy = req.query.orderByField || 'id';
     const sortOrder = req.query.orderByDir || 'asc';
-    const field = req.body.field || undefined;
-    const docType = req.body.docType || undefined;
-    const progress = req.body.progress
-      ? req.body.progress === 'true'
+    const field = req.query.field || undefined;
+    const docType = req.query.docType || undefined;
+    const progress = req.query.progress
+      ? req.query.progress === 'true'
       : undefined;
     const keyword = req.body.keyword || undefined;
 
