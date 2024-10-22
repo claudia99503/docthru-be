@@ -68,8 +68,6 @@ router.post('/register', userController.register);
  *   post:
  *     tags: [User]
  *     summary: 사용자 로그인
- *     security:
- *       - cookieAuth: []  # 쿠키 인증 추가
  *     description: 사용자가 로그인합니다.
  *     requestBody:
  *       required: true

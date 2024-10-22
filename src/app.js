@@ -27,9 +27,11 @@ const __dirname = path.dirname(__filename);
 
 const isProduction = process.env.NODE_ENV === 'production';
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
 const allowedOrigins = [
   CLIENT_URL,
+  BASE_URL,
   'http://localhost:3000',
   'https://localhost:3000',
   'http://localhost:3001',
