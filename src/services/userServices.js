@@ -182,13 +182,13 @@ export const getOngoingChallenges = async (userId, page, limit) => {
 
   const [ongoingChallenges, totalCount] = await Promise.all([
     prisma.Participation.findMany({
-      where: { userId, challenge: { progress: true } },
+      where: { userId, challenge: { progress: false } },
       include: { challenge: true },
       skip,
       take: parsedLimit,
     }),
     prisma.Participation.count({
-      where: { userId, challenge: { progress: true } },
+      where: { userId, challenge: { progress: false } },
     }),
   ]);
 
@@ -208,13 +208,13 @@ export const getCompletedChallenges = async (userId, page, limit) => {
 
   const [completedChallenges, totalCount] = await Promise.all([
     prisma.Participation.findMany({
-      where: { userId, challenge: { progress: false } },
+      where: { userId, challenge: { progress: true } },
       include: { challenge: true },
       skip,
       take: parsedLimit,
     }),
     prisma.Participation.count({
-      where: { userId, challenge: { progress: false } },
+      where: { userId, challenge: { progress: true } },
     }),
   ]);
 
