@@ -108,7 +108,11 @@ export const createChallenge = async (req, res, next) => {
 export async function getChallengeById(req, res, next) {
   try {
     const { challengeId } = req.params;
-    const challenge = await ChallengeService.getChallengeById(challengeId);
+    const { userId } = req.user;
+    const challenge = await ChallengeService.getChallengeById(
+      challengeId,
+      userId
+    );
     return res.status(200).json(challenge);
   } catch (error) {
     next(error);
