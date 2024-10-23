@@ -1,4 +1,5 @@
 import * as userServices from '../services/userServices.js';
+import { logoutUser } from '../services/userServices.js';
 import {
   BadRequestException,
   UnauthorizedException,
@@ -100,6 +101,8 @@ export const logout = async (req, res, next) => {
         '저장된 리프레시 토큰과 일치하지 않습니다.'
       );
     }
+
+    await logoutUser(userId);
 
     res.clearCookie('refreshToken', {
       httpOnly: true,

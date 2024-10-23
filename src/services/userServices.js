@@ -150,6 +150,30 @@ export const verifyRefreshToken = async (refreshToken) => {
   }
 };
 
+export const refreshTokens = async (refreshToken) => {
+  const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
+
+  const user = await prisma.user.findUnique({
+    where: { id: decoded.userId },
+  });
+
+  if (!user || user.refreshToken !== refreshToken) {
+    throw new UnauthorizedException('유효하지 않은 리프레시 토큰입니다.');
+  }
+
+  const accessToken = generateToken(user.id, ACCESS_TOKEN_SECRET, TOKEN_EXPIRY);
+
+  const newRefreshToken = generateToken(
+    user.id,
+    REFRESH_TOKEN_SECRET,
+    REFRESH_TOKEN_EXPIRY
+  );
+
+  await updateRefreshToken(user.id, newRefreshToken);
+
+  return { accessToken, newRefreshToken, userId: user.id };
+};
+
 export const updateRefreshToken = async (userId, newRefreshToken) => {
   try {
     const user = await prisma.user.update({
