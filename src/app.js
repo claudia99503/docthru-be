@@ -41,7 +41,15 @@ const allowedOrigins = [
 ];
 
 const corsOptions = {
-  origin: true, // 모든 origin 허용으로 임시 변경
+  origin: function (origin, callback) {
+    // Swagger UI나 같은 도메인 요청 (!origin) 또는 허용된 도메인이면 허용
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log('Blocked origin:', origin); // 디버깅용
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -70,7 +78,13 @@ export const sendRefreshToken = (res, token) => {
 const contentSecurityPolicy = {
   directives: {
     defaultSrc: ["'self'"],
-    connectSrc: ["'self'", CLIENT_URL, 'https://vercel.live'],
+    connectSrc: [
+      "'self'",
+      CLIENT_URL,
+      'https://vercel.live',
+      'https://docthru-be.vercel.app',
+      'https://docthru.vercel.app',
+    ],
     scriptSrc: [
       "'self'",
       "'unsafe-inline'",
@@ -99,6 +113,7 @@ app.use(
 // app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 app.use('/api/swagger.json', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*'); // swagger.json은 모든 곳에서 접근 가능하게
   res.json(swaggerDocs);
 });
 
@@ -108,7 +123,9 @@ app.use(
   swaggerUi.serve,
   swaggerUi.setup(swaggerDocs, {
     swaggerOptions: {
-      url: '/api/swagger.json', // 명세 경로를 명확하게 지정
+      url: '/api/swagger.json',
+      persistAuthorization: true,
+      withCredentials: true,
     },
   })
 );
