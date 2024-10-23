@@ -174,15 +174,7 @@ export const deleteReplyById = async ({ replyId, userId }) => {
   );
 };
 
-export const getRepliesByFeedbackId = async (feedbackId) => {
-  const replies = await prisma.reply.findMany({
-    where: { feedbackId: Number(feedbackId) },
-    include: { user: true },
-    orderBy: { createdAt: 'asc' },
-  });
 
-  return replies;
-};
 
 export const getFeedbackById = async (feedbackId) => {
   const feedback = await prisma.feedback.findUnique({
