@@ -36,22 +36,12 @@ const allowedOrigins = [
   'https://localhost:3000',
   'http://localhost:3001',
   'https://vercel.live',
+  'https://docthru-be.vercel.app',
+  'https://docthru.vercel.app',
 ];
 
 const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin) {
-      callback(null, true);
-      return;
-    }
-
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-      return;
-    }
-
-    callback(new Error('Not allowed by CORS'));
-  },
+  origin: true, // 모든 origin 허용으로 임시 변경
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
