@@ -56,13 +56,3 @@ export const deleteReplyById = async (req, res, next) => {
   }
 };
 
-// 대댓글 목록 조회
-export const getRepliesByFeedbackId = async (req, res, next) => {
-  try {
-    const { feedbackId } = req.params;
-    const replies = await replyService.getRepliesByFeedbackId(feedbackId);
-    res.status(200).json({ data: replies });
-  } catch (error) {
-    next(error);
-  }
-};

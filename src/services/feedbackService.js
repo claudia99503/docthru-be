@@ -13,12 +13,15 @@ export const getFeedbacksWorkById = async ({
   cursorId,
   limit,
   userId,
+  repliesCursorId,
 }) => {
   let feedbackList;
 
+  let orderBy = [{ createdAt: 'desc' }, { id: 'asc' }];
+
   const feedbacks = await prisma.feedback.findMany({
     where: { workId: Number(workId) },
-    orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+    orderBy: orderBy,
     ...(cursorId && { cursor: { id: Number(cursorId) } }),
     take: Number(limit + 1),
     include: {
@@ -26,6 +29,19 @@ export const getFeedbacksWorkById = async ({
         select: {
           nickname: true,
           grade: true,
+        },
+      },
+      replies: {
+        take: Number(limit + 1),
+        orderBy: orderBy,
+        ...(repliesCursorId && { cursor: { id: Number(repliesCursorId) } }),
+        include: {
+          user: {
+            select: {
+              nickname: true,
+              grade: true,
+            },
+          },
         },
       },
     },
@@ -51,25 +67,54 @@ export const getFeedbacksWorkById = async ({
     feedbackList = feedbacks.map((feedback) => ({
       ...feedback,
       isEditable: userInfo.role === 'ADMIN',
+
+      nextCursor:
+        feedback.replies.length > limit ? feedback.replies[limit]?.id : null,
+      hasNext: feedback.replies.length > limit ? true : false,
+
+      replies: feedback.replies.slice(0, limit).map((reply) => ({
+        ...reply,
+        isEditable: userInfo.role === 'ADMIN',
+      })),
     }));
   } else {
     // progress가 false일 때: ADMIN과 피드백 작성자만 수정 가능
-    feedbackList = feedbacks.map((feedback) => {
-      const isEditable =
-        userInfo.role === 'ADMIN' || feedback.userId === userId;
-      return {
-        ...feedback,
-        isEditable,
-      };
-    });
+    feedbackList = feedbacks.map((feedback) => ({
+      ...feedback,
+      isEditable: userInfo.role === 'ADMIN' || feedback.userId === userId,
+
+      nextCursor:
+        feedback.replies.length > limit ? feedback.replies[limit]?.id : null,
+      hasNext: feedback.replies.length > limit ? true : false,
+
+      replies: feedback.replies.slice(0, limit).map((reply) => ({
+        ...reply,
+        isEditable: userInfo.role === 'ADMIN' || feedback.userId === userId,
+      })),
+    }));
   }
 
   const nextCursor = feedbacks.slice(limit)[0]?.id || null;
-
   const hasNext = feedbacks.length > limit ? true : false;
   const list = feedbackList.slice(0, limit);
 
-  return { meta: { hasNext, nextCursor }, list };
+  const data = list.map((feedback) => ({
+    id: feedback.id,
+    userId: feedback.userId,
+    content: feedback.content,
+    createdAt: feedback.createdAt,
+    updatedAt: feedback.updatedAt,
+    user: feedback.user,
+    replies: {
+      meta: {
+        nextCursor: feedback.nextCursor,
+        hasNext: feedback.hasNext,
+      },
+      repliesList: feedback.replies,
+    },
+  }));
+
+  return { meta: { hasNext, nextCursor }, list: data };
 };
 
 export const postFeedbackById = async ({ workId, content, userId }) => {
