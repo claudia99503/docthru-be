@@ -13,12 +13,15 @@ export const getFeedbacksWorkById = async ({
   cursorId,
   limit,
   userId,
+  repliesCursorId,
 }) => {
   let feedbackList;
 
+  let orderBy = [{ createdAt: 'desc' }, { id: 'asc' }];
+
   const feedbacks = await prisma.feedback.findMany({
     where: { workId: Number(workId) },
-    orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+    orderBy: orderBy,
     ...(cursorId && { cursor: { id: Number(cursorId) } }),
     take: Number(limit + 1),
     include: {
@@ -28,7 +31,11 @@ export const getFeedbacksWorkById = async ({
           grade: true,
         },
       },
-      replies: true,
+      replies: {
+        take: Number(limit + 1),
+        orderBy: orderBy,
+        ...(repliesCursorId && { cursor: { id: Number(repliesCursorId) } }),
+      },
     },
   });
 
@@ -52,7 +59,12 @@ export const getFeedbacksWorkById = async ({
     feedbackList = feedbacks.map((feedback) => ({
       ...feedback,
       isEditable: userInfo.role === 'ADMIN',
-      replies: feedback.replies.map((reply) => ({
+
+      nextCursor:
+        feedback.replies.length > limit ? feedback.replies[limit]?.id : null,
+      hasNext: feedback.replies.length > limit ? true : false,
+
+      replies: feedback.replies.slice(0, limit).map((reply) => ({
         ...reply,
         isEditable: userInfo.role === 'ADMIN',
       })),
@@ -62,18 +74,39 @@ export const getFeedbacksWorkById = async ({
     feedbackList = feedbacks.map((feedback) => ({
       ...feedback,
       isEditable: userInfo.role === 'ADMIN' || feedback.userId === userId,
-      replies: feedback.replies.map((reply) => ({
+
+      nextCursor:
+        feedback.replies.length > limit ? feedback.replies[limit]?.id : null,
+      hasNext: feedback.replies.length > limit ? true : false,
+
+      replies: feedback.replies.slice(0, limit).map((reply) => ({
         ...reply,
         isEditable: userInfo.role === 'ADMIN' || feedback.userId === userId,
       })),
     }));
   }
-  const nextCursor = feedbacks.slice(limit)[0]?.id || null;
 
+  const nextCursor = feedbacks.slice(limit)[0]?.id || null;
   const hasNext = feedbacks.length > limit ? true : false;
   const list = feedbackList.slice(0, limit);
 
-  return { meta: { hasNext, nextCursor }, list };
+  const data = list.map((feedback) => ({
+    id: feedback.id,
+    userId: feedback.userId,
+    content: feedback.content,
+    createdAt: feedback.createdAt,
+    updatedAt: feedback.updatedAt,
+    user: feedback.user,
+    replies: {
+      meta: {
+        nextCursor: feedback.nextCursor,
+        hasNext: feedback.hasNext,
+      },
+      repliesList: feedback.replies,
+    },
+  }));
+
+  return { meta: { hasNext, nextCursor }, list: data };
 };
 
 export const postFeedbackById = async ({ workId, content, userId }) => {
