@@ -71,7 +71,7 @@ export const logout = async (req, res, next) => {
     const refreshToken = req.cookies.refreshToken;
 
     if (!refreshToken) {
-      throw new UnauthorizedException.missingToken('리프레시 토큰이 없습니다.');
+      throw UnauthorizedException.missingToken('리프레시 토큰이 없습니다.');
     }
 
     let userId;
@@ -80,11 +80,11 @@ export const logout = async (req, res, next) => {
       userId = decoded.userId;
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
-        throw new UnauthorizedException.tokenExpired(
+        throw UnauthorizedException.tokenExpired(
           '리프레시 토큰이 만료되었습니다.'
         );
       } else if (error instanceof jwt.JsonWebTokenError) {
-        throw new UnauthorizedException.invalidToken(
+        throw UnauthorizedException.invalidToken(
           '유효하지 않은 리프레시 토큰입니다.'
         );
       } else {
@@ -96,7 +96,7 @@ export const logout = async (req, res, next) => {
 
     const user = await userServices.findUserByRefreshToken(refreshToken);
     if (!user) {
-      throw new UnauthorizedException.invalidToken(
+      throw UnauthorizedException.invalidToken(
         '저장된 리프레시 토큰과 일치하지 않습니다.'
       );
     }
@@ -119,7 +119,7 @@ export const refreshToken = async (req, res, next) => {
 
   if (!refreshToken) {
     return next(
-      new UnauthorizedException.missingToken('리프레시 토큰이 없습니다.')
+      UnauthorizedException.missingToken('리프레시 토큰이 없습니다.')
     );
   }
 
@@ -131,16 +131,12 @@ export const refreshToken = async (req, res, next) => {
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
       return next(
-        new UnauthorizedException.tokenExpired(
-          '리프레시 토큰이 만료되었습니다.'
-        )
+        UnauthorizedException.tokenExpired('리프레시 토큰이 만료되었습니다.')
       );
     }
     if (error instanceof jwt.JsonWebTokenError) {
       return next(
-        new UnauthorizedException.invalidToken(
-          '유효하지 않은 리프레시 토큰입니다.'
-        )
+        UnauthorizedException.invalidToken('유효하지 않은 리프레시 토큰입니다.')
       );
     }
     next(new InternalServerErrorException('토큰 갱신 중 오류가 발생했습니다.'));
@@ -153,7 +149,7 @@ export const getCurrentUser = async (req, res, next) => {
     const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
-      throw new UnauthorizedException.missingToken('액세스 토큰이 없습니다.');
+      throw UnauthorizedException.missingToken('액세스 토큰이 없습니다.');
     }
 
     let decodedToken;
@@ -161,11 +157,9 @@ export const getCurrentUser = async (req, res, next) => {
       decodedToken = jwt.verify(token, ACCESS_TOKEN_SECRET);
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
-        throw new UnauthorizedException.tokenExpired('토큰이 만료되었습니다.');
+        throw UnauthorizedException.tokenExpired('토큰이 만료되었습니다.');
       } else if (error instanceof jwt.JsonWebTokenError) {
-        throw new UnauthorizedException.invalidToken(
-          '유효하지 않은 토큰입니다.'
-        );
+        throw UnauthorizedException.invalidToken('유효하지 않은 토큰입니다.');
       } else {
         throw new InternalServerErrorException(
           '토큰 검증 중 오류가 발생했습니다.'

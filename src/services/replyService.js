@@ -1,7 +1,6 @@
 import prisma from '../lib/prisma.js';
 import * as notificationService from './notificationService.js';
 import {
-  UnauthorizedException,
   NotFoundException,
   UnprocessableEntityException,
   ForbiddenException,

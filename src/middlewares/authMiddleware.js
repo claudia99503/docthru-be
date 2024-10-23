@@ -11,7 +11,7 @@ export const authenticateAccessToken = async (req, res, next) => {
   const token = authHeader && authHeader.split(' ')[1];
   if (!token) {
     return next(
-      new UnauthorizedException.missingToken('액세스 토큰이 필요합니다.')
+      UnauthorizedException.missingToken('액세스 토큰이 필요합니다.')
     );
   }
   try {
@@ -20,9 +20,7 @@ export const authenticateAccessToken = async (req, res, next) => {
     next();
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
-      return next(
-        new UnauthorizedException.tokenExpired('토큰이 만료되었습니다.')
-      );
+      return next(UnauthorizedException.tokenExpired('토큰이 만료되었습니다.'));
     }
     try {
       const decodedToken = jwt.decode(token);
@@ -40,7 +38,7 @@ export const authenticateAccessToken = async (req, res, next) => {
       domain: isProduction ? '.vercel.app' : undefined,
     });
     return next(
-      new UnauthorizedException.invalidToken(
+      UnauthorizedException.invalidToken(
         '유효하지 않은 토큰입니다. 다시 로그인해주세요.'
       )
     );

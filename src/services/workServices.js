@@ -1,7 +1,6 @@
 import prisma from '../lib/prisma.js';
 import {
   BadRequestException,
-  UnauthorizedException,
   NotFoundException,
   ForbiddenException,
   UnprocessableEntityException,

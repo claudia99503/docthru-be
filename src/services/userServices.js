@@ -130,19 +130,19 @@ export const verifyRefreshToken = async (refreshToken) => {
     });
 
     if (!user || user.refreshToken !== refreshToken) {
-      throw new UnauthorizedException.invalidToken(
+      throw UnauthorizedException.invalidToken(
         '유효하지 않은 리프레시 토큰입니다.'
       );
     }
     return user;
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
-      throw new UnauthorizedException.tokenExpired(
+      throw UnauthorizedException.tokenExpired(
         '리프레시 토큰이 만료되었습니다.'
       );
     }
     if (error instanceof jwt.JsonWebTokenError) {
-      throw new UnauthorizedException.invalidToken(
+      throw UnauthorizedException.invalidToken(
         '유효하지 않은 리프레시 토큰입니다.'
       );
     }
@@ -177,18 +177,31 @@ const getPaginationData = (page, limit) => {
   return { parsedPage, parsedLimit, skip };
 };
 
-export const getOngoingChallenges = async (userId, page, limit) => {
+export const getOngoingChallenges = async (userId, page, limit, search) => {
   const { parsedPage, parsedLimit, skip } = getPaginationData(page, limit);
+
+  const whereCondition = {
+    userId,
+    challenge: {
+      progress: false,
+      ...(search && {
+        title: {
+          contains: search,
+          mode: 'insensitive',
+        },
+      }),
+    },
+  };
 
   const [ongoingChallenges, totalCount] = await Promise.all([
     prisma.Participation.findMany({
-      where: { userId, challenge: { progress: false } },
+      where: whereCondition,
       include: { challenge: true },
       skip,
       take: parsedLimit,
     }),
     prisma.Participation.count({
-      where: { userId, challenge: { progress: false } },
+      where: whereCondition,
     }),
   ]);
 
@@ -203,18 +216,31 @@ export const getOngoingChallenges = async (userId, page, limit) => {
   };
 };
 
-export const getCompletedChallenges = async (userId, page, limit) => {
+export const getCompletedChallenges = async (userId, page, limit, search) => {
   const { parsedPage, parsedLimit, skip } = getPaginationData(page, limit);
+
+  const whereCondition = {
+    userId,
+    challenge: {
+      progress: true,
+      ...(search && {
+        title: {
+          contains: search,
+          mode: 'insensitive',
+        },
+      }),
+    },
+  };
 
   const [completedChallenges, totalCount] = await Promise.all([
     prisma.Participation.findMany({
-      where: { userId, challenge: { progress: true } },
+      where: whereCondition,
       include: { challenge: true },
       skip,
       take: parsedLimit,
     }),
     prisma.Participation.count({
-      where: { userId, challenge: { progress: true } },
+      where: whereCondition,
     }),
   ]);
 
