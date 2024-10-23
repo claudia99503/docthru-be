@@ -163,7 +163,7 @@ export const deleteReplyById = async ({ replyId, userId }) => {
   });
 
   notificationService.notifyContentChange(
-    replyToDelete.userId,
+    [replyToDelete.userId],
     userId,
     'REPLY',
     replyToDelete.feedback.work.challenge.title,
@@ -173,8 +173,6 @@ export const deleteReplyById = async ({ replyId, userId }) => {
     replyId
   );
 };
-
-
 
 export const getFeedbackById = async (feedbackId) => {
   const feedback = await prisma.feedback.findUnique({
