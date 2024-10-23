@@ -101,10 +101,12 @@ export const getFeedbacksWorkById = async ({
   const data = list.map((feedback) => ({
     id: feedback.id,
     userId: feedback.userId,
+    workId: feedback.workId,
     content: feedback.content,
     createdAt: feedback.createdAt,
     updatedAt: feedback.updatedAt,
     user: feedback.user,
+    isEditable: feedback.isEditable,
     replies: {
       meta: {
         nextCursor: feedback.nextCursor,
