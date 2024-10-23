@@ -31,13 +31,13 @@ export class BadRequestException extends CommonException {
 
 // 인증이 필요한데 인증되지 않았을 때
 export class UnauthorizedException extends CommonException {
-  constructor(message = '인증되지 않은 사용자입니다', subCode = 0) {
-    const code = `${ExceptionCode.AUTHENTICATION_ERROR}.${subCode}`;
+  constructor(message = '인증되지 않은 사용자입니다', subCode = null) {
     super({
       status: HttpStatus.UNAUTHORIZED,
-      code,
+      code: ExceptionCode.AUTHENTICATION_ERROR,
       message,
       identifier: ExceptionIdentifier.AUTHENTICATION_ERROR,
+      subCode: subCode || undefined,
     });
   }
 

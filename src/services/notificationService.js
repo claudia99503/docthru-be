@@ -214,12 +214,13 @@ export const notifyContentChange = (
       ),
       challengeId,
       workId,
-      feedbackId,
       createdAt: date,
       isRead: false,
     }));
 
-  notifyMultipleUsers(notifications);
+  if (notifications.length > 0) {
+    notifyMultipleUsers(notifications);
+  }
 };
 
 export const getNotifications = async (userId, includeRead = false) => {
