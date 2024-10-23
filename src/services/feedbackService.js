@@ -110,7 +110,7 @@ export const getFeedbacksWorkById = async ({
         nextCursor: feedback.nextCursor,
         hasNext: feedback.hasNext,
       },
-      repliesList: feedback.replies,
+      list: feedback.replies,
     },
   }));
 
