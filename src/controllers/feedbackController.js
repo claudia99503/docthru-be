@@ -4,13 +4,14 @@ export const getFeedbacksWorkById = async (req, res, next) => {
   try {
     const { userId } = req.user;
     const { workId } = req.params;
-    const { cursorId = null, limit = 3 } = req.query;
+    const { cursorId = null, limit = 3, repliesCursorId = null } = req.query;
 
     const feedbackData = await feedbackService.getFeedbacksWorkById({
       workId,
       cursorId,
       limit,
       userId,
+      repliesCursorId,
     });
     return res.status(200).json(feedbackData);
   } catch (error) {

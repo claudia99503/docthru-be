@@ -28,6 +28,7 @@ export const getFeedbacksWorkById = async ({
           grade: true,
         },
       },
+      replies: true,
     },
   });
 
@@ -51,19 +52,22 @@ export const getFeedbacksWorkById = async ({
     feedbackList = feedbacks.map((feedback) => ({
       ...feedback,
       isEditable: userInfo.role === 'ADMIN',
+      replies: feedback.replies.map((reply) => ({
+        ...reply,
+        isEditable: userInfo.role === 'ADMIN',
+      })),
     }));
   } else {
     // progress가 false일 때: ADMIN과 피드백 작성자만 수정 가능
-    feedbackList = feedbacks.map((feedback) => {
-      const isEditable =
-        userInfo.role === 'ADMIN' || feedback.userId === userId;
-      return {
-        ...feedback,
-        isEditable,
-      };
-    });
+    feedbackList = feedbacks.map((feedback) => ({
+      ...feedback,
+      isEditable: userInfo.role === 'ADMIN' || feedback.userId === userId,
+      replies: feedback.replies.map((reply) => ({
+        ...reply,
+        isEditable: userInfo.role === 'ADMIN' || feedback.userId === userId,
+      })),
+    }));
   }
-
   const nextCursor = feedbacks.slice(limit)[0]?.id || null;
 
   const hasNext = feedbacks.length > limit ? true : false;
