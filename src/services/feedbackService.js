@@ -68,9 +68,9 @@ export const getFeedbacksWorkById = async ({
       ...feedback,
       isEditable: userInfo.role === 'ADMIN',
 
+      hasNext: feedback.replies.length > limit ? true : false,
       nextCursor:
         feedback.replies.length > limit ? feedback.replies[limit]?.id : null,
-      hasNext: feedback.replies.length > limit ? true : false,
 
       replies: feedback.replies.slice(0, limit).map((reply) => ({
         ...reply,
@@ -109,8 +109,8 @@ export const getFeedbacksWorkById = async ({
     isEditable: feedback.isEditable,
     replies: {
       meta: {
-        nextCursor: feedback.nextCursor,
         hasNext: feedback.hasNext,
+        nextCursor: feedback.nextCursor,
       },
       list: feedback.replies,
     },
