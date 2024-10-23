@@ -91,26 +91,153 @@ export const postFeedbackById = async ({ workId, content, userId }) => {
 };
 
 export const updateFeedbackById = async ({ feedbackId, content, userId }) => {
-  if (!content) {
-    throw new BadRequestException('내용 입력은 필수입니다.');
+  try {
+    if (!content) {
+      throw new BadRequestException('내용 입력은 필수입니다.');
+    }
+
+    return await prisma.$transaction(
+      async (tx) => {
+        // 1. 피드백 정보 조회
+        const feedbackInfo = await tx.feedback.findUnique({
+          where: { id: Number(feedbackId) },
+          include: {
+            user: true,
+            work: {
+              include: {
+                challenge: true,
+                user: true,
+              },
+            },
+          },
+        });
+
+        if (!feedbackInfo) {
+          throw new NotFoundException('피드백을 찾을 수 없습니다.');
+        }
+
+        // 2. 피드백 업데이트
+        const updatedFeedback = await tx.feedback.update({
+          where: { id: Number(feedbackId) },
+          data: { content },
+        });
+
+        // 3. 알림 처리
+        const userInfo = await tx.user.findUnique({
+          where: { id: Number(userId) },
+        });
+
+        const challengeInfo = feedbackInfo.work.challenge;
+
+        // ADMIN이 수정한 경우 피드백 작성자에게 알림
+        if (userInfo?.role === 'ADMIN') {
+          notificationService.notifyContentChange(
+            [Number(feedbackInfo.user.id)],
+            Number(userId),
+            'FEEDBACK',
+            challengeInfo.title,
+            '수정',
+            Number(challengeInfo.id),
+            Number(feedbackInfo.work.id)
+          );
+        }
+
+        // 작업물 작성자에게 알림 (피드백 작성자와 다른 경우)
+        if (feedbackInfo.user.id !== feedbackInfo.work.userId) {
+          notificationService.notifyContentChange(
+            [Number(feedbackInfo.work.userId)],
+            Number(userId),
+            'FEEDBACK',
+            challengeInfo.title,
+            '수정',
+            Number(challengeInfo.id),
+            Number(feedbackInfo.work.id)
+          );
+        }
+
+        return updatedFeedback;
+      },
+      {
+        isolationLevel: 'Serializable',
+      }
+    );
+  } catch (error) {
+    if (error.code === 'P2025') {
+      throw new NotFoundException('피드백을 찾을 수 없습니다.');
+    }
+    throw error;
   }
-
-  const feedback = await prisma.feedback.update({
-    where: { id: Number(feedbackId) },
-    data: { content },
-  });
-
-  await notifyAdminAboutFeedback(userId, feedbackId, '수정');
-
-  return feedback;
 };
 
 export const deleteFeedbackById = async ({ feedbackId, userId }) => {
-  await notifyAdminAboutFeedback(userId, feedbackId, '삭제');
+  try {
+    return await prisma.$transaction(
+      async (tx) => {
+        const feedbackInfo = await tx.feedback.findUnique({
+          where: { id: Number(feedbackId) },
+          include: {
+            user: true,
+            work: {
+              include: {
+                challenge: true,
+                user: true,
+              },
+            },
+          },
+        });
 
-  await prisma.feedback.delete({
-    where: { id: Number(feedbackId) },
-  });
+        if (!feedbackInfo) {
+          throw new NotFoundException('피드백을 찾을 수 없습니다.');
+        }
+
+        const userInfo = await tx.user.findUnique({
+          where: { id: Number(userId) },
+        });
+
+        const challengeInfo = feedbackInfo.work.challenge;
+
+        await tx.feedback.delete({
+          where: {
+            id: Number(feedbackId),
+          },
+        });
+
+        if (userInfo?.role === 'ADMIN') {
+          notificationService.notifyContentChange(
+            [Number(feedbackInfo.user.id)],
+            Number(userId),
+            'FEEDBACK',
+            challengeInfo.title,
+            '삭제',
+            Number(challengeInfo.id),
+            Number(feedbackInfo.work.id)
+          );
+        }
+
+        if (feedbackInfo.user.id !== feedbackInfo.work.userId) {
+          notificationService.notifyContentChange(
+            [Number(feedbackInfo.work.userId)],
+            Number(userId),
+            'FEEDBACK',
+            challengeInfo.title,
+            '삭제',
+            Number(challengeInfo.id),
+            Number(feedbackInfo.work.id)
+          );
+        }
+
+        return { message: '피드백이 삭제되었습니다.' };
+      },
+      {
+        isolationLevel: 'Serializable',
+      }
+    );
+  } catch (error) {
+    if (error.code === 'P2025') {
+      throw new NotFoundException('피드백을 찾을 수 없습니다.');
+    }
+    throw error;
+  }
 };
 
 const notifyCreateAboutFeedback = async (userId, workId, feedback) => {
@@ -135,58 +262,6 @@ const notifyCreateAboutFeedback = async (userId, workId, feedback) => {
     Number(feedback.id),
     new Date()
   );
-};
-
-const notifyAdminAboutFeedback = async (userId, feedbackId, action) => {
-  const [userInfo, feedbackInfo] = await prisma.$transaction([
-    prisma.user.findUnique({
-      where: { id: Number(userId) },
-    }),
-    prisma.feedback.findUnique({
-      where: { id: Number(feedbackId) },
-      include: {
-        user: true,
-        work: {
-          include: {
-            challenge: true,
-            user: true,
-          },
-        },
-      },
-    }),
-  ]);
-
-  if (!feedbackInfo) {
-    throw new NotFoundException('피드백을 찾을 수 없습니다.');
-  }
-
-  const challengeInfo = feedbackInfo.work.challenge;
-
-  if (userInfo && userInfo.role === 'ADMIN') {
-    notificationService.notifyContentChange(
-      [Number(feedbackInfo.user.id)],
-      Number(userId),
-      'FEEDBACK',
-      challengeInfo.title,
-      action,
-      Number(challengeInfo.id),
-      Number(feedbackInfo.work.id),
-      Number(feedbackId)
-    );
-  }
-
-  if (feedbackInfo.user.id !== feedbackInfo.work.userId) {
-    notificationService.notifyContentChange(
-      [Number(feedbackInfo.work.userId)],
-      Number(userId),
-      'FEEDBACK',
-      challengeInfo.title,
-      action,
-      Number(challengeInfo.id),
-      Number(feedbackInfo.work.id),
-      Number(feedbackId)
-    );
-  }
 };
 
 export const validateFeedbackAccess = async (userId, feedbackId) => {

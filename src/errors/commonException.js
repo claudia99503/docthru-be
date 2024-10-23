@@ -4,6 +4,7 @@ export class CommonException extends Error {
     code = 'UNKNOWN_ERROR',
     message = '예상 외 에러가 발생했습니다',
     identifier,
+    subCode,
     reason,
     origin,
     occurredAt = new Date().toISOString(),
@@ -11,6 +12,7 @@ export class CommonException extends Error {
     super(message);
     this.status = status;
     this.code = code;
+    this.subCode = subCode;
     this.identifier = identifier;
     this.reason = reason;
     this.origin = origin;
