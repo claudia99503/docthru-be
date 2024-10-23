@@ -64,6 +64,11 @@ export async function getApplication(req, res, next) {
         mode: 'insensitive',
       };
     }
+    if (sortBy === 'status' && req.query.sortOrder) {
+      keywordConditions.status = {
+        equals: req.query.sortOrder,
+      };
+    }
 
     const challenge = await prisma.challenge.findMany({
       where: keywordConditions,
