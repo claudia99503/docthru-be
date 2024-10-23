@@ -35,6 +35,14 @@ export const getFeedbacksWorkById = async ({
         take: Number(limit + 1),
         orderBy: orderBy,
         ...(repliesCursorId && { cursor: { id: Number(repliesCursorId) } }),
+        include: {
+          user: {
+            select: {
+              nickname: true,
+              grade: true,
+            },
+          },
+        },
       },
     },
   });
