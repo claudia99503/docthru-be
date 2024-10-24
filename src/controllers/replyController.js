@@ -56,3 +56,22 @@ export const deleteReplyById = async (req, res, next) => {
   }
 };
 
+export const getReplies = async (req, res, next) => {
+  try {
+    const { userId } = req.user;
+    const { feedbackId } = req.params;
+    const { cursorId = null, limit = 3 } = req.query;
+
+    const repliesData = await replyService.getReplies({
+      feedbackId,
+      cursorId,
+      limit,
+      userId,
+    });
+
+    return res.status(200).json(repliesData);
+  } catch (error) {
+    console.error('Error:', error);
+    next(error);
+  }
+};

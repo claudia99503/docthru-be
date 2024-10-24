@@ -46,38 +46,54 @@ const router = express.Router();
 // 알림 조회
 router.get(
   '/users/:userId/notifications',
+  authenticateAccessToken,
   notificationController.getNotifications
 );
 
 /**
  * @swagger
- * /api/notifications/users/{id}/notifications:
+ * /api/notifications/{id}/read:
  *   put:
- *     tags: [Notification]
- *     summary: 알림 읽기
+ *     tags:
+ *       - Notification
+ *     summary: 알림 읽음 처리
  *     security:
  *       - bearerAuth: []
- *     description: 알림 아이디에 따라 읽음 조회합니다.
+ *     description: 특정 알림을 읽음 상태로 변경합니다
  *     parameters:
- *       - name: id
- *         in: path
+ *       - in: path
+ *         name: id
  *         required: true
  *         description: 알림 ID
  *         schema:
  *           type: integer
  *     responses:
  *       200:
- *         description: 알림 목록 조회 성공
+ *         description: 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 알림이 읽음 처리되었습니다
  *       401:
- *         description: 권한이 없음
+ *         description: 인증되지 않은 사용자
+ *       403:
+ *         description: 권한 없음
  *       404:
- *         description: 알림 없음
+ *         description: 알림을 찾을 수 없음
  *       500:
  *         description: 서버 오류
  */
 
 // 알림 읽음 처리
-router.put('/notifications/:id/read', notificationController.markAsRead);
+router.put(
+  '/:id/read',
+  authenticateAccessToken,
+  notificationController.markAsRead
+);
 
 export default router;
 

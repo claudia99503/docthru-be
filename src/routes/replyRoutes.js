@@ -1,5 +1,3 @@
-// replyRoutes.js
-
 import express from 'express';
 import * as replyController from '../controllers/replyController.js';
 import { authenticateAccessToken } from '../middlewares/authMiddleware.js';
@@ -90,5 +88,88 @@ router.delete(
   authenticateAccessToken,
   replyController.deleteReplyById
 );
+
+/**
+ * @swagger
+ * /api/replies/{feedbackId}:
+ *   get:
+ *     tags:
+ *       - Reply
+ *     summary: 특정 피드백의 답글 목록 조회
+ *     security:
+ *       - bearerAuth: []
+ *     description: 특정 피드백의 답글 목록을 cursor 기반 페이지네이션으로 조회합니다
+ *     parameters:
+ *       - in: path
+ *         name: feedbackId
+ *         required: true
+ *         description: 피드백 ID
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: cursorId
+ *         required: false
+ *         description: 마지막으로 받은 답글의 ID (페이지네이션)
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         description: 한 번에 가져올 답글 개수
+ *         schema:
+ *           type: integer
+ *           default: 3
+ *     responses:
+ *       200:
+ *         description: 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 list:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       content:
+ *                         type: string
+ *                       userId:
+ *                         type: integer
+ *                       feedbackId:
+ *                         type: integer
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                       user:
+ *                         type: object
+ *                         properties:
+ *                           nickname:
+ *                             type: string
+ *                           grade:
+ *                             type: string
+ *                       isEditable:
+ *                         type: boolean
+ *                 meta:
+ *                   type: object
+ *                   properties:
+ *                     hasNext:
+ *                       type: boolean
+ *                     nextCursor:
+ *                       type: integer
+ *                       nullable: true
+ *       401:
+ *         description: 인증되지 않은 사용자
+ *       404:
+ *         description: 피드백을 찾을 수 없음
+ *       500:
+ *         description: 서버 오류
+ */
+router.get('/:feedbackId', authenticateAccessToken, replyController.getReplies);
 
 export default router;

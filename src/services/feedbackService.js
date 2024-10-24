@@ -13,10 +13,8 @@ export const getFeedbacksWorkById = async ({
   cursorId,
   limit,
   userId,
-  repliesCursorId,
 }) => {
   let feedbackList;
-
   let orderBy = [{ createdAt: 'desc' }, { id: 'asc' }];
 
   const feedbacks = await prisma.feedback.findMany({
@@ -31,10 +29,10 @@ export const getFeedbacksWorkById = async ({
           grade: true,
         },
       },
+      // replies는 초기 3개만 포함
       replies: {
-        take: Number(limit + 1),
+        take: 3,
         orderBy: orderBy,
-        ...(repliesCursorId && { cursor: { id: Number(repliesCursorId) } }),
         include: {
           user: {
             select: {
@@ -62,61 +60,38 @@ export const getFeedbacksWorkById = async ({
     where: { id: Number(userId) },
   });
 
+  // isEditable 로직은 그대로 유지
   if (work.challenge.progress) {
-    // progress가 true일 때: ADMIN만 수정 가능
     feedbackList = feedbacks.map((feedback) => ({
       ...feedback,
       isEditable: userInfo.role === 'ADMIN',
-
-      hasNext: feedback.replies.length > limit ? true : false,
-      nextCursor:
-        feedback.replies.length > limit ? feedback.replies[limit]?.id : null,
-
-      replies: feedback.replies.slice(0, limit).map((reply) => ({
-        ...reply,
-        isEditable: userInfo.role === 'ADMIN',
-      })),
+      replies: {
+        meta: {
+          hasNext: feedback.replies.length === 3, // 3개만 가져왔으므로 3개면 더 있다는 의미
+          nextCursor: feedback.replies[2]?.id || null, // 3번째 항목의 id를 nextCursor로
+        },
+        list: feedback.replies,
+      },
     }));
   } else {
-    // progress가 false일 때: ADMIN과 피드백 작성자만 수정 가능
     feedbackList = feedbacks.map((feedback) => ({
       ...feedback,
       isEditable: userInfo.role === 'ADMIN' || feedback.userId === userId,
-
-      nextCursor:
-        feedback.replies.length > limit ? feedback.replies[limit]?.id : null,
-      hasNext: feedback.replies.length > limit ? true : false,
-
-      replies: feedback.replies.slice(0, limit).map((reply) => ({
-        ...reply,
-        isEditable: userInfo.role === 'ADMIN' || feedback.userId === userId,
-      })),
+      replies: {
+        meta: {
+          hasNext: feedback.replies.length === 3,
+          nextCursor: feedback.replies[2]?.id || null,
+        },
+        list: feedback.replies,
+      },
     }));
   }
 
-  const nextCursor = feedbacks.slice(limit)[0]?.id || null;
-  const hasNext = feedbacks.length > limit ? true : false;
+  const nextCursor = feedbacks.length > limit ? feedbacks[limit].id : null;
+  const hasNext = feedbacks.length > limit;
   const list = feedbackList.slice(0, limit);
 
-  const data = list.map((feedback) => ({
-    id: feedback.id,
-    userId: feedback.userId,
-    workId: feedback.workId,
-    content: feedback.content,
-    createdAt: feedback.createdAt,
-    updatedAt: feedback.updatedAt,
-    user: feedback.user,
-    isEditable: feedback.isEditable,
-    replies: {
-      meta: {
-        hasNext: feedback.hasNext,
-        nextCursor: feedback.nextCursor,
-      },
-      list: feedback.replies,
-    },
-  }));
-
-  return { meta: { hasNext, nextCursor }, list: data };
+  return { meta: { hasNext, nextCursor }, list };
 };
 
 export const postFeedbackById = async ({ workId, content, userId }) => {

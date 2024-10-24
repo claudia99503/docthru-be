@@ -217,3 +217,58 @@ export const getReplyById = async (replyId) => {
 
   return reply;
 };
+
+export const getReplies = async ({ feedbackId, cursorId, limit, userId }) => {
+  const replies = await prisma.reply.findMany({
+    where: {
+      feedbackId: Number(feedbackId),
+      ...(cursorId && {
+        id: { lt: Number(cursorId) },
+      }),
+    },
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    take: Number(limit + 1),
+    include: {
+      user: {
+        select: {
+          nickname: true,
+          grade: true,
+        },
+      },
+    },
+  });
+
+  const feedback = await prisma.feedback.findUnique({
+    where: { id: Number(feedbackId) },
+    include: {
+      work: {
+        include: {
+          challenge: {
+            select: {
+              progress: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const userInfo = await prisma.user.findUnique({
+    where: { id: Number(userId) },
+  });
+
+  const isEditable = feedback.work.challenge.progress
+    ? userInfo.role === 'ADMIN'
+    : userInfo.role === 'ADMIN' || feedback.userId === userId;
+
+  const hasNext = replies.length > limit;
+  const nextCursor = hasNext ? replies[limit - 1].id : null;
+
+  return {
+    list: replies.slice(0, limit).map((reply) => ({
+      ...reply,
+      isEditable,
+    })),
+    meta: { hasNext, nextCursor },
+  };
+};
