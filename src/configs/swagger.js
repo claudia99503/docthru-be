@@ -15,7 +15,7 @@ const swaggerOptions = {
         description: '로컬 서버',
       },
       {
-        url: `http://localhost:3000`,
+        url: `http://localhost:3001`,
         description: '로컬 서버',
       },
       {
