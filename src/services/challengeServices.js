@@ -279,6 +279,30 @@ export const ChallengeService = {
 
     return Participation;
   },
+  deleteChallengeParticipation: async (challengeId, userId) => {
+    const challenge = await prisma.challenge.findUnique({
+      where: { id: parseInt(challengeId, 10) },
+      include: { participations: true },
+    });
+    if (!challenge) {
+      throw new NotFoundException('챌린지가 없습니다.');
+    }
+    const participation = challenge.participations.find(
+      (participations) => participations.userId === userId
+    );
+    if (!participation) {
+      throw new NotFoundException('참여자가 없음');
+    }
+    await prisma.participation.delete({
+      where: { id: participation.id },
+    });
+    await prisma.challenge.update({
+      where: { id: parseInt(challengeId, 10) },
+      data: { participants: { decrement: 1 } },
+    });
+
+    return participation;
+  },
 
   hardDeleteChallengeById: async (challengeId, userId) => {
     const challenge = await prisma.challenge.findUnique({
