@@ -15,8 +15,8 @@ model User {
   email          String          @unique @db.VarChar(255)
   password       String          @db.VarChar(255)
   refreshToken   String?
-  tokenUpdatedAt DateTime? // 추가: 토큰 갱신 시간 기록
-  lastLoginAt    DateTime? // 추가: 마지막 로그인 시간
+  tokenUpdatedAt DateTime?
+  lastLoginAt    DateTime?
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   bestCount      Int             @default(0)
