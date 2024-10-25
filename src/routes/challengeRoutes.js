@@ -7,6 +7,7 @@ import {
   postChallengeParticipate,
   getApplication,
   createChallenge,
+  deleteChallengeParticipation,
   cancelChallenge,
 } from '../controllers/challengeController.js';
 import { authenticateAccessToken } from '../middlewares/authMiddleware.js';
@@ -361,5 +362,11 @@ router.post(
  *         description: 서버 오류
  */
 router.delete('/:challengeId/cancel', authenticateAccessToken, cancelChallenge);
+
+router.delete(
+  '/:challengeId/participations',
+  authenticateAccessToken,
+  deleteChallengeParticipation
+);
 
 export default router;

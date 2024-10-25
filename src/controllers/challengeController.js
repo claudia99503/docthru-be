@@ -232,6 +232,20 @@ export async function postChallengeParticipate(req, res, next) {
   }
 }
 
+export async function deleteChallengeParticipation(req, res, next) {
+  try {
+    const { challengeId } = req.params;
+    const { userId } = req.user;
+    const result = await ChallengeService.deleteChallengeParticipation(
+      challengeId,
+      userId
+    );
+    return res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function cancelChallenge(req, res, next) {
   try {
     const userId = req.user.userId;
