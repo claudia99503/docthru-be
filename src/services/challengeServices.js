@@ -82,6 +82,14 @@ export const ChallengeService = {
             userId: true,
           },
         },
+        works: {
+          where: {
+            userId: userId,
+          },
+          select: {
+            id: true,
+          },
+        },
       },
     });
 
@@ -91,7 +99,7 @@ export const ChallengeService = {
     const isParticipated = challenge.participations.some(
       (participations) => participations.userId === userId
     );
-    const { user, ...rest } = challenge;
+    const { user, works, ...rest } = challenge;
     const processedChallenge = {
       ...rest,
       writer: user
@@ -101,6 +109,7 @@ export const ChallengeService = {
           }
         : null,
       isParticipated,
+      workId: works.length > 0 ? works[0].id : null,
     };
 
     return processedChallenge;
