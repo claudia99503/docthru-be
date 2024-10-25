@@ -110,9 +110,11 @@ export const getWorkById = async ({ userId, workId }) => {
   }
 
   return {
-    userId: works.id,
+    workId: works.id,
+    userId: works.userId,
     nickname: works.user.nickname,
     content: works.content,
+    updatedAt: works.updatedAt,
     createdAt: works.createdAt,
     likeCount: works.likeCount,
     isClosed: works.challenge.progress,
