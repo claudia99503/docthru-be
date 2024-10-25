@@ -150,16 +150,48 @@ export const verifyRefreshToken = async (refreshToken) => {
   }
 };
 
-export const refreshTokens = async (refreshToken) => {
+export const refreshTokens = async (currentRefreshToken) => {
   return await prisma.$transaction(async (tx) => {
-    const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
+    let decoded;
+    try {
+      decoded = jwt.verify(currentRefreshToken, REFRESH_TOKEN_SECRET);
+    } catch (error) {
+      if (error instanceof jwt.TokenExpiredError) {
+        // 만료된 토큰은 DB에서도 제거
+        await cleanupUserRefreshToken(decoded?.userId);
+        throw UnauthorizedException.tokenExpired('만료된 리프레시 토큰입니다.');
+      }
+      throw UnauthorizedException.invalidToken(
+        '유효하지 않은 리프레시 토큰입니다.'
+      );
+    }
 
     const user = await tx.user.findUnique({
       where: { id: decoded.userId },
+      select: {
+        id: true,
+        refreshToken: true,
+        tokenUpdatedAt: true, // 새로운 필드 추가
+      },
     });
 
-    if (!user || user.refreshToken !== refreshToken) {
+    // 저장된 토큰과 불일치하거나 사용자가 없는 경우
+    if (!user || user.refreshToken !== currentRefreshToken) {
+      await cleanupUserRefreshToken(decoded.userId);
       throw new UnauthorizedException('유효하지 않은 리프레시 토큰입니다.');
+    }
+
+    // 토큰 갱신 최소 간격 체크 (예: 1분)
+    const MIN_REFRESH_INTERVAL = 60 * 1000;
+    if (
+      user.tokenUpdatedAt &&
+      Date.now() - user.tokenUpdatedAt.getTime() < MIN_REFRESH_INTERVAL
+    ) {
+      return {
+        accessToken: generateToken(user.id, ACCESS_TOKEN_SECRET, TOKEN_EXPIRY),
+        newRefreshToken: currentRefreshToken,
+        userId: user.id,
+      };
     }
 
     const accessToken = generateToken(
@@ -175,10 +207,25 @@ export const refreshTokens = async (refreshToken) => {
 
     await tx.user.update({
       where: { id: user.id },
-      data: { refreshToken: newRefreshToken },
+      data: {
+        refreshToken: newRefreshToken,
+        tokenUpdatedAt: new Date(),
+      },
     });
 
     return { accessToken, newRefreshToken, userId: user.id };
+  });
+};
+
+export const cleanupUserRefreshToken = async (userId) => {
+  if (!userId) return;
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      refreshToken: null,
+      tokenUpdatedAt: null,
+    },
   });
 };
 

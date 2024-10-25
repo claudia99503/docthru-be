@@ -1,5 +1,5 @@
 import * as userServices from '../services/userServices.js';
-import { logoutUser } from '../services/userServices.js';
+import { cleanupUserRefreshToken } from '../services/userServices.js';
 import {
   BadRequestException,
   UnauthorizedException,
@@ -72,7 +72,14 @@ export const logout = async (req, res, next) => {
     const refreshToken = req.cookies.refreshToken;
 
     if (!refreshToken) {
-      throw UnauthorizedException.missingToken('리프레시 토큰이 없습니다.');
+      res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'None' : 'Lax',
+        path: '/',
+        domain: isProduction ? '.vercel.app' : undefined,
+      });
+      return res.json({ message: '로그아웃 성공' });
     }
 
     let userId;
@@ -80,29 +87,18 @@ export const logout = async (req, res, next) => {
       const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
       userId = decoded.userId;
     } catch (error) {
-      if (error instanceof jwt.TokenExpiredError) {
-        throw UnauthorizedException.tokenExpired(
-          '리프레시 토큰이 만료되었습니다.'
-        );
-      } else if (error instanceof jwt.JsonWebTokenError) {
-        throw UnauthorizedException.invalidToken(
-          '유효하지 않은 리프레시 토큰입니다.'
-        );
-      } else {
-        throw new InternalServerErrorException(
-          '리프레시 토큰 검증 중 오류가 발생했습니다.'
-        );
-      }
+      // 토큰이 유효하지 않아도 쿠키는 삭제
+      res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'None' : 'Lax',
+        path: '/',
+        domain: isProduction ? '.vercel.app' : undefined,
+      });
+      return res.json({ message: '로그아웃 성공' });
     }
 
-    const user = await userServices.findUserByRefreshToken(refreshToken);
-    if (!user) {
-      throw UnauthorizedException.invalidToken(
-        '저장된 리프레시 토큰과 일치하지 않습니다.'
-      );
-    }
-
-    await logoutUser(userId);
+    await cleanupUserRefreshToken(userId);
 
     res.clearCookie('refreshToken', {
       httpOnly: true,
