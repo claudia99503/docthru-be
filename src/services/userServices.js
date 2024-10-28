@@ -293,7 +293,29 @@ export const getOngoingChallenges = async (userId, page, limit, search) => {
   const [ongoingChallenges, totalCount] = await Promise.all([
     prisma.Participation.findMany({
       where: whereCondition,
-      include: { challenge: true },
+      include: {
+        challenge: true,
+        user: {
+          select: {
+            works: {
+              where: {
+                challengeId: {
+                  in: prisma.challenge
+                    .findMany({
+                      where: whereCondition.challenge,
+                      select: { id: true },
+                    })
+                    .then((challenges) => challenges.map((c) => c.id)),
+                },
+              },
+              select: {
+                id: true,
+                challengeId: true,
+              },
+            },
+          },
+        },
+      },
       skip,
       take: parsedLimit,
     }),
@@ -302,8 +324,20 @@ export const getOngoingChallenges = async (userId, page, limit, search) => {
     }),
   ]);
 
+  const challengesWithWorkId = ongoingChallenges.map((participation) => ({
+    ...participation,
+    challenge: {
+      ...participation.challenge,
+      workId:
+        participation.user.works.find(
+          (work) => work.challengeId === participation.challenge.id
+        )?.id || null,
+    },
+    user: undefined,
+  }));
+
   return {
-    list: ongoingChallenges,
+    list: challengesWithWorkId,
     meta: {
       currentPage: parsedPage,
       pageSize: parsedLimit,
@@ -332,7 +366,29 @@ export const getCompletedChallenges = async (userId, page, limit, search) => {
   const [completedChallenges, totalCount] = await Promise.all([
     prisma.Participation.findMany({
       where: whereCondition,
-      include: { challenge: true },
+      include: {
+        challenge: true,
+        user: {
+          select: {
+            works: {
+              where: {
+                challengeId: {
+                  in: prisma.challenge
+                    .findMany({
+                      where: whereCondition.challenge,
+                      select: { id: true },
+                    })
+                    .then((challenges) => challenges.map((c) => c.id)),
+                },
+              },
+              select: {
+                id: true,
+                challengeId: true,
+              },
+            },
+          },
+        },
+      },
       skip,
       take: parsedLimit,
     }),
@@ -341,8 +397,20 @@ export const getCompletedChallenges = async (userId, page, limit, search) => {
     }),
   ]);
 
+  const challengesWithWorkId = completedChallenges.map((participation) => ({
+    ...participation,
+    challenge: {
+      ...participation.challenge,
+      workId:
+        participation.user.works.find(
+          (work) => work.challengeId === participation.challenge.id
+        )?.id || null,
+    },
+    user: undefined,
+  }));
+
   return {
-    list: completedChallenges,
+    list: challengesWithWorkId,
     meta: {
       currentPage: parsedPage,
       pageSize: parsedLimit,
