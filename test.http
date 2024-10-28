@@ -107,3 +107,14 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE4LCJpY
 GET http://localhost:3001/api/challenges/application?sortBy=status&sortOrder=WAITING&keyword=테스트
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjI0LCJpYXQiOjE3Mjk2NDk5NTksImV4cCI6MTcyOTY1MDg1OX0.S3cRHFCAEBpg26xofRCgPF1lRMkzi6CaruNmUDuwnJU
+
+
+### image 변경
+PATCH http://localhost:3001/api/users/my
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE2LCJpYXQiOjE3Mjk4MzYxNjYsImV4cCI6MTcyOTgzNzA2Nn0.XgSsjKGzbbiqTtaSLLoG3LoPAgJU03zViwwfI6J54I0
+
+{
+  "nickname" : "이걸로 변경",
+  "imageUrl" : "URL 변ff경"
+}
