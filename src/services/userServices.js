@@ -443,38 +443,20 @@ export const getCurrentUser = async (userId) => {
 export const getUserById = async (id) => {
   const user = await prisma.user.findUnique({
     where: { id: Number(id) },
-    include: {
-      participations: true,
+    select: {
+      id: true,
+      nickname: true,
+      role: true,
+      grade: true,
+      createdAt: true,
     },
   });
-
-  const challengeList = await Promise.all(
-    user.participations.map(async (participation) => {
-      const challenge = await prisma.challenge.findUnique({
-        where: { id: Number(participation.challengeId) },
-      });
-      return {
-        challenge,
-      };
-    })
-  );
-
-  const data = {
-    id: user.id,
-    nickname: user.nickname,
-    role: user.role,
-    grade: user.grade,
-    createdAt: user.createdAt,
-    challengeList,
-  };
 
   if (!user) {
     throw new NotFoundException('사용자를 찾을 수 없습니다.');
   }
 
-  return {
-    ...data,
-  };
+  return { ...user, createdAt: user.createdAt };
 };
 
 export const updateUserGradeBatch = async (userIds) => {
