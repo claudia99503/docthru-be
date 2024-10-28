@@ -456,10 +456,7 @@ export const getUserById = async (id) => {
     throw new NotFoundException('사용자를 찾을 수 없습니다.');
   }
 
-  return {
-    ...user,
-    createdAt: user.createdAt,
-  };
+  return { ...user, createdAt: user.createdAt };
 };
 
 export const updateUserGradeBatch = async (userIds) => {
