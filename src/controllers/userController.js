@@ -250,3 +250,22 @@ export const getUserById = async (req, res, next) => {
     next(error);
   }
 };
+
+export const patchUserData = async (req, res, next) => {
+  const { userId } = req.user;
+  const { nickname, imageUrl } = req.body;
+  try {
+    const updatedUser = await userServices.patchUserData(
+      userId,
+      nickname,
+      imageUrl
+    );
+    const data = {
+      nickname: updatedUser.nickname,
+      image: updatedUser.image,
+    };
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};

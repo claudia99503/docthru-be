@@ -229,6 +229,24 @@ export const cleanupUserRefreshToken = async (userId) => {
   });
 };
 
+export const patchUserData = async (userId, nickname, imageUrl) => {
+  try {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { nickname, image: imageUrl },
+    });
+    if (!user) {
+      throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    }
+    return user;
+  } catch (error) {
+    if (error.code === 'P2025') {
+      throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    }
+    throw error;
+  }
+};
+
 export const updateRefreshToken = async (userId, newRefreshToken) => {
   try {
     const user = await prisma.user.update({

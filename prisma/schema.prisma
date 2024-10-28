@@ -19,6 +19,7 @@ model User {
   lastLoginAt    DateTime?
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
+  joinCount      Int             @default(0)
   bestCount      Int             @default(0)
   Challenge      Challenge[]
   feedbacks      Feedback[]
@@ -27,6 +28,7 @@ model User {
   participations Participation[]
   works          Work[]
   replies        Reply[]
+  image          String?
 }
 
 model Challenge {
@@ -86,7 +88,7 @@ model Feedback {
   user          User           @relation(fields: [userId], references: [id])
   work          Work           @relation("WorkFeedbacks", fields: [workId], references: [id], onDelete: Cascade)
   notifications Notification[]
-  replies       Reply[] // 새로 추가된 관계
+  replies       Reply[]
 }
 
 model Reply {
