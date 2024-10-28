@@ -28,7 +28,23 @@ model User {
   participations Participation[]
   works          Work[]
   replies        Reply[]
+  Profile        Profile?
   image          String?
+}
+
+model Profile {
+  id              Int      @id @default(autoincrement())
+  userId          Int      @unique
+  bio             String?
+  location        String?  @db.VarChar(100)
+  career          Int?
+  position        String?  @db.VarChar(50)
+  skills          String[]
+  preferredFields String[]
+  githubUrl       String?  @db.VarChar(255)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id])
 }
 
 model Challenge {
@@ -88,7 +104,7 @@ model Feedback {
   user          User           @relation(fields: [userId], references: [id])
   work          Work           @relation("WorkFeedbacks", fields: [workId], references: [id], onDelete: Cascade)
   notifications Notification[]
-  replies       Reply[]
+  replies       Reply[] // 새로 추가된 관계
 }
 
 model Reply {
@@ -169,5 +185,5 @@ enum NotificationType {
   NEW_FEEDBACK
   DEADLINE
   ADMIN_ACTION
-  NEW_REPLY // 새로 추가된 알림 유형
+  NEW_REPLY
 }
