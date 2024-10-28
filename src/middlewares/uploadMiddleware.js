@@ -1,5 +1,5 @@
 import multer from 'multer';
-import storage from '../configs/cloudinary.js';
+import storage from '../configs/cloudynary.js';
 import { BadRequestException } from '../errors/customException.js';
 
 const fileFilter = (req, file, cb) => {
