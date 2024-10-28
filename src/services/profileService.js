@@ -71,7 +71,7 @@ export const getProfile = async (userId) => {
       image: profile.user.image,
       role: profile.user.role,
     },
-    challengeList,
+    list: challengeList,
   };
 
   return data;
