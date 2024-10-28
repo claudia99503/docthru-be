@@ -77,6 +77,7 @@ export const getWorkById = async ({ userId, workId }) => {
           title: true,
           field: true,
           docType: true,
+          docUrl: true,
           progress: true,
         },
       },
@@ -125,6 +126,7 @@ export const getWorkById = async ({ userId, workId }) => {
       title: works.challenge.title,
       field: works.challenge.field,
       docType: works.challenge.docType,
+      docUrl: works.challenge.docUrl,
     },
   };
 };
