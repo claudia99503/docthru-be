@@ -376,4 +376,6 @@ router.get('/me/challenges/completed', userController.getCompletedChallenges);
  */
 router.get('/me/challenges/applications', userController.getAppliedChallenges);
 
+router.patch('/my', userController.patchUserData);
+
 export default router;

@@ -27,6 +27,7 @@ model User {
   participations Participation[]
   works          Work[]
   replies        Reply[]
+  image          String?
 }
 
 model Challenge {
