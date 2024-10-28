@@ -123,10 +123,8 @@ export async function getChallengeById(req, res, next) {
     );
 
     if (role === 'ADMIN') {
-      console.log(role);
       challenge.isAdmin = true;
     } else {
-      console.log(role);
       challenge.isAdmin = false;
     }
     return res.status(200).json(challenge);
