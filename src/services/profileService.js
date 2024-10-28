@@ -70,6 +70,7 @@ export const getProfile = async (userId) => {
       nickname: profile.user.nickname,
       image: profile.user.image,
       role: profile.user.role,
+      createdAt: profile.user.createdAt,
     },
     list: challengeList,
   };
