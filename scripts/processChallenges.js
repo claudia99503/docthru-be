@@ -118,3 +118,5 @@ async function processChallenges() {
     await prisma.$disconnect();
   }
 }
+
+processChallenges();
