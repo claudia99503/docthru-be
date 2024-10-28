@@ -466,30 +466,17 @@ export const updateUserGradeBatch = async (userIds) => {
       id: true,
       grade: true,
       bestCount: true,
-      participations: {
-        select: {
-          challenge: {
-            select: {
-              progress: true,
-            },
-          },
-        },
-      },
+      joinCount: true,
     },
   });
 
   const updatedUsers = users.map((user) => {
-    const challengeParticipationCount = user.participations.filter(
-      (participation) => participation.challenge.progress
-    ).length;
-
-    const bestCount = user.bestCount;
     let newGrade = 'NORMAL';
 
     if (
-      bestCount >= 10 ||
-      challengeParticipationCount >= 10 ||
-      (challengeParticipationCount >= 5 && bestCount >= 5)
+      user.bestCount >= 10 ||
+      user.joinCount >= 10 ||
+      (user.joinCount >= 5 && user.bestCount >= 5)
     ) {
       newGrade = 'EXPERT';
     }

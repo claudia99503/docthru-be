@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import upload from '../middlewares/uploadMiddleware.js';
 import * as userController from '../controllers/userController.js';
 import { authenticateAccessToken } from '../middlewares/authMiddleware.js';
 
@@ -376,6 +377,11 @@ router.get('/me/challenges/completed', userController.getCompletedChallenges);
  */
 router.get('/me/challenges/applications', userController.getAppliedChallenges);
 
-router.patch('/my', userController.patchUserData);
+router.patch(
+  '/my',
+  authenticateAccessToken,
+  upload.single('image'), // 'image'는 form field 이름
+  userController.patchUserData
+);
 
 export default router;
