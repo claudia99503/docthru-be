@@ -19,11 +19,11 @@ async function processChallenges() {
             userId: true,
             user: {
               select: {
+                id: true,
                 works: {
-                  where: {
-                    challengeId: {
-                      equals: prisma.challenge.fields.id,
-                    },
+                  select: {
+                    id: true,
+                    challengeId: true,
                   },
                 },
               },
@@ -53,6 +53,11 @@ async function processChallenges() {
 
     challengesToClose.forEach((challenge) => {
       challenge.participations.forEach((participation) => {
+        // 해당 챌린지에 대한 사용자의 작업 확인
+        const userWorks = participation.user.works.filter(
+          (work) => work.challengeId === challenge.id
+        );
+
         notifications.push({
           userId: participation.userId,
           type: 'DEADLINE',
@@ -64,7 +69,7 @@ async function processChallenges() {
           isRead: false,
         });
 
-        if (participation.user.works.length > 0) {
+        if (userWorks.length > 0) {
           joinCountUpdates.add(participation.userId);
         }
 
@@ -75,8 +80,9 @@ async function processChallenges() {
         ...challenge.works.map((w) => w._count.likes),
         0
       );
+
       challenge.works.forEach((work) => {
-        if (work._count.likes === maxLikes) {
+        if (work._count.likes === maxLikes && maxLikes > 0) {
           bestCountUpdates.set(
             work.userId,
             (bestCountUpdates.get(work.userId) || 0) + 1
@@ -86,13 +92,11 @@ async function processChallenges() {
     });
 
     await prisma.$transaction(async (tx) => {
-      // 챌린지 상태 업데이트
       await tx.challenge.updateMany({
         where: { id: { in: challengeIds } },
         data: { progress: true },
       });
 
-      // 베스트 작품 카운트 업데이트
       if (bestCountUpdates.size > 0) {
         await Promise.all(
           Array.from(bestCountUpdates).map(([userId, increment]) =>
@@ -104,7 +108,6 @@ async function processChallenges() {
         );
       }
 
-      // 참여 카운트 업데이트
       if (joinCountUpdates.size > 0) {
         await tx.user.updateMany({
           where: { id: { in: Array.from(joinCountUpdates) } },
@@ -112,11 +115,9 @@ async function processChallenges() {
         });
       }
 
-      // 알림 생성
       await createNotificationBatch(notifications);
     });
 
-    // 유저 등급 업데이트
     if (gradeUpdates.size > 0) {
       await updateUserGradeBatch(Array.from(gradeUpdates));
       console.log(`${gradeUpdates.size}명의 유저 등급 검사 완료`);
