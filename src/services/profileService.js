@@ -69,7 +69,8 @@ export const getProfile = async (userId) => {
     user: {
       nickname: profile.user.nickname,
       image: profile.user.image,
-      role: profile.user.role,
+      email: profile.user.email,
+      grade: profile.user.grade,
       createdAt: profile.user.createdAt,
     },
     list: challengeList,
