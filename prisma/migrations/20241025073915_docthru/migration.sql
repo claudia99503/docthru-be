@@ -29,9 +29,27 @@ CREATE TABLE "User" (
     "lastLoginAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "joinCount" INTEGER NOT NULL DEFAULT 0,
     "bestCount" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Profile" (
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "bio" TEXT,
+    "location" VARCHAR(100),
+    "career" INTEGER,
+    "position" VARCHAR(50),
+    "skills" TEXT[],
+    "preferredFields" TEXT[],
+    "githubUrl" VARCHAR(255),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Profile_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -138,7 +156,13 @@ CREATE UNIQUE INDEX "User_nickname_key" ON "User"("nickname");
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Profile_userId_key" ON "Profile"("userId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Like_userId_workId_key" ON "Like"("userId", "workId");
+
+-- AddForeignKey
+ALTER TABLE "Profile" ADD CONSTRAINT "Profile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Challenge" ADD CONSTRAINT "Challenge_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

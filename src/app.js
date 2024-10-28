@@ -9,6 +9,7 @@ import swaggerUi from 'swagger-ui-express';
 import customJsonParser from './middlewares/jsonParser.js';
 import { REFRESH_TOKEN_MAX_AGE } from './configs/config.js';
 
+import profileRoutes from './routes/profileRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import workRoutes from './routes/workRoutes.js';
 import challengeRoutes from './routes/challengeRoutes.js';
@@ -137,6 +138,7 @@ app.use('/api/challenges', challengeRoutes);
 app.use('/api/replies', replyRoutes);
 app.use('/api/feedbacks', feedbackRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/profiles', profileRoutes);
 
 app.use(errorHandler);
 
