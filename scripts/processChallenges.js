@@ -21,7 +21,9 @@ async function processChallenges() {
               select: {
                 works: {
                   where: {
-                    challengeId: true,
+                    challengeId: {
+                      equals: prisma.challenge.fields.id,
+                    },
                   },
                 },
               },
@@ -31,7 +33,11 @@ async function processChallenges() {
         works: {
           select: {
             userId: true,
-            _count: { select: { likes: true } },
+            _count: {
+              select: {
+                likes: true,
+              },
+            },
           },
         },
       },
@@ -80,11 +86,13 @@ async function processChallenges() {
     });
 
     await prisma.$transaction(async (tx) => {
+      // 챌린지 상태 업데이트
       await tx.challenge.updateMany({
         where: { id: { in: challengeIds } },
         data: { progress: true },
       });
 
+      // 베스트 작품 카운트 업데이트
       if (bestCountUpdates.size > 0) {
         await Promise.all(
           Array.from(bestCountUpdates).map(([userId, increment]) =>
@@ -96,6 +104,7 @@ async function processChallenges() {
         );
       }
 
+      // 참여 카운트 업데이트
       if (joinCountUpdates.size > 0) {
         await tx.user.updateMany({
           where: { id: { in: Array.from(joinCountUpdates) } },
@@ -103,9 +112,11 @@ async function processChallenges() {
         });
       }
 
+      // 알림 생성
       await createNotificationBatch(notifications);
     });
 
+    // 유저 등급 업데이트
     if (gradeUpdates.size > 0) {
       await updateUserGradeBatch(Array.from(gradeUpdates));
       console.log(`${gradeUpdates.size}명의 유저 등급 검사 완료`);
