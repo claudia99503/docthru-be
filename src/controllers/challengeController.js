@@ -116,10 +116,17 @@ export async function getChallengeById(req, res, next) {
   try {
     const { challengeId } = req.params;
     const { userId } = req.user;
+    const { role } = await ChallengeService.getCurrentUser(userId);
     const challenge = await ChallengeService.getChallengeById(
       challengeId,
       userId
     );
+
+    if (role === 'ADMIN') {
+      challenge.isAdmin = true;
+    } else {
+      challenge.isAdmin = false;
+    }
     return res.status(200).json(challenge);
   } catch (error) {
     next(error);
