@@ -22,6 +22,13 @@ const createDefaultProfile = async (userId) => {
 export const getProfile = async (userId) => {
   const profile = await prisma.profile.findUnique({
     where: { userId: parseInt(userId) },
+    include: {
+      user: {
+        include: {
+          participations: true,
+        },
+      },
+    },
   });
 
   if (!profile) {
@@ -36,7 +43,38 @@ export const getProfile = async (userId) => {
     return await createDefaultProfile(userId);
   }
 
-  return profile;
+  const challengeList = await Promise.all(
+    profile.user.participations.map(async (participation) => {
+      const challenge = await prisma.challenge.findUnique({
+        where: { id: Number(participation.challengeId) },
+      });
+      return {
+        ...challenge,
+      };
+    })
+  );
+
+  const data = {
+    id: profile.id,
+    userId: profile.userId,
+    bio: profile.bio,
+    location: profile.location,
+    career: profile.career,
+    position: profile.position,
+    skills: profile.skills,
+    preferredFields: profile.preferredFields,
+    githubUrl: profile.githubUrl,
+    createdAt: profile.createdAt,
+    updatedAt: profile.challengeList,
+    user: {
+      nickname: profile.user.nickname,
+      image: profile.user.image,
+      role: profile.user.role,
+    },
+    challengeList,
+  };
+
+  return data;
 };
 
 export const createProfile = async (userId) => {
