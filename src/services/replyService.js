@@ -257,17 +257,16 @@ export const getReplies = async ({ feedbackId, cursorId, limit, userId }) => {
     where: { id: Number(userId) },
   });
 
-  const isEditable = feedback.work.challenge.progress
-    ? userInfo.role === 'ADMIN'
-    : userInfo.role === 'ADMIN' || feedback.userId === userId;
-
+  // 각 댓글별로 isEditable 여부를 개별적으로 계산
   const hasNext = replies.length > limit;
   const nextCursor = hasNext ? replies[limit - 1].id : null;
 
   return {
     list: replies.slice(0, limit).map((reply) => ({
       ...reply,
-      isEditable,
+      isEditable: feedback.work.challenge.progress
+        ? userInfo.role === 'ADMIN'
+        : userInfo.role === 'ADMIN' || reply.userId === Number(userId), // 여기를 수정!
     })),
     meta: { hasNext, nextCursor },
   };

@@ -60,17 +60,19 @@ export const getFeedbacksWorkById = async ({
     where: { id: Number(userId) },
   });
 
-  // isEditable 로직은 그대로 유지
   if (work.challenge.progress) {
     feedbackList = feedbacks.map((feedback) => ({
       ...feedback,
       isEditable: userInfo.role === 'ADMIN',
       replies: {
         meta: {
-          hasNext: feedback.replies.length === 3, // 3개만 가져왔으므로 3개면 더 있다는 의미
-          nextCursor: feedback.replies[2]?.id || null, // 3번째 항목의 id를 nextCursor로
+          hasNext: feedback.replies.length === 3,
+          nextCursor: feedback.replies[2]?.id || null,
         },
-        list: feedback.replies,
+        list: feedback.replies.map((reply) => ({
+          ...reply,
+          isEditable: userInfo.role === 'ADMIN',
+        })),
       },
     }));
   } else {
@@ -82,7 +84,10 @@ export const getFeedbacksWorkById = async ({
           hasNext: feedback.replies.length === 3,
           nextCursor: feedback.replies[2]?.id || null,
         },
-        list: feedback.replies,
+        list: feedback.replies.map((reply) => ({
+          ...reply,
+          isEditable: userInfo.role === 'ADMIN' || reply.userId === userId,
+        })),
       },
     }));
   }

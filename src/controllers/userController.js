@@ -256,6 +256,15 @@ export const patchUserData = async (req, res, next) => {
     const { userId } = req.user;
     const { nickname } = req.body;
 
+    // 기존 이미지 삭제 로직 추가
+    if (req.file) {
+      const currentUser = await userServices.getUserById(userId);
+      if (currentUser.image) {
+        const publicId = currentUser.image.split('/').pop().split('.')[0];
+        await cloudinary.uploader.destroy(publicId);
+      }
+    }
+
     const imageUrl = req.file ? req.file.path : undefined;
 
     const updatedUser = await userServices.patchUserData(
@@ -265,10 +274,22 @@ export const patchUserData = async (req, res, next) => {
     );
 
     res.json({
-      nickname: updatedUser.nickname,
-      image: updatedUser.image,
+      message: '프로필이 성공적으로 업데이트되었습니다.',
+      data: {
+        nickname: updatedUser.nickname,
+        image: updatedUser.image,
+      },
     });
   } catch (error) {
+    // Cloudinary 업로드 실패 시 에러 처리
+    if (error.http_code) {
+      next(
+        new InternalServerErrorException(
+          '이미지 업로드 중 오류가 발생했습니다.'
+        )
+      );
+      return;
+    }
     next(error);
   }
 };
