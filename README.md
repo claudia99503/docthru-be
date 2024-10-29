@@ -2,7 +2,7 @@
 	<span id="top">
 	<h1>Docthru 백엔드 레포지토리</h1><br>
 
-![image](https://github.com/user-attachments/assets/b25cdac9-b7a5-446d-9d72-5104d591f038)
+![image](https://github.com/user-attachments/assets/d8691020-d809-4dc8-ad23-76c3392b46f7)
 
 
 
@@ -25,9 +25,10 @@
 ## <span id="dev">기술 및 개발 환경</span>
 
 ### Backend
-<img src="https://img.shields.io/badge/Prisma-black?style=for-the-badge&logo=Prisma&logoColor=white"> <img src="https://img.shields.io/badge/express-black?style=for-the-badge&logo=express&logoColor=white"> <img src="https://img.shields.io/badge/Node.js-black?style=for-the-badge&logo=Node.js&logoColor=white"> <img src="https://img.shields.io/badge/Postgre-black?style=for-the-badge&logo=postgreSQL&logoColor=white">
+<img src="https://img.shields.io/badge/express-black?style=for-the-badge&logo=express&logoColor=white"> <img src="https://img.shields.io/badge/Node.js-black?style=for-the-badge&logo=Node.js&logoColor=white"> <img src="https://img.shields.io/badge/Postgre-black?style=for-the-badge&logo=postgreSQL&logoColor=white">
 
-
+### Database
+<img src="https://img.shields.io/badge/Prisma-black?style=for-the-badge&logo=Prisma&logoColor=white">
 
 ### 협업방식
 
@@ -37,6 +38,8 @@
 ### 배포
 
 ![Vercel](https://img.shields.io/badge/vercel-%23000000.svg?style=for-the-badge&logo=vercel&logoColor=white)
+
+<br>
 
 ## <span id="roles"> 역할 분담 </span>
 
@@ -50,6 +53,8 @@
 ### **김효인**
 - [워드 명세서](https://docthru-be.vercel.app/api-docs/#/Work)
 - [피드백 명세서](https://docthru-be.vercel.app/api-docs/#/Feedback)
+
+<br>
 
 ## <span id="convention">컨벤션</span>
 | Emoji | Code                          | 기능     | Description              |
@@ -67,6 +72,8 @@
 | 🗃     | `:card_file_box:`             | DB       | 데이터베이스 관련 수정   |
 | 💡    | `:bulb:`                      | Comment  | 주석 추가/수정           |
 | 🚀    | `:rocket:`                    | Deploy   | 배포                     |
+<br>
+
 <br>
 
 ## <span id="file"> 프로젝트 폴더 구조</span>
