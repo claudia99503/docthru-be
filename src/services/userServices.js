@@ -484,6 +484,8 @@ export const getAppliedChallenges = async (
         status: true,
         createdAt: true,
         deadline: true,
+        maxParticipants: true,
+        field: true,
       },
     }),
     prisma.challenge.count({ where: whereClause }),
