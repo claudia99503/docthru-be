@@ -290,9 +290,26 @@ export const getOngoingChallenges = async (userId, page, limit, search) => {
     },
   };
 
+  // 먼저 참여중인 챌린지들의 ID를 가져옵니다
+  const participations = await prisma.Participation.findMany({
+    where: whereCondition,
+    select: {
+      challengeId: true,
+    },
+    skip,
+    take: parsedLimit,
+  });
+
+  const challengeIds = participations.map((p) => p.challengeId);
+
   const [ongoingChallenges, totalCount] = await Promise.all([
     prisma.Participation.findMany({
-      where: whereCondition,
+      where: {
+        userId,
+        challengeId: {
+          in: challengeIds,
+        },
+      },
       include: {
         challenge: true,
         user: {
@@ -300,12 +317,7 @@ export const getOngoingChallenges = async (userId, page, limit, search) => {
             works: {
               where: {
                 challengeId: {
-                  in: prisma.challenge
-                    .findMany({
-                      where: whereCondition.challenge,
-                      select: { id: true },
-                    })
-                    .then((challenges) => challenges.map((c) => c.id)),
+                  in: challengeIds,
                 },
               },
               select: {
@@ -316,8 +328,6 @@ export const getOngoingChallenges = async (userId, page, limit, search) => {
           },
         },
       },
-      skip,
-      take: parsedLimit,
     }),
     prisma.Participation.count({
       where: whereCondition,
@@ -363,9 +373,26 @@ export const getCompletedChallenges = async (userId, page, limit, search) => {
     },
   };
 
+  // 먼저 완료된 챌린지들의 ID를 가져옵니다
+  const participations = await prisma.Participation.findMany({
+    where: whereCondition,
+    select: {
+      challengeId: true,
+    },
+    skip,
+    take: parsedLimit,
+  });
+
+  const challengeIds = participations.map((p) => p.challengeId);
+
   const [completedChallenges, totalCount] = await Promise.all([
     prisma.Participation.findMany({
-      where: whereCondition,
+      where: {
+        userId,
+        challengeId: {
+          in: challengeIds,
+        },
+      },
       include: {
         challenge: true,
         user: {
@@ -373,12 +400,7 @@ export const getCompletedChallenges = async (userId, page, limit, search) => {
             works: {
               where: {
                 challengeId: {
-                  in: prisma.challenge
-                    .findMany({
-                      where: whereCondition.challenge,
-                      select: { id: true },
-                    })
-                    .then((challenges) => challenges.map((c) => c.id)),
+                  in: challengeIds,
                 },
               },
               select: {
@@ -389,8 +411,6 @@ export const getCompletedChallenges = async (userId, page, limit, search) => {
           },
         },
       },
-      skip,
-      take: parsedLimit,
     }),
     prisma.Participation.count({
       where: whereCondition,
