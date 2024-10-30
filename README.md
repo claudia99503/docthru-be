@@ -49,6 +49,7 @@
 - [챌린지 명세서](https://docthru-be.vercel.app/api-docs/#/Challenge)
 ### **김현우**
 - [유저 명세서](https://docthru-be.vercel.app/api-docs/#/User)
+- [프로필 명세서](https://docthru-be.vercel.app/api-docs/#/Profile)
 - [알림 명세서](https://docthru-be.vercel.app/api-docs/#/Notification)
 ### **김효인**
 - [워크 명세서](https://docthru-be.vercel.app/api-docs/#/Work)
