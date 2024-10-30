@@ -51,7 +51,7 @@
 - [유저 명세서](https://docthru-be.vercel.app/api-docs/#/User)
 - [알림 명세서](https://docthru-be.vercel.app/api-docs/#/Notification)
 ### **김효인**
-- [워드 명세서](https://docthru-be.vercel.app/api-docs/#/Work)
+- [워크 명세서](https://docthru-be.vercel.app/api-docs/#/Work)
 - [피드백 명세서](https://docthru-be.vercel.app/api-docs/#/Feedback)
 
 <br>
