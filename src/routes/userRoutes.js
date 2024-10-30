@@ -377,6 +377,53 @@ router.get('/me/challenges/completed', userController.getCompletedChallenges);
  */
 router.get('/me/challenges/applications', userController.getAppliedChallenges);
 
+/**
+ * @swagger
+ * /api/users/my:
+ *   patch:
+ *     tags: [User]
+ *     summary: 사용자 프로필 정보 수정
+ *     security:
+ *       - bearerAuth: []
+ *     description: 사용자의 닉네임과 프로필 이미지를 수정합니다.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nickname:
+ *                 type: string
+ *                 description: 변경할 닉네임
+ *               image:
+ *                 type: file
+ *                 description: 프로필 이미지 파일
+ *     responses:
+ *       200:
+ *         description: 프로필 수정 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 프로필이 성공적으로 업데이트되었습니다.
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     nickname:
+ *                       type: string
+ *                     image:
+ *                       type: string
+ *       400:
+ *         description: 잘못된 요청
+ *       401:
+ *         description: 인증되지 않은 요청
+ *       500:
+ *         description: 서버 에러
+ */
 router.patch(
   '/my',
   authenticateAccessToken,
