@@ -40,6 +40,7 @@ export const getWorksListById = async ({
     userId: workList.userId,
     nickname: workList.user.nickname,
     grade: workList.user.grade,
+    image: workList.user.image,
     challengeId: workList.challengeId,
     content: workList.content,
     createdAt: workList.createdAt,
@@ -84,6 +85,7 @@ export const getWorkById = async ({ userId, workId }) => {
       user: {
         select: {
           nickname: true,
+          image: true,
         },
       },
     },
@@ -114,6 +116,7 @@ export const getWorkById = async ({ userId, workId }) => {
     workId: works.id,
     userId: works.userId,
     nickname: works.user.nickname,
+    image: works.user.image,
     content: works.content,
     updatedAt: works.updatedAt,
     createdAt: works.createdAt,
@@ -322,6 +325,7 @@ const bestWorksList = async ({ challengeId, userId, sortOrder }) => {
       userId: bestWork.userId,
       nickname: bestWork.user.nickname,
       grade: bestWork.user.grade,
+      image: bestWork.user.image,
       challengeId: bestWork.challengeId,
       content: bestWork.content,
       createdAt: bestWork.createdAt,

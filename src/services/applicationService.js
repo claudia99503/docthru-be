@@ -115,7 +115,7 @@ export const ApplicationService = {
           },
         },
         user: {
-          select: { nickname: true },
+          select: { nickname: true, image: true },
         },
       },
     });

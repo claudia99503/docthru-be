@@ -233,6 +233,7 @@ export const getReplies = async ({ feedbackId, cursorId, limit, userId }) => {
         select: {
           nickname: true,
           grade: true,
+          image: true,
         },
       },
     },

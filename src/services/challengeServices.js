@@ -75,6 +75,7 @@ export const ChallengeService = {
           select: {
             nickname: true,
             grade: true,
+            image: true,
           },
         },
         participations: {
@@ -106,6 +107,7 @@ export const ChallengeService = {
         ? {
             nickname: user.nickname,
             grade: user.grade,
+            image: user.image,
           }
         : null,
       isParticipated,

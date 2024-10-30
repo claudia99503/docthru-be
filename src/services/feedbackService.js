@@ -27,6 +27,7 @@ export const getFeedbacksWorkById = async ({
         select: {
           nickname: true,
           grade: true,
+          image: true,
         },
       },
       // replies는 초기 3개만 포함
@@ -38,6 +39,7 @@ export const getFeedbacksWorkById = async ({
             select: {
               nickname: true,
               grade: true,
+              image: true,
             },
           },
         },

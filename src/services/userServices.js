@@ -517,6 +517,7 @@ export const getCurrentUser = async (userId) => {
       role: true,
       grade: true,
       createdAt: true,
+      image: true,
     },
   });
 
@@ -539,6 +540,7 @@ export const getUserById = async (id) => {
       role: true,
       grade: true,
       createdAt: true,
+      image: true,
     },
   });
 
