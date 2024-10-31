@@ -2,7 +2,7 @@
 	<span id="top">
 	<h1>Docthru 백엔드 레포지토리</h1><br>
 
-![image](https://github.com/user-attachments/assets/d8691020-d809-4dc8-ad23-76c3392b46f7)
+![image](https://github.com/user-attachments/assets/b7c9c7e6-64f2-46c7-a2a8-3864e6406a56)
 
 
 
