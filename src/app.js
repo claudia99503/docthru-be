@@ -38,6 +38,7 @@ const allowedOrigins = [
   'http://localhost:3001',
   'https://vercel.live',
   'https://docthru-be.vercel.app',
+  'https://docthrumin.vercel.app',
   'https://docthru.vercel.app',
 ];
 
@@ -84,6 +85,7 @@ const contentSecurityPolicy = {
       CLIENT_URL,
       'https://vercel.live',
       'https://docthru-be.vercel.app',
+      'https://docthrumin.vercel.app',
       'https://docthru.vercel.app',
     ],
     scriptSrc: [
