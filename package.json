@@ -31,7 +31,7 @@
   "scripts": {
     "dev": "nodemon src/app.js",
     "start": "node src/index.js",
-    "build": "prisma generate && next build",
+    "build": "prisma generate",
     "vercel-build": "prisma generate && prisma migrate deploy",
     "seed": "prisma db seed"
   },
