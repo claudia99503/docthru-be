@@ -84,6 +84,7 @@ const contentSecurityPolicy = {
       'https://vercel.live',
       'https://docthru-be.vercel.app',
       'https://docthru.vercel.app',
+      'https://easydocthru.vercel.app',
     ],
     scriptSrc: [
       "'self'",
