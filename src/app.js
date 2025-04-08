@@ -28,17 +28,20 @@ const __dirname = path.dirname(__filename);
 
 const isProduction = process.env.NODE_ENV === 'production';
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
+const CLIENT_URL2 = process.env.CLIENT_URL2 || 'http://localhost:3000';
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
 const allowedOrigins = [
   CLIENT_URL,
+  CLIENT_URL2,
   BASE_URL,
   'http://localhost:3000',
   'https://localhost:3000',
   'http://localhost:3001',
   'https://vercel.live',
   'https://easydocthru.vercel.app',
-  'https://docthru-fe-seven.vercel.app'
+  'https://docthru-fe-seven.vercel.app',
+  'https://docthru-quvjo2zus-lucca6042-gmailcoms-projects.vercel.app',
 ];
 
 const corsOptions = {
@@ -82,9 +85,11 @@ const contentSecurityPolicy = {
     connectSrc: [
       "'self'",
       CLIENT_URL,
+      CLIENT_URL2,
       'https://vercel.live',
       'https://easydocthru.vercel.app',
       'https://docthru-fe-seven.vercel.app',
+      'https://docthru-quvjo2zus-lucca6042-gmailcoms-projects.vercel.app'
     ],
     scriptSrc: [
       "'self'",
